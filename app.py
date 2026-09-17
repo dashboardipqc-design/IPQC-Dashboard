@@ -1842,7 +1842,11 @@ Total Findings:
 {current_total}
 </b>
 
+
+
 </div>
+
+
 
 </div>
         """,

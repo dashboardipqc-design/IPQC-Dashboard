@@ -38,7 +38,6 @@ TEAL = "#1489A8"
 GREEN = "#22C55E"
 ORANGE = "#F59E0B"
 RED = "#EF4444"
-PINK = "#EC4899"
 
 DARK_RING = "#1E293B"
 
@@ -46,7 +45,7 @@ DARK_RING = "#1E293B"
 AREA_COLORS = {
     "DP": CYAN,
     "FOL": BLUE,
-    "MOL": PURPLE,
+    "MOL": TEAL,
     "EOL": ORANGE
 }
 
@@ -85,7 +84,7 @@ st.markdown(
 
     .block-container {{
         max-width: 1800px;
-        padding-top: 1.0rem;
+        padding-top: 1rem;
         padding-left: 2rem;
         padding-right: 2rem;
         padding-bottom: 2rem;
@@ -97,94 +96,21 @@ st.markdown(
         margin-bottom: 0 !important;
     }}
 
-    h2, h3 {{
-        color: {TEXT};
-    }}
-
     p {{
         color: {MUTED};
     }}
 
-    /* Remove Streamlit chart spacing */
     div[data-testid="stPlotlyChart"] {{
-        background: {CARD};
+        background-color: {CARD};
         border: 1px solid {BORDER};
         border-radius: 12px;
         overflow: hidden;
     }}
 
-    /* Bottom dashboard cards */
-    .dashboard-card {{
-        background: {CARD};
-        border: 1px solid {BORDER};
-        border-radius: 12px;
-        padding: 18px 20px;
-        height: 210px;
-        box-sizing: border-box;
-    }}
-
-    .card-title {{
-        color: {MUTED};
-        font-size: 14px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        margin-bottom: 8px;
-    }}
-
-    .summary-number {{
-        color: {TEXT};
-        font-size: 44px;
-        font-weight: 700;
-        line-height: 1;
-    }}
-
-    .summary-label {{
-        color: {MUTED};
-        font-size: 13px;
-        margin-top: 6px;
-    }}
-
-    .summary-secondary {{
-        color: {ORANGE};
-        font-size: 30px;
-        font-weight: 700;
-        margin-top: 15px;
-    }}
-
-    .observation-box {{
-        background: rgba(239, 68, 68, 0.10);
-        border: 1px solid rgba(239, 68, 68, 0.50);
-        border-radius: 7px;
-        padding: 11px 14px;
-        color: {RED};
-        font-weight: 700;
-        margin-top: 10px;
-        margin-bottom: 14px;
-    }}
-
-    .highlight-box {{
-        background: rgba(34, 197, 94, 0.10);
-        border: 1px solid rgba(34, 197, 94, 0.45);
-        border-radius: 7px;
-        padding: 11px 14px;
-        color: {GREEN};
-        font-weight: 700;
-        margin-top: 10px;
-        margin-bottom: 14px;
-    }}
-
-    .detail-text {{
-        color: {MUTED};
-        font-size: 14px;
-        line-height: 1.5;
-    }}
-
-    /* Sidebar */
     section[data-testid="stSidebar"] {{
         background-color: {CARD};
     }}
 
-    /* Reduce vertical gaps */
     div[data-testid="stVerticalBlock"] {{
         gap: 0.8rem;
     }}
@@ -196,11 +122,12 @@ st.markdown(
 
 
 # ============================================================
-# SUPABASE
+# SUPABASE CONNECTION
 # ============================================================
 
 @st.cache_resource
 def init_supabase():
+
     return create_client(
         st.secrets["SUPABASE_URL"],
         st.secrets["SUPABASE_KEY"]
@@ -209,6 +136,10 @@ def init_supabase():
 
 supabase = init_supabase()
 
+
+# ============================================================
+# LOAD FINDINGS
+# ============================================================
 
 @st.cache_data(ttl=60)
 def load_findings():
@@ -224,6 +155,7 @@ def load_findings():
 
 
 try:
+
     df = load_findings()
 
 except Exception as e:
@@ -243,11 +175,13 @@ current_time = datetime.now(
     ZoneInfo("Asia/Kuala_Lumpur")
 )
 
-header1, header2 = st.columns(
+
+header_left, header_right = st.columns(
     [4, 1]
 )
 
-with header1:
+
+with header_left:
 
     st.title(
         "IPQC Finding Monitoring Dashboard"
@@ -257,7 +191,8 @@ with header1:
         "Finding Trend • Gap Monitoring • Closure Tracking"
     )
 
-with header2:
+
+with header_right:
 
     st.markdown(
         f"""
@@ -269,7 +204,7 @@ with header2:
         ">
             Last Updated<br>
             <b style="color:{TEXT};">
-            {current_time.strftime("%d-%b-%Y %H:%M")}
+                {current_time.strftime("%d-%b-%Y %H:%M")}
             </b>
         </div>
         """,
@@ -311,6 +246,10 @@ df["status_clean"] = (
 )
 
 
+# ============================================================
+# SHIFT
+# ============================================================
+
 df["shift_letter"] = (
     df["shift"]
     .fillna("")
@@ -333,28 +272,6 @@ df["shift_type"] = (
 
 
 # ============================================================
-# AGING
-# ============================================================
-
-today = pd.Timestamp(
-    current_time.date()
-)
-
-df["aging_days"] = (
-    today
-    -
-    df["finding_datetime_parsed"].dt.normalize()
-).dt.days
-
-
-df["aging_days"] = (
-    df["aging_days"]
-    .fillna(0)
-    .clip(lower=0)
-)
-
-
-# ============================================================
 # WORK WEEK
 # ============================================================
 
@@ -365,10 +282,12 @@ df["week_number"] = (
     .week
 )
 
+
 df["work_week"] = (
     "WW"
     +
-    df["week_number"].astype(str)
+    df["week_number"]
+    .astype(str)
 )
 
 
@@ -381,7 +300,7 @@ st.sidebar.title(
 )
 
 
-# AREA
+# AREA FILTER
 
 area_options = sorted(
     df["area"]
@@ -390,6 +309,7 @@ area_options = sorted(
     .tolist()
 )
 
+
 selected_area = st.sidebar.multiselect(
     "Area",
     area_options,
@@ -397,7 +317,7 @@ selected_area = st.sidebar.multiselect(
 )
 
 
-# CATEGORY
+# CATEGORY FILTER
 
 category_options = sorted(
     df["category"]
@@ -406,6 +326,7 @@ category_options = sorted(
     .tolist()
 )
 
+
 selected_category = st.sidebar.multiselect(
     "Category",
     category_options,
@@ -413,7 +334,7 @@ selected_category = st.sidebar.multiselect(
 )
 
 
-# SHIFT
+# SHIFT FILTER
 
 shift_options = sorted(
     df["shift_letter"]
@@ -422,6 +343,7 @@ shift_options = sorted(
     .tolist()
 )
 
+
 selected_shift = st.sidebar.multiselect(
     "Shift",
     shift_options,
@@ -429,7 +351,7 @@ selected_shift = st.sidebar.multiselect(
 )
 
 
-# STATUS
+# STATUS FILTER
 
 status_options = sorted(
     df["status_clean"]
@@ -437,6 +359,7 @@ status_options = sorted(
     .unique()
     .tolist()
 )
+
 
 selected_status = st.sidebar.multiselect(
     "Status",
@@ -446,7 +369,7 @@ selected_status = st.sidebar.multiselect(
 
 
 # ============================================================
-# FILTER DATA
+# APPLY FILTERS
 # ============================================================
 
 filtered_df = df[
@@ -470,50 +393,16 @@ if filtered_df.empty:
 
 
 # ============================================================
-# KPI VALUES
+# TOTAL CASES
 # ============================================================
 
 total_cases = len(
     filtered_df
 )
 
-open_cases = len(
-    filtered_df[
-        filtered_df["status_clean"] == "Open"
-    ]
-)
-
-closed_cases = len(
-    filtered_df[
-        filtered_df["status_clean"] == "Closed"
-    ]
-)
-
-overdue_cases = len(
-    filtered_df[
-        (filtered_df["status_clean"] == "Open")
-        &
-        (filtered_df["aging_days"] > 7)
-    ]
-)
-
-
-if total_cases > 0:
-
-    closure_rate = (
-        closed_cases
-        /
-        total_cases
-        * 100
-    )
-
-else:
-
-    closure_rate = 0
-
 
 # ============================================================
-# COMMON PLOTLY STYLE
+# COMMON CHART STYLE
 # ============================================================
 
 def style_chart(fig):
@@ -521,18 +410,21 @@ def style_chart(fig):
     fig.update_layout(
         paper_bgcolor=CARD,
         plot_bgcolor=CARD,
+
         font=dict(
             color=TEXT,
             size=12
         ),
+
         title=dict(
             font=dict(
                 color=MUTED,
-                size=15
+                size=14
             ),
             x=0.04,
             xanchor="left"
         ),
+
         margin=dict(
             l=35,
             r=25,
@@ -545,7 +437,12 @@ def style_chart(fig):
 
 
 # ============================================================
-# ROW 1 — TOTAL / SHIFT / TIME / CATEGORY
+# ROW 1
+#
+# TOTAL CASES
+# SHIFT DISTRIBUTION
+# TIME DISTRIBUTION
+# FINDING CATEGORY
 # ============================================================
 
 row1_col1, row1_col2, row1_col3, row1_col4 = st.columns(
@@ -554,26 +451,24 @@ row1_col1, row1_col2, row1_col3, row1_col4 = st.columns(
 
 
 # ============================================================
-# TOTAL CASES
+# 1. TOTAL CASES
 # ============================================================
 
 total_chart = go.Figure(
     data=[
         go.Pie(
-            values=[
-                total_cases
-            ],
-            labels=[
-                "Total Cases"
-            ],
+            values=[total_cases],
+            labels=["Total Cases"],
             hole=0.67,
+
             marker=dict(
                 colors=[GREEN]
             ),
+
             textinfo="none",
+
             hovertemplate=(
-                "Total Cases: "
-                f"{total_cases}"
+                f"Total Cases: {total_cases}"
                 "<extra></extra>"
             )
         )
@@ -583,11 +478,14 @@ total_chart = go.Figure(
 
 total_chart.add_annotation(
     text=f"<b>{total_cases}</b>",
+
     x=0.5,
     y=0.50,
+
     showarrow=False,
+
     font=dict(
-        size=26,
+        size=27,
         color=GREEN
     )
 )
@@ -598,6 +496,7 @@ total_chart.update_layout(
     showlegend=False,
     height=250
 )
+
 
 style_chart(
     total_chart
@@ -616,7 +515,7 @@ with row1_col1:
 
 
 # ============================================================
-# SHIFT DISTRIBUTION
+# 2. SHIFT DISTRIBUTION
 # ============================================================
 
 shift_data = (
@@ -631,16 +530,21 @@ shift_data = (
 
 shift_chart = px.pie(
     shift_data,
+
     names="shift_letter",
     values="Cases",
+
     hole=0.58,
+
     color="shift_letter",
+
     color_discrete_map=SHIFT_COLORS
 )
 
 
 shift_chart.update_traces(
     textinfo="none",
+
     hovertemplate=(
         "Shift %{label}<br>"
         "Cases: %{value}<br>"
@@ -652,18 +556,24 @@ shift_chart.update_traces(
 
 shift_chart.update_layout(
     title="● SHIFT DISTRIBUTION (%)",
+
     height=250,
+
     legend=dict(
         orientation="v",
+
         yanchor="middle",
         y=0.5,
+
         xanchor="left",
-        x=0.78,
+        x=0.76,
+
         font=dict(
             size=10
         )
     )
 )
+
 
 style_chart(
     shift_chart
@@ -682,7 +592,7 @@ with row1_col2:
 
 
 # ============================================================
-# TIME DISTRIBUTION
+# 3. TIME DISTRIBUTION
 # ============================================================
 
 time_data = (
@@ -697,16 +607,21 @@ time_data = (
 
 time_chart = px.pie(
     time_data,
+
     names="shift_type",
     values="Cases",
+
     hole=0.58,
+
     color="shift_type",
+
     color_discrete_map=TIME_COLORS
 )
 
 
 time_chart.update_traces(
     textinfo="none",
+
     hovertemplate=(
         "%{label}<br>"
         "Cases: %{value}<br>"
@@ -718,18 +633,24 @@ time_chart.update_traces(
 
 time_chart.update_layout(
     title="● TIME DISTRIBUTION (%)",
+
     height=250,
+
     legend=dict(
         orientation="v",
+
         yanchor="middle",
         y=0.5,
+
         xanchor="left",
-        x=0.78,
+        x=0.76,
+
         font=dict(
             size=10
         )
     )
 )
+
 
 style_chart(
     time_chart
@@ -748,7 +669,7 @@ with row1_col3:
 
 
 # ============================================================
-# CATEGORY DISTRIBUTION
+# 4. FINDING CATEGORY
 # ============================================================
 
 category_data = (
@@ -763,14 +684,17 @@ category_data = (
 
 category_chart = px.pie(
     category_data,
+
     names="category",
     values="Cases",
+
     color_discrete_sequence=CATEGORY_COLORS
 )
 
 
 category_chart.update_traces(
     textinfo="none",
+
     hovertemplate=(
         "%{label}<br>"
         "Cases: %{value}<br>"
@@ -782,18 +706,24 @@ category_chart.update_traces(
 
 category_chart.update_layout(
     title="● FINDING CATEGORY (%)",
+
     height=250,
+
     legend=dict(
         orientation="v",
+
         yanchor="middle",
         y=0.5,
+
         xanchor="left",
-        x=0.68,
+        x=0.62,
+
         font=dict(
             size=9
         )
     )
 )
+
 
 style_chart(
     category_chart
@@ -812,7 +742,10 @@ with row1_col4:
 
 
 # ============================================================
-# ROW 2 — WEEKLY TREND / AREA
+# ROW 2
+#
+# WEEKLY FINDING TREND
+# FINDINGS BY AREA
 # ============================================================
 
 row2_col1, row2_col2 = st.columns(
@@ -821,7 +754,7 @@ row2_col1, row2_col2 = st.columns(
 
 
 # ============================================================
-# WEEKLY FINDING TREND
+# 5. WEEKLY FINDING TREND
 # ============================================================
 
 weekly_data = (
@@ -830,7 +763,10 @@ weekly_data = (
         subset=["week_number"]
     )
     .groupby(
-        ["week_number", "work_week"]
+        [
+            "week_number",
+            "work_week"
+        ]
     )
     .size()
     .reset_index(
@@ -845,14 +781,21 @@ weekly_data = (
 weekly_chart = go.Figure()
 
 
+# BAR
+
 weekly_chart.add_trace(
     go.Bar(
         x=weekly_data["work_week"],
         y=weekly_data["Cases"],
+
         name="Total Findings",
+
         marker_color=ORANGE,
+
         text=weekly_data["Cases"],
+
         textposition="outside",
+
         hovertemplate=(
             "%{x}<br>"
             "Findings: %{y}"
@@ -862,19 +805,26 @@ weekly_chart.add_trace(
 )
 
 
+# TREND LINE
+
 weekly_chart.add_trace(
     go.Scatter(
         x=weekly_data["work_week"],
         y=weekly_data["Cases"],
+
         name="Finding Trend",
+
         mode="lines+markers",
+
         line=dict(
             color=CYAN,
             width=3
         ),
+
         marker=dict(
             size=7
         ),
+
         hovertemplate=(
             "%{x}<br>"
             "Findings: %{y}"
@@ -886,24 +836,32 @@ weekly_chart.add_trace(
 
 weekly_chart.update_layout(
     title="● WEEKLY FINDING TREND",
+
     height=315,
+
     xaxis_title="",
     yaxis_title="Cases",
+
     legend=dict(
         orientation="h",
+
         yanchor="bottom",
         y=1.01,
+
         xanchor="center",
         x=0.55
     ),
+
     xaxis=dict(
         gridcolor="#334155"
     ),
+
     yaxis=dict(
         gridcolor="#475569",
         rangemode="tozero"
     )
 )
+
 
 style_chart(
     weekly_chart
@@ -922,7 +880,7 @@ with row2_col1:
 
 
 # ============================================================
-# FINDINGS BY AREA
+# 6. FINDINGS BY AREA
 # ============================================================
 
 area_order = [
@@ -954,19 +912,25 @@ area_chart.add_trace(
     go.Bar(
         x=area_data["Cases"],
         y=area_data["area"],
+
         orientation="h",
+
         marker=dict(
             color=[
                 AREA_COLORS.get(
                     area,
                     CYAN
                 )
+
                 for area
                 in area_data["area"]
             ]
         ),
+
         text=area_data["Cases"],
+
         textposition="outside",
+
         hovertemplate=(
             "%{y}<br>"
             "Cases: %{x}"
@@ -978,16 +942,22 @@ area_chart.add_trace(
 
 area_chart.update_layout(
     title="● FINDINGS BY AREA",
+
     height=315,
+
     xaxis_title="Cases",
     yaxis_title="",
+
     showlegend=False,
+
     xaxis=dict(
         gridcolor="#475569",
         rangemode="tozero"
     ),
+
     yaxis=dict(
         categoryorder="array",
+
         categoryarray=[
             "EOL",
             "MOL",
@@ -996,6 +966,7 @@ area_chart.update_layout(
         ]
     )
 )
+
 
 style_chart(
     area_chart
@@ -1011,312 +982,3 @@ with row2_col2:
             "displayModeBar": False
         }
     )
-
-
-# ============================================================
-# ROW 3 — SUMMARY / OBSERVATIONS / HIGHLIGHTS
-# ============================================================
-
-row3_col1, row3_col2, row3_col3 = st.columns(
-    [1, 1, 1]
-)
-
-
-# ============================================================
-# SUMMARY
-# ============================================================
-
-with row3_col1:
-
-    st.markdown(
-        f"""
-        <div class="dashboard-card">
-
-            <div class="card-title">
-                <span style="color:{CYAN};">●</span>
-                SUMMARY
-            </div>
-
-            <div class="summary-number">
-                {total_cases}
-            </div>
-
-            <div class="summary-label">
-                Total Findings
-            </div>
-
-            <div class="summary-secondary">
-                {open_cases}
-            </div>
-
-            <div class="summary-label">
-                Open Findings
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# KEY OBSERVATIONS
-# ============================================================
-
-if open_cases > 0:
-
-    oldest_open = (
-        filtered_df[
-            filtered_df["status_clean"]
-            == "Open"
-        ]
-        .sort_values(
-            "aging_days",
-            ascending=False
-        )
-    )
-
-    if not oldest_open.empty:
-
-        oldest_days = int(
-            oldest_open.iloc[0][
-                "aging_days"
-            ]
-        )
-
-        oldest_area = str(
-            oldest_open.iloc[0][
-                "area"
-            ]
-        )
-
-        oldest_station = str(
-            oldest_open.iloc[0][
-                "station"
-            ]
-        )
-
-        observation_title = (
-            f"⚠ Oldest Open — "
-            f"{oldest_days} Days"
-        )
-
-        observation_text = (
-            f"Oldest open finding is at "
-            f"{oldest_area} / "
-            f"{oldest_station}."
-        )
-
-    else:
-
-        observation_title = (
-            "No Open Findings"
-        )
-
-        observation_text = (
-            "No open finding requires "
-            "immediate attention."
-        )
-
-else:
-
-    observation_title = (
-        "No Open Findings"
-    )
-
-    observation_text = (
-        "All findings in the selected "
-        "scope are closed."
-    )
-
-
-with row3_col2:
-
-    st.markdown(
-        f"""
-        <div class="dashboard-card">
-
-            <div class="card-title">
-                <span style="color:{RED};">●</span>
-                KEY OBSERVATIONS
-            </div>
-
-            <div class="observation-box">
-                {observation_title}
-            </div>
-
-            <div class="detail-text">
-                • {observation_text}
-                <br><br>
-                • Open >7 Days:
-                <b style="color:{RED};">
-                    {overdue_cases}
-                </b>
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# HIGHLIGHTS
-# ============================================================
-
-if total_cases > 0:
-
-    highlight_title = (
-        f"★ Closure Rate — "
-        f"{closure_rate:.1f}%"
-    )
-
-    highlight_text = (
-        f"{closed_cases} of "
-        f"{total_cases} findings "
-        f"are currently closed."
-    )
-
-else:
-
-    highlight_title = (
-        "★ No Findings"
-    )
-
-    highlight_text = (
-        "No findings available "
-        "for the selected scope."
-    )
-
-
-with row3_col3:
-
-    st.markdown(
-        f"""
-        <div class="dashboard-card">
-
-            <div class="card-title">
-                <span style="color:{GREEN};">●</span>
-                HIGHLIGHTS
-            </div>
-
-            <div class="highlight-box">
-                {highlight_title}
-            </div>
-
-            <div class="detail-text">
-                • {highlight_text}
-                <br><br>
-                • Closed Findings:
-                <b style="color:{GREEN};">
-                    {closed_cases}
-                </b>
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# OPEN FINDING DETAILS
-# ============================================================
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-with st.expander(
-    f"Open Finding Details ({open_cases})"
-):
-
-    open_table = filtered_df[
-        filtered_df["status_clean"]
-        == "Open"
-    ].copy()
-
-
-    if open_table.empty:
-
-        st.success(
-            "No open findings for "
-            "the selected filters."
-        )
-
-    else:
-
-        display_columns = [
-            "id",
-            "finding_datetime",
-            "area",
-            "station",
-            "equipment_id",
-            "category",
-            "finding_description",
-            "auditee",
-            "auditor",
-            "aging_days",
-            "status_clean"
-        ]
-
-
-        display_columns = [
-            column
-            for column
-            in display_columns
-            if column
-            in open_table.columns
-        ]
-
-
-        display_table = (
-            open_table[
-                display_columns
-            ]
-            .sort_values(
-                "aging_days",
-                ascending=False
-            )
-            .rename(
-                columns={
-                    "id":
-                        "ID",
-
-                    "finding_datetime":
-                        "Finding Date & Time",
-
-                    "area":
-                        "Area",
-
-                    "station":
-                        "Station",
-
-                    "equipment_id":
-                        "Equipment ID",
-
-                    "category":
-                        "Category",
-
-                    "finding_description":
-                        "Finding Description",
-
-                    "auditee":
-                        "Auditee",
-
-                    "auditor":
-                        "Auditor",
-
-                    "aging_days":
-                        "Aging (Days)",
-
-                    "status_clean":
-                        "Status"
-                }
-            )
-        )
-
-
-        st.dataframe(
-            display_table,
-            use_container_width=True,
-            hide_index=True
-        )

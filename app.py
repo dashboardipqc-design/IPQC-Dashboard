@@ -1184,22 +1184,6 @@ current_total = len(
 )
 
 
-current_open = len(
-    current_week_df[
-        current_week_df["status_clean"]
-        == "Open"
-    ]
-)
-
-
-current_closed = len(
-    current_week_df[
-        current_week_df["status_clean"]
-        == "Closed"
-    ]
-)
-
-
 current_area_counts = (
     current_week_df["area"]
     .value_counts()
@@ -1319,12 +1303,6 @@ ai_payload = {
 
         "total_findings":
             current_total,
-
-        "open_findings":
-            current_open,
-
-        "closed_findings":
-            current_closed,
 
         "area_counts":
             current_area_counts,
@@ -1668,7 +1646,7 @@ if (
     recommendation = (
         "Continue IPQC monitoring and "
         "follow up on the current "
-        "open findings."
+        "findings."
     )
 
 
@@ -1842,11 +1820,7 @@ Total Findings:
 {current_total}
 </b>
 
-
-
 </div>
-
-
 
 </div>
         """,

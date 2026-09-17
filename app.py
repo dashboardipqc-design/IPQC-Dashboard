@@ -364,7 +364,26 @@ df["category_short"] = (
 st.sidebar.title(
     "Dashboard Filters"
 )
+# WORK WEEK FILTER
 
+week_options = (
+    df[["week_number", "work_week"]]
+    .dropna()
+    .drop_duplicates()
+    .sort_values(
+        "week_number",
+        ascending=False
+    )
+    ["work_week"]
+    .tolist()
+)
+
+
+selected_week = st.sidebar.multiselect(
+    "Work Week",
+    options=week_options,
+    default=week_options
+)
 
 # AREA FILTER
 
@@ -439,6 +458,8 @@ selected_status = st.sidebar.multiselect(
 # ============================================================
 
 filtered_df = df[
+    df["work_week"].isin(selected_week)
+    &
     df["area"].isin(selected_area)
     &
     df["category_short"].isin(selected_category)

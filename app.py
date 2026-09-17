@@ -96,6 +96,10 @@ st.markdown(
         margin-bottom: 0 !important;
     }}
 
+    h2, h3 {{
+        color: {TEXT};
+    }}
+
     p {{
         color: {MUTED};
     }}
@@ -168,7 +172,7 @@ except Exception as e:
 
 
 # ============================================================
-# HEADER
+# CURRENT TIME
 # ============================================================
 
 current_time = datetime.now(
@@ -176,12 +180,16 @@ current_time = datetime.now(
 )
 
 
-header_left, header_right = st.columns(
+# ============================================================
+# HEADER
+# ============================================================
+
+header1, header2 = st.columns(
     [4, 1]
 )
 
 
-with header_left:
+with header1:
 
     st.title(
         "IPQC Finding Monitoring Dashboard"
@@ -192,21 +200,16 @@ with header_left:
     )
 
 
-with header_right:
+with header2:
 
     st.markdown(
         f"""
-        <div style="
-            text-align:right;
-            color:{MUTED};
-            font-size:13px;
-            padding-top:10px;
-        ">
-            Last Updated<br>
-            <b style="color:{TEXT};">
-                {current_time.strftime("%d-%b-%Y %H:%M")}
-            </b>
-        </div>
+<div style="text-align:right; color:{MUTED}; font-size:13px; padding-top:10px;">
+Last Updated<br>
+<b style="color:{TEXT};">
+{current_time.strftime("%d-%b-%Y %H:%M")}
+</b>
+</div>
         """,
         unsafe_allow_html=True
     )
@@ -227,7 +230,7 @@ if df.empty:
 
 
 # ============================================================
-# DATA CLEANING
+# CLEAN DATA
 # ============================================================
 
 df["finding_datetime_parsed"] = pd.to_datetime(
@@ -272,6 +275,29 @@ df["shift_type"] = (
 
 
 # ============================================================
+# AGING
+# ============================================================
+
+today = pd.Timestamp(
+    current_time.date()
+)
+
+
+df["aging_days"] = (
+    today
+    -
+    df["finding_datetime_parsed"].dt.normalize()
+).dt.days
+
+
+df["aging_days"] = (
+    df["aging_days"]
+    .fillna(0)
+    .clip(lower=0)
+)
+
+
+# ============================================================
 # WORK WEEK
 # ============================================================
 
@@ -286,8 +312,7 @@ df["week_number"] = (
 df["work_week"] = (
     "WW"
     +
-    df["week_number"]
-    .astype(str)
+    df["week_number"].astype(str)
 )
 
 
@@ -419,7 +444,7 @@ def style_chart(fig):
         title=dict(
             font=dict(
                 color=MUTED,
-                size=14
+                size=15
             ),
             x=0.04,
             xanchor="left"
@@ -451,7 +476,7 @@ row1_col1, row1_col2, row1_col3, row1_col4 = st.columns(
 
 
 # ============================================================
-# 1. TOTAL CASES
+# TOTAL CASES DONUT
 # ============================================================
 
 total_chart = go.Figure(
@@ -478,14 +503,13 @@ total_chart = go.Figure(
 
 total_chart.add_annotation(
     text=f"<b>{total_cases}</b>",
-
     x=0.5,
-    y=0.50,
+    y=0.5,
 
     showarrow=False,
 
     font=dict(
-        size=27,
+        size=28,
         color=GREEN
     )
 )
@@ -515,7 +539,7 @@ with row1_col1:
 
 
 # ============================================================
-# 2. SHIFT DISTRIBUTION
+# SHIFT DISTRIBUTION
 # ============================================================
 
 shift_data = (
@@ -537,7 +561,6 @@ shift_chart = px.pie(
     hole=0.58,
 
     color="shift_letter",
-
     color_discrete_map=SHIFT_COLORS
 )
 
@@ -566,7 +589,7 @@ shift_chart.update_layout(
         y=0.5,
 
         xanchor="left",
-        x=0.76,
+        x=0.78,
 
         font=dict(
             size=10
@@ -592,7 +615,7 @@ with row1_col2:
 
 
 # ============================================================
-# 3. TIME DISTRIBUTION
+# TIME DISTRIBUTION
 # ============================================================
 
 time_data = (
@@ -614,7 +637,6 @@ time_chart = px.pie(
     hole=0.58,
 
     color="shift_type",
-
     color_discrete_map=TIME_COLORS
 )
 
@@ -643,7 +665,7 @@ time_chart.update_layout(
         y=0.5,
 
         xanchor="left",
-        x=0.76,
+        x=0.78,
 
         font=dict(
             size=10
@@ -669,7 +691,7 @@ with row1_col3:
 
 
 # ============================================================
-# 4. FINDING CATEGORY
+# FINDING CATEGORY
 # ============================================================
 
 category_data = (
@@ -716,7 +738,7 @@ category_chart.update_layout(
         y=0.5,
 
         xanchor="left",
-        x=0.62,
+        x=0.68,
 
         font=dict(
             size=9
@@ -754,7 +776,7 @@ row2_col1, row2_col2 = st.columns(
 
 
 # ============================================================
-# 5. WEEKLY FINDING TREND
+# WEEKLY FINDING TREND
 # ============================================================
 
 weekly_data = (
@@ -793,7 +815,6 @@ weekly_chart.add_trace(
         marker_color=ORANGE,
 
         text=weekly_data["Cases"],
-
         textposition="outside",
 
         hovertemplate=(
@@ -880,7 +901,7 @@ with row2_col1:
 
 
 # ============================================================
-# 6. FINDINGS BY AREA
+# FINDINGS BY AREA
 # ============================================================
 
 area_order = [
@@ -921,14 +942,12 @@ area_chart.add_trace(
                     area,
                     CYAN
                 )
-
                 for area
                 in area_data["area"]
             ]
         ),
 
         text=area_data["Cases"],
-
         textposition="outside",
 
         hovertemplate=(

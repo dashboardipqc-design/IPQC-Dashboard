@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from supabase import create_client
 
@@ -175,7 +175,7 @@ except Exception as e:
 
 
 # ============================================================
-# CURRENT TIME
+# CURRENT MALAYSIA TIME
 # ============================================================
 
 current_time = datetime.now(
@@ -301,7 +301,7 @@ df["aging_days"] = (
 
 
 # ============================================================
-# WORK WEEK
+# ISO WORK WEEK
 # ============================================================
 
 df["week_number"] = (
@@ -312,18 +312,29 @@ df["week_number"] = (
 )
 
 
+df["week_year"] = (
+    df["finding_datetime_parsed"]
+    .dt
+    .isocalendar()
+    .year
+)
+
+
 df["work_week"] = (
     "WW"
     +
-    df["week_number"].astype(str)
+    df["week_number"]
+    .astype(str)
+    .str
+    .zfill(2)
 )
 
 
 # ============================================================
 # SHORT CATEGORY NAME
 #
-# Database value remains unchanged.
-# This is only used for dashboard display.
+# Only changes dashboard display.
+# Original Supabase value remains unchanged.
 # ============================================================
 
 def shorten_category(category):
@@ -359,31 +370,15 @@ df["category_short"] = (
 
 # ============================================================
 # SIDEBAR FILTERS
+#
+# No Work Week filter.
+# Overall charts use all available time.
 # ============================================================
 
 st.sidebar.title(
     "Dashboard Filters"
 )
-# WORK WEEK FILTER
 
-week_options = (
-    df[["week_number", "work_week"]]
-    .dropna()
-    .drop_duplicates()
-    .sort_values(
-        "week_number",
-        ascending=False
-    )
-    ["work_week"]
-    .tolist()
-)
-
-
-selected_week = st.sidebar.multiselect(
-    "Work Week",
-    options=week_options,
-    default=week_options
-)
 
 # AREA FILTER
 
@@ -455,11 +450,12 @@ selected_status = st.sidebar.multiselect(
 
 # ============================================================
 # APPLY FILTERS
+#
+# These filters apply to all charts.
+# Timeframe remains overall except Weekly Trend.
 # ============================================================
 
 filtered_df = df[
-    df["work_week"].isin(selected_week)
-    &
     df["area"].isin(selected_area)
     &
     df["category_short"].isin(selected_category)
@@ -480,7 +476,7 @@ if filtered_df.empty:
 
 
 # ============================================================
-# TOTAL CASES
+# TOTAL CASES — OVERALL
 # ============================================================
 
 total_cases = len(
@@ -544,11 +540,6 @@ BOTTOM_LEGEND = dict(
 
 # ============================================================
 # ROW 1
-#
-# TOTAL CASES
-# SHIFT DISTRIBUTION
-# TIME DISTRIBUTION
-# FINDING CATEGORY
 # ============================================================
 
 row1_col1, row1_col2, row1_col3, row1_col4 = st.columns(
@@ -557,7 +548,7 @@ row1_col1, row1_col2, row1_col3, row1_col4 = st.columns(
 
 
 # ============================================================
-# TOTAL CASES
+# TOTAL CASES — OVERALL
 # ============================================================
 
 total_chart = go.Figure(
@@ -565,9 +556,7 @@ total_chart = go.Figure(
         go.Pie(
             values=[total_cases],
 
-            labels=[
-                "Total Cases"
-            ],
+            labels=["Total Cases"],
 
             hole=0.67,
 
@@ -602,7 +591,7 @@ total_chart.add_annotation(
 
 
 total_chart.update_layout(
-    title="● TOTAL CASES",
+    title="● TOTAL CASES — OVERALL",
 
     showlegend=False,
 
@@ -628,7 +617,7 @@ with row1_col1:
 
 
 # ============================================================
-# SHIFT DISTRIBUTION
+# SHIFT DISTRIBUTION — OVERALL
 # ============================================================
 
 shift_data = (
@@ -667,7 +656,7 @@ shift_chart.update_traces(
 
 
 shift_chart.update_layout(
-    title="● SHIFT DISTRIBUTION (%)",
+    title="● SHIFT DISTRIBUTION (%) — OVERALL",
 
     height=290,
 
@@ -693,7 +682,7 @@ with row1_col2:
 
 
 # ============================================================
-# TIME DISTRIBUTION
+# TIME DISTRIBUTION — OVERALL
 # ============================================================
 
 time_data = (
@@ -732,7 +721,7 @@ time_chart.update_traces(
 
 
 time_chart.update_layout(
-    title="● TIME DISTRIBUTION (%)",
+    title="● TIME DISTRIBUTION (%) — OVERALL",
 
     height=290,
 
@@ -758,7 +747,7 @@ with row1_col3:
 
 
 # ============================================================
-# FINDING CATEGORY
+# FINDING CATEGORY — OVERALL
 # ============================================================
 
 category_data = (
@@ -796,7 +785,7 @@ category_chart.update_traces(
 
 
 category_chart.update_layout(
-    title="● FINDING CATEGORY (%)",
+    title="● FINDING CATEGORY (%) — OVERALL",
 
     height=290,
 
@@ -835,9 +824,6 @@ with row1_col4:
 
 # ============================================================
 # ROW 2
-#
-# WEEKLY FINDING TREND
-# FINDINGS BY AREA
 # ============================================================
 
 row2_col1, row2_col2 = st.columns(
@@ -847,28 +833,135 @@ row2_col1, row2_col2 = st.columns(
 
 # ============================================================
 # WEEKLY FINDING TREND
+#
+# Latest 10 ISO work weeks.
+# Missing weeks are automatically filled with 0.
 # ============================================================
 
-weekly_data = (
+current_date = current_time.date()
+
+
+# Find Monday of current ISO week
+
+current_week_monday = (
+    current_date
+    -
+    timedelta(
+        days=current_date.weekday()
+    )
+)
+
+
+# Build exactly 10 consecutive weeks
+
+latest_10_weeks = []
+
+
+for weeks_ago in range(9, -1, -1):
+
+    week_date = (
+        current_week_monday
+        -
+        timedelta(
+            weeks=weeks_ago
+        )
+    )
+
+    iso_year, iso_week, _ = (
+        week_date.isocalendar()
+    )
+
+    latest_10_weeks.append(
+        {
+            "week_year": iso_year,
+            "week_number": iso_week,
+            "work_week": f"WW{iso_week:02d}"
+        }
+    )
+
+
+week_template = pd.DataFrame(
+    latest_10_weeks
+)
+
+
+# Count findings per actual ISO year + week
+
+weekly_counts = (
     filtered_df
     .dropna(
-        subset=["week_number"]
+        subset=[
+            "week_year",
+            "week_number"
+        ]
     )
     .groupby(
         [
-            "week_number",
-            "work_week"
+            "week_year",
+            "week_number"
         ]
     )
     .size()
     .reset_index(
         name="Cases"
     )
-    .sort_values(
-        "week_number"
+)
+
+
+# Make data types consistent for merge
+
+week_template["week_year"] = (
+    week_template["week_year"]
+    .astype(int)
+)
+
+
+week_template["week_number"] = (
+    week_template["week_number"]
+    .astype(int)
+)
+
+
+weekly_counts["week_year"] = (
+    weekly_counts["week_year"]
+    .astype(int)
+)
+
+
+weekly_counts["week_number"] = (
+    weekly_counts["week_number"]
+    .astype(int)
+)
+
+
+# Merge against 10-week template.
+# Any missing week becomes 0.
+
+weekly_data = (
+    week_template
+    .merge(
+        weekly_counts,
+
+        on=[
+            "week_year",
+            "week_number"
+        ],
+
+        how="left"
     )
 )
 
+
+weekly_data["Cases"] = (
+    weekly_data["Cases"]
+    .fillna(0)
+    .astype(int)
+)
+
+
+# ============================================================
+# WEEKLY TREND CHART
+# ============================================================
 
 weekly_chart = go.Figure()
 
@@ -927,7 +1020,7 @@ weekly_chart.add_trace(
 
 
 weekly_chart.update_layout(
-    title="● WEEKLY FINDING TREND",
+    title="● WEEKLY FINDING TREND — LATEST 10 WEEKS",
 
     height=315,
 
@@ -949,12 +1042,19 @@ weekly_chart.update_layout(
     ),
 
     xaxis=dict(
-        gridcolor="#334155"
+        gridcolor="#334155",
+
+        categoryorder="array",
+
+        categoryarray=weekly_data[
+            "work_week"
+        ].tolist()
     ),
 
     yaxis=dict(
         gridcolor="#475569",
-        rangemode="tozero"
+        rangemode="tozero",
+        dtick=1
     )
 )
 
@@ -977,7 +1077,7 @@ with row2_col1:
 
 
 # ============================================================
-# FINDINGS BY AREA
+# FINDINGS BY AREA — OVERALL
 # ============================================================
 
 area_order = [
@@ -1037,7 +1137,7 @@ area_chart.add_trace(
 
 
 area_chart.update_layout(
-    title="● FINDINGS BY AREA",
+    title="● FINDINGS BY AREA — OVERALL",
 
     height=315,
 
@@ -1048,7 +1148,8 @@ area_chart.update_layout(
 
     xaxis=dict(
         gridcolor="#475569",
-        rangemode="tozero"
+        rangemode="tozero",
+        dtick=1
     ),
 
     yaxis=dict(

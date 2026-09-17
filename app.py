@@ -49,7 +49,6 @@ AREA_COLORS = {
     "EOL": ORANGE
 }
 
-
 SHIFT_COLORS = {
     "A": CYAN,
     "B": BLUE,
@@ -57,12 +56,10 @@ SHIFT_COLORS = {
     "D": PURPLE
 }
 
-
 TIME_COLORS = {
     "DAY": ORANGE,
     "NIGHT": "#475569"
 }
-
 
 CATEGORY_COLORS = {
     "Method / Handling": CYAN,
@@ -87,7 +84,7 @@ st.markdown(
 
     .block-container {{
         max-width: 1800px;
-        padding-top: 1rem;
+        padding-top: 1.5rem !important;
         padding-left: 2rem;
         padding-right: 2rem;
         padding-bottom: 2rem;
@@ -96,7 +93,12 @@ st.markdown(
     h1 {{
         color: {TEXT};
         font-size: 28px !important;
+        line-height: 1.35 !important;
+        margin-top: 0 !important;
         margin-bottom: 0 !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        overflow: visible !important;
     }}
 
     h2, h3 {{
@@ -213,7 +215,6 @@ def load_findings():
 
 
 try:
-
     df = load_findings()
 
 except Exception as e:
@@ -221,7 +222,6 @@ except Exception as e:
     st.error(
         f"Unable to load findings from Supabase: {e}"
     )
-
     st.stop()
 
 
@@ -279,7 +279,6 @@ if df.empty:
         "No findings recorded yet. "
         "Submit findings through the IPQC Finding Entry system."
     )
-
     st.stop()
 
 
@@ -292,7 +291,6 @@ df["finding_datetime_parsed"] = pd.to_datetime(
     format="%d-%b-%Y %H:%M:%S",
     errors="coerce"
 )
-
 
 df["status_clean"] = (
     df["status"]
@@ -316,7 +314,6 @@ df["shift_letter"] = (
     .str.strip()
 )
 
-
 df["shift_type"] = (
     df["shift"]
     .fillna("")
@@ -336,13 +333,11 @@ today = pd.Timestamp(
     current_time.date()
 )
 
-
 df["aging_days"] = (
     today
     -
     df["finding_datetime_parsed"].dt.normalize()
 ).dt.days
-
 
 df["aging_days"] = (
     df["aging_days"]
@@ -362,14 +357,12 @@ df["week_number"] = (
     .week
 )
 
-
 df["week_year"] = (
     df["finding_datetime_parsed"]
     .dt
     .isocalendar()
     .year
 )
-
 
 df["work_week"] = (
     "WW"
@@ -424,7 +417,6 @@ st.sidebar.title(
     "Dashboard Filters"
 )
 
-
 area_options = sorted(
     df["area"]
     .dropna()
@@ -432,13 +424,11 @@ area_options = sorted(
     .tolist()
 )
 
-
 selected_area = st.sidebar.multiselect(
     "Area",
     area_options,
     default=area_options
 )
-
 
 category_options = sorted(
     df["category_short"]
@@ -447,13 +437,11 @@ category_options = sorted(
     .tolist()
 )
 
-
 selected_category = st.sidebar.multiselect(
     "Category",
     category_options,
     default=category_options
 )
-
 
 shift_options = sorted(
     df["shift_letter"]
@@ -462,13 +450,11 @@ shift_options = sorted(
     .tolist()
 )
 
-
 selected_shift = st.sidebar.multiselect(
     "Shift",
     shift_options,
     default=shift_options
 )
-
 
 status_options = sorted(
     df["status_clean"]
@@ -476,7 +462,6 @@ status_options = sorted(
     .unique()
     .tolist()
 )
-
 
 selected_status = st.sidebar.multiselect(
     "Status",
@@ -505,7 +490,6 @@ if filtered_df.empty:
     st.warning(
         "No findings match the selected filters."
     )
-
     st.stop()
 
 
@@ -513,9 +497,7 @@ if filtered_df.empty:
 # TOTAL CASES
 # ============================================================
 
-total_cases = len(
-    filtered_df
-)
+total_cases = len(filtered_df)
 
 
 # ============================================================
@@ -555,16 +537,11 @@ def style_chart(fig):
 
 BOTTOM_LEGEND = dict(
     orientation="h",
-
     yanchor="top",
     y=-0.03,
-
     xanchor="center",
     x=0.5,
-
-    font=dict(
-        size=10
-    )
+    font=dict(size=10)
 )
 
 
@@ -599,7 +576,6 @@ total_chart = go.Figure(
     ]
 )
 
-
 total_chart.add_annotation(
     text=f"<b>{total_cases}</b>",
     x=0.5,
@@ -611,18 +587,13 @@ total_chart.add_annotation(
     )
 )
 
-
 total_chart.update_layout(
     title="● TOTAL CASES — OVERALL",
     showlegend=False,
     height=290
 )
 
-
-style_chart(
-    total_chart
-)
-
+style_chart(total_chart)
 
 with row1_col1:
 
@@ -644,7 +615,6 @@ shift_data = (
     .reset_index(name="Cases")
 )
 
-
 shift_chart = px.pie(
     shift_data,
     names="shift_letter",
@@ -653,7 +623,6 @@ shift_chart = px.pie(
     color="shift_letter",
     color_discrete_map=SHIFT_COLORS
 )
-
 
 shift_chart.update_traces(
     textinfo="none",
@@ -665,18 +634,13 @@ shift_chart.update_traces(
     )
 )
 
-
 shift_chart.update_layout(
     title="● SHIFT DISTRIBUTION (%) — OVERALL",
     height=290,
     legend=BOTTOM_LEGEND
 )
 
-
-style_chart(
-    shift_chart
-)
-
+style_chart(shift_chart)
 
 with row1_col2:
 
@@ -698,7 +662,6 @@ time_data = (
     .reset_index(name="Cases")
 )
 
-
 time_chart = px.pie(
     time_data,
     names="shift_type",
@@ -707,7 +670,6 @@ time_chart = px.pie(
     color="shift_type",
     color_discrete_map=TIME_COLORS
 )
-
 
 time_chart.update_traces(
     textinfo="none",
@@ -719,18 +681,13 @@ time_chart.update_traces(
     )
 )
 
-
 time_chart.update_layout(
     title="● TIME DISTRIBUTION (%) — OVERALL",
     height=290,
     legend=BOTTOM_LEGEND
 )
 
-
-style_chart(
-    time_chart
-)
-
+style_chart(time_chart)
 
 with row1_col3:
 
@@ -752,7 +709,6 @@ category_data = (
     .reset_index(name="Cases")
 )
 
-
 category_chart = px.pie(
     category_data,
     names="category_short",
@@ -760,7 +716,6 @@ category_chart = px.pie(
     color="category_short",
     color_discrete_map=CATEGORY_COLORS
 )
-
 
 category_chart.update_traces(
     textinfo="none",
@@ -771,7 +726,6 @@ category_chart.update_traces(
         "<extra></extra>"
     )
 )
-
 
 category_chart.update_layout(
     title="● FINDING CATEGORY (%) — OVERALL",
@@ -786,11 +740,7 @@ category_chart.update_layout(
     )
 )
 
-
-style_chart(
-    category_chart
-)
-
+style_chart(category_chart)
 
 with row1_col4:
 
@@ -811,11 +761,10 @@ row2_col1, row2_col2 = st.columns(
 
 
 # ============================================================
-# WEEKLY FINDING TREND — LATEST 10 ISO WEEKS
+# WEEKLY FINDING TREND
 # ============================================================
 
 current_date = current_time.date()
-
 
 current_week_monday = (
     current_date
@@ -825,9 +774,7 @@ current_week_monday = (
     )
 )
 
-
 latest_10_weeks = []
-
 
 for weeks_ago in range(9, -1, -1):
 
@@ -856,7 +803,6 @@ week_template = pd.DataFrame(
     latest_10_weeks
 )
 
-
 weekly_counts = (
     filtered_df
     .dropna(
@@ -877,30 +823,25 @@ weekly_counts = (
     )
 )
 
-
 week_template["week_year"] = (
     week_template["week_year"]
     .astype(int)
 )
-
 
 week_template["week_number"] = (
     week_template["week_number"]
     .astype(int)
 )
 
-
 weekly_counts["week_year"] = (
     weekly_counts["week_year"]
     .astype(int)
 )
 
-
 weekly_counts["week_number"] = (
     weekly_counts["week_number"]
     .astype(int)
 )
-
 
 weekly_data = (
     week_template
@@ -914,7 +855,6 @@ weekly_data = (
     )
 )
 
-
 weekly_data["Cases"] = (
     weekly_data["Cases"]
     .fillna(0)
@@ -922,12 +862,7 @@ weekly_data["Cases"] = (
 )
 
 
-# ============================================================
-# WEEKLY TREND CHART
-# ============================================================
-
 weekly_chart = go.Figure()
-
 
 weekly_chart.add_trace(
     go.Bar(
@@ -944,7 +879,6 @@ weekly_chart.add_trace(
         )
     )
 )
-
 
 weekly_chart.add_trace(
     go.Scatter(
@@ -966,7 +900,6 @@ weekly_chart.add_trace(
         )
     )
 )
-
 
 weekly_chart.update_layout(
     title="● WEEKLY FINDING TREND — LATEST 10 WEEKS",
@@ -995,11 +928,7 @@ weekly_chart.update_layout(
     )
 )
 
-
-style_chart(
-    weekly_chart
-)
-
+style_chart(weekly_chart)
 
 with row2_col1:
 
@@ -1021,7 +950,6 @@ area_order = [
     "EOL"
 ]
 
-
 area_data = (
     filtered_df
     .groupby("area")
@@ -1033,9 +961,7 @@ area_data = (
     .reset_index(name="Cases")
 )
 
-
 area_chart = go.Figure()
-
 
 area_chart.add_trace(
     go.Bar(
@@ -1062,7 +988,6 @@ area_chart.add_trace(
     )
 )
 
-
 area_chart.update_layout(
     title="● FINDINGS BY AREA — OVERALL",
     height=315,
@@ -1085,11 +1010,7 @@ area_chart.update_layout(
     )
 )
 
-
-style_chart(
-    area_chart
-)
-
+style_chart(area_chart)
 
 with row2_col2:
 
@@ -1103,16 +1024,7 @@ with row2_col2:
 # ============================================================
 # AI MANAGEMENT INSIGHTS
 #
-# IMPORTANT:
-# - Dashboard refresh DOES NOT call OpenAI
-# - Changing filters DOES NOT call OpenAI
-# - Only button click calls OpenAI
-# - Generated summary has NO TTL
-# ============================================================
-
-
-# ============================================================
-# SHARED AI SUMMARY STORE
+# OpenAI is called ONLY when the button is clicked.
 # ============================================================
 
 @st.cache_resource
@@ -1133,7 +1045,6 @@ ai_summary_store = (
 current_iso_year, current_iso_week, _ = (
     current_date.isocalendar()
 )
-
 
 current_work_week = (
     f"WW{current_iso_week:02d}"
@@ -1189,7 +1100,6 @@ current_total = len(
     current_week_df
 )
 
-
 current_open = len(
     current_week_df[
         current_week_df["status_clean"]
@@ -1197,14 +1107,12 @@ current_open = len(
     ]
 )
 
-
 current_closed = len(
     current_week_df[
         current_week_df["status_clean"]
         == "Closed"
     ]
 )
-
 
 current_area_counts = (
     current_week_df["area"]
@@ -1216,13 +1124,11 @@ current_area_counts = (
     .to_dict()
 )
 
-
 current_category_counts = (
     current_week_df["category_short"]
     .value_counts()
     .to_dict()
 )
-
 
 current_shift_counts = (
     current_week_df["shift_letter"]
@@ -1247,7 +1153,6 @@ AI_COLUMNS = [
     "status_clean"
 ]
 
-
 current_ai_df = current_week_df[
     [
         column
@@ -1255,7 +1160,6 @@ current_ai_df = current_week_df[
         if column in current_week_df.columns
     ]
 ].copy()
-
 
 current_records = (
     current_ai_df
@@ -1283,7 +1187,6 @@ HISTORY_COLUMNS = [
     "status_clean"
 ]
 
-
 historical_ai_df = (
     historical_df
     .sort_values(
@@ -1293,7 +1196,6 @@ historical_ai_df = (
     .head(150)
 )
 
-
 historical_ai_df = historical_ai_df[
     [
         column
@@ -1301,7 +1203,6 @@ historical_ai_df = historical_ai_df[
         if column in historical_ai_df.columns
     ]
 ].copy()
-
 
 historical_records = (
     historical_ai_df
@@ -1358,19 +1259,12 @@ payload_json = json.dumps(
 
 
 # ============================================================
-# GENERATE NEW AI SUMMARY
-#
-# NOT CACHED.
-# This function runs only when the button is clicked.
+# GENERATE AI SUMMARY
 # ============================================================
 
 def generate_new_ai_summary(
     data_payload
 ):
-
-    # Import OpenAI only when needed.
-    # This allows the rest of the dashboard to work
-    # without an API key.
 
     from openai import OpenAI
 
@@ -1379,7 +1273,6 @@ def generate_new_ai_summary(
             "OPENAI_API_KEY"
         ]
     )
-
 
     prompt = f"""
 You are supporting an IPQC management dashboard for a semiconductor
@@ -1398,48 +1291,32 @@ RULES:
 
 - Observation must summarize only findings from the current work week.
 - Highlight must summarize only findings from the current work week.
-
 - Historical findings are provided only to determine whether a similar
   issue occurred previously.
-
 - Do not summarize historical findings as current-week findings.
-
 - Do not invent root causes.
-
 - Do not invent corrective actions.
-
 - Do not invent past occurrences.
-
 - Do not consider two findings similar merely because they have the
   same broad category.
-
 - When identifying a similar historical occurrence, consider the
   finding description, issue mechanism, process, station and equipment.
-
 - If a reasonably similar historical occurrence exists, state the
   previous work week and relevant area/station.
-
 - If there is no reasonably similar historical occurrence, state:
   "No similar historical occurrence identified."
-
 - Recommendation must be practical for IPQC, Quality, Production
   or Process Engineering follow-up.
-
 - Recommendations may include verification, investigation,
   recurrence review, containment verification, corrective-action
   review or effectiveness verification.
-
 - Do not state that a previous corrective action failed unless the
   supplied records provide evidence for that conclusion.
-
 - Zero findings means only "No findings recorded".
   Do not interpret zero findings as proof of good compliance or
   process performance.
-
 - Use concise management-level wording.
-
 - Do not use markdown.
-
 - Return ONLY valid JSON.
 
 Return exactly this structure:
@@ -1456,19 +1333,10 @@ DATA:
 {data_payload}
 """
 
-
-    # Model can later be changed in Streamlit Secrets:
-    #
-    # OPENAI_MODEL = "your-model"
-    #
-    # If OPENAI_MODEL is not configured,
-    # the default below is used.
-
     model_name = st.secrets.get(
         "OPENAI_MODEL",
         "gpt-5.6-luna"
     )
-
 
     response = (
         client.responses.create(
@@ -1477,14 +1345,10 @@ DATA:
         )
     )
 
-
     output_text = (
         response.output_text
         .strip()
     )
-
-
-    # Remove accidental code fences
 
     if output_text.startswith("```"):
 
@@ -1501,7 +1365,6 @@ DATA:
             .strip()
         )
 
-
     return json.loads(
         output_text
     )
@@ -1514,7 +1377,6 @@ DATA:
 def safe_text(value):
 
     if value is None:
-
         return ""
 
     return html.escape(
@@ -1531,13 +1393,11 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
 ai_header_col1, ai_header_col2 = (
     st.columns(
         [4, 1]
     )
 )
-
 
 with ai_header_col1:
 
@@ -1567,15 +1427,9 @@ with ai_header_col2:
 
 # ============================================================
 # GENERATE BUTTON
-#
-# OPENAI IS CALLED ONLY HERE
 # ============================================================
 
 if generate_ai:
-
-    # --------------------------------------------------------
-    # NO FINDINGS
-    # --------------------------------------------------------
 
     if current_total == 0:
 
@@ -1584,11 +1438,6 @@ if generate_ai:
             f"{current_work_week}. "
             "AI summary was not generated."
         )
-
-
-    # --------------------------------------------------------
-    # NO API KEY
-    # --------------------------------------------------------
 
     elif (
         "OPENAI_API_KEY"
@@ -1601,11 +1450,6 @@ if generate_ai:
             "Streamlit Secrets when you "
             "want to generate an AI summary."
         )
-
-
-    # --------------------------------------------------------
-    # GENERATE
-    # --------------------------------------------------------
 
     else:
 
@@ -1623,20 +1467,13 @@ if generate_ai:
                     )
                 )
 
-
-                # ============================================
-                # REPLACE PREVIOUS SUMMARY
-                # ============================================
-
                 ai_summary_store[
                     "summary"
                 ] = new_summary
 
-
                 ai_summary_store[
                     "work_week"
                 ] = current_work_week
-
 
                 ai_summary_store[
                     "generated_at"
@@ -1651,12 +1488,10 @@ if generate_ai:
                     )
                 )
 
-
             st.success(
                 f"{current_work_week} "
                 "AI summary generated."
             )
-
 
         except Exception as e:
 
@@ -1680,13 +1515,11 @@ cached_summary = (
     )
 )
 
-
 cached_week = (
     ai_summary_store.get(
         "work_week"
     )
 )
-
 
 generated_at = (
     ai_summary_store.get(
@@ -1697,8 +1530,6 @@ generated_at = (
 
 # ============================================================
 # DEFAULT SENTENCES
-#
-# These are shown when AI has NOT been generated.
 # ============================================================
 
 if (
@@ -1713,7 +1544,6 @@ if (
         "for the selected scope."
     )
 
-
     past_occurrence = (
         "AI summary has not been generated. "
         "Generate the summary to compare "
@@ -1721,13 +1551,11 @@ if (
         "occurrences."
     )
 
-
     recommendation = (
         "Continue IPQC monitoring and "
         "follow up on the current "
         "open findings."
     )
-
 
     highlight = (
         f"Current {current_work_week}: "
@@ -1735,7 +1563,6 @@ if (
         f"{current_open} open and "
         f"{current_closed} closed."
     )
-
 
     showing_ai = False
 
@@ -1753,14 +1580,12 @@ else:
         )
     )
 
-
     past_occurrence = (
         cached_summary.get(
             "past_occurrence",
             ""
         )
     )
-
 
     recommendation = (
         cached_summary.get(
@@ -1769,14 +1594,12 @@ else:
         )
     )
 
-
     highlight = (
         cached_summary.get(
             "highlight",
             ""
         )
     )
-
 
     showing_ai = True
 

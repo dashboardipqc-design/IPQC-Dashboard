@@ -49,6 +49,7 @@ AREA_COLORS = {
     "EOL": ORANGE
 }
 
+
 SHIFT_COLORS = {
     "A": CYAN,
     "B": BLUE,
@@ -56,18 +57,20 @@ SHIFT_COLORS = {
     "D": PURPLE
 }
 
+
 TIME_COLORS = {
     "DAY": ORANGE,
-    "NIGHT": DARK_RING
+    "NIGHT": "#475569"
 }
 
-CATEGORY_COLORS = [
-    RED,
-    ORANGE,
-    CYAN,
-    PURPLE,
-    GREEN
-]
+
+CATEGORY_COLORS = {
+    "Method / Handling": CYAN,
+    "Machine / Facility": RED,
+    "Material / Product": ORANGE,
+    "Document / Record": PURPLE,
+    "Personnel Compliance": GREEN
+}
 
 
 # ============================================================
@@ -317,6 +320,44 @@ df["work_week"] = (
 
 
 # ============================================================
+# SHORT CATEGORY NAME
+#
+# Database value remains unchanged.
+# This is only used for dashboard display.
+# ============================================================
+
+def shorten_category(category):
+
+    if pd.isna(category):
+        return "Unknown"
+
+    category = str(category).strip()
+
+    if "Method / Handling" in category:
+        return "Method / Handling"
+
+    elif "Machine / Facility" in category:
+        return "Machine / Facility"
+
+    elif "Material / Product" in category:
+        return "Material / Product"
+
+    elif "Document / Record" in category:
+        return "Document / Record"
+
+    elif "Personnel Compliance" in category:
+        return "Personnel Compliance"
+
+    return category
+
+
+df["category_short"] = (
+    df["category"]
+    .apply(shorten_category)
+)
+
+
+# ============================================================
 # SIDEBAR FILTERS
 # ============================================================
 
@@ -345,7 +386,7 @@ selected_area = st.sidebar.multiselect(
 # CATEGORY FILTER
 
 category_options = sorted(
-    df["category"]
+    df["category_short"]
     .dropna()
     .unique()
     .tolist()
@@ -400,7 +441,7 @@ selected_status = st.sidebar.multiselect(
 filtered_df = df[
     df["area"].isin(selected_area)
     &
-    df["category"].isin(selected_category)
+    df["category_short"].isin(selected_category)
     &
     df["shift_letter"].isin(selected_shift)
     &
@@ -454,11 +495,30 @@ def style_chart(fig):
             l=35,
             r=25,
             t=55,
-            b=35
+            b=55
         )
     )
 
     return fig
+
+
+# ============================================================
+# COMMON BOTTOM LEGEND
+# ============================================================
+
+BOTTOM_LEGEND = dict(
+    orientation="h",
+
+    yanchor="top",
+    y=-0.03,
+
+    xanchor="center",
+    x=0.5,
+
+    font=dict(
+        size=10
+    )
+)
 
 
 # ============================================================
@@ -476,14 +536,18 @@ row1_col1, row1_col2, row1_col3, row1_col4 = st.columns(
 
 
 # ============================================================
-# TOTAL CASES DONUT
+# TOTAL CASES
 # ============================================================
 
 total_chart = go.Figure(
     data=[
         go.Pie(
             values=[total_cases],
-            labels=["Total Cases"],
+
+            labels=[
+                "Total Cases"
+            ],
+
             hole=0.67,
 
             marker=dict(
@@ -503,6 +567,7 @@ total_chart = go.Figure(
 
 total_chart.add_annotation(
     text=f"<b>{total_cases}</b>",
+
     x=0.5,
     y=0.5,
 
@@ -517,8 +582,10 @@ total_chart.add_annotation(
 
 total_chart.update_layout(
     title="● TOTAL CASES",
+
     showlegend=False,
-    height=250
+
+    height=290
 )
 
 
@@ -532,6 +599,7 @@ with row1_col1:
     st.plotly_chart(
         total_chart,
         use_container_width=True,
+
         config={
             "displayModeBar": False
         }
@@ -580,21 +648,9 @@ shift_chart.update_traces(
 shift_chart.update_layout(
     title="● SHIFT DISTRIBUTION (%)",
 
-    height=250,
+    height=290,
 
-    legend=dict(
-        orientation="v",
-
-        yanchor="middle",
-        y=0.5,
-
-        xanchor="left",
-        x=0.78,
-
-        font=dict(
-            size=10
-        )
-    )
+    legend=BOTTOM_LEGEND
 )
 
 
@@ -608,6 +664,7 @@ with row1_col2:
     st.plotly_chart(
         shift_chart,
         use_container_width=True,
+
         config={
             "displayModeBar": False
         }
@@ -656,21 +713,9 @@ time_chart.update_traces(
 time_chart.update_layout(
     title="● TIME DISTRIBUTION (%)",
 
-    height=250,
+    height=290,
 
-    legend=dict(
-        orientation="v",
-
-        yanchor="middle",
-        y=0.5,
-
-        xanchor="left",
-        x=0.78,
-
-        font=dict(
-            size=10
-        )
-    )
+    legend=BOTTOM_LEGEND
 )
 
 
@@ -684,6 +729,7 @@ with row1_col3:
     st.plotly_chart(
         time_chart,
         use_container_width=True,
+
         config={
             "displayModeBar": False
         }
@@ -696,7 +742,7 @@ with row1_col3:
 
 category_data = (
     filtered_df
-    .groupby("category")
+    .groupby("category_short")
     .size()
     .reset_index(
         name="Cases"
@@ -707,10 +753,12 @@ category_data = (
 category_chart = px.pie(
     category_data,
 
-    names="category",
+    names="category_short",
     values="Cases",
 
-    color_discrete_sequence=CATEGORY_COLORS
+    color="category_short",
+
+    color_discrete_map=CATEGORY_COLORS
 )
 
 
@@ -729,16 +777,16 @@ category_chart.update_traces(
 category_chart.update_layout(
     title="● FINDING CATEGORY (%)",
 
-    height=250,
+    height=290,
 
     legend=dict(
-        orientation="v",
+        orientation="h",
 
-        yanchor="middle",
-        y=0.5,
+        yanchor="top",
+        y=-0.03,
 
-        xanchor="left",
-        x=0.68,
+        xanchor="center",
+        x=0.5,
 
         font=dict(
             size=9
@@ -757,6 +805,7 @@ with row1_col4:
     st.plotly_chart(
         category_chart,
         use_container_width=True,
+
         config={
             "displayModeBar": False
         }
@@ -815,6 +864,7 @@ weekly_chart.add_trace(
         marker_color=ORANGE,
 
         text=weekly_data["Cases"],
+
         textposition="outside",
 
         hovertemplate=(
@@ -870,7 +920,11 @@ weekly_chart.update_layout(
         y=1.01,
 
         xanchor="center",
-        x=0.55
+        x=0.55,
+
+        font=dict(
+            size=10
+        )
     ),
 
     xaxis=dict(
@@ -894,6 +948,7 @@ with row2_col1:
     st.plotly_chart(
         weekly_chart,
         use_container_width=True,
+
         config={
             "displayModeBar": False
         }
@@ -948,6 +1003,7 @@ area_chart.add_trace(
         ),
 
         text=area_data["Cases"],
+
         textposition="outside",
 
         hovertemplate=(
@@ -997,6 +1053,7 @@ with row2_col2:
     st.plotly_chart(
         area_chart,
         use_container_width=True,
+
         config={
             "displayModeBar": False
         }

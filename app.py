@@ -249,7 +249,7 @@ with header1:
     )
 
     st.caption(
-        "Finding Trend • Gap Monitoring • Closure Tracking"
+        "Total Summary"
     )
 
 
@@ -1877,8 +1877,8 @@ if (
 ):
 
     st.caption(
-        f"AI summary generated: "
+        f"Summary generated: "
         f"{generated_at} • "
         "Dashboard refresh does not "
-        "regenerate the AI summary."
+        "regenerate the summary."
     )

@@ -18,6 +18,50 @@ st.set_page_config(
 
 
 # ============================================================
+# DASHBOARD COLOR PALETTE
+# ============================================================
+
+COLORS = {
+    "cyan": "#22D3EE",
+    "blue": "#6366F1",
+    "purple": "#A78BFA",
+    "teal": "#14B8A6",
+    "green": "#22C55E",
+    "orange": "#F59E0B",
+    "red": "#EF4444",
+    "pink": "#EC4899"
+}
+
+AREA_COLORS = {
+    "DP": "#22D3EE",
+    "FOL": "#6366F1",
+    "MOL": "#14B8A6",
+    "EOL": "#F59E0B"
+}
+
+SHIFT_COLORS = {
+    "A": "#22D3EE",
+    "B": "#6366F1",
+    "C": "#14B8A6",
+    "D": "#A78BFA"
+}
+
+CATEGORY_COLORS = [
+    "#22D3EE",
+    "#6366F1",
+    "#F59E0B",
+    "#EF4444",
+    "#A78BFA"
+]
+
+AGING_COLORS = {
+    "0-3 Days": "#22C55E",
+    "4-7 Days": "#F59E0B",
+    ">7 Days": "#EF4444"
+}
+
+
+# ============================================================
 # CUSTOM CSS
 # ============================================================
 
@@ -161,16 +205,15 @@ df["status_clean"] = (
 )
 
 
-# ------------------------------------------------------------
-# Shift separation
-#
+# ============================================================
+# SHIFT SEPARATION
+# ============================================================
+
 # Example:
 # B - DAY
 #
-# becomes:
 # Shift = B
 # Time = DAY
-# ------------------------------------------------------------
 
 df["shift_letter"] = (
     df["shift"]
@@ -198,7 +241,8 @@ today = pd.Timestamp(
 )
 
 df["aging_days"] = (
-    today -
+    today
+    -
     df["finding_datetime_parsed"].dt.normalize()
 ).dt.days
 
@@ -236,9 +280,9 @@ st.sidebar.header(
 )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # AREA FILTER
-# ------------------------------------------------------------
+# ============================================================
 
 area_options = sorted(
     df["area"]
@@ -254,9 +298,9 @@ selected_area = st.sidebar.multiselect(
 )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # CATEGORY FILTER
-# ------------------------------------------------------------
+# ============================================================
 
 category_options = sorted(
     df["category"]
@@ -272,9 +316,9 @@ selected_category = st.sidebar.multiselect(
 )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # SHIFT FILTER
-# ------------------------------------------------------------
+# ============================================================
 
 shift_options = sorted(
     df["shift_letter"]
@@ -290,9 +334,9 @@ selected_shift = st.sidebar.multiselect(
 )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # STATUS FILTER
-# ------------------------------------------------------------
+# ============================================================
 
 status_options = sorted(
     df["status_clean"]
@@ -484,6 +528,7 @@ weekly_chart = px.bar(
 )
 
 weekly_chart.update_traces(
+    marker_color=COLORS["cyan"],
     textposition="outside"
 )
 
@@ -496,7 +541,8 @@ weekly_chart.update_layout(
         b=20
     ),
     xaxis_title="Work Week",
-    yaxis_title="Number of Findings"
+    yaxis_title="Number of Findings",
+    showlegend=False
 )
 
 
@@ -524,6 +570,8 @@ area_chart = px.bar(
     y="area",
     orientation="h",
     text="Findings",
+    color="area",
+    color_discrete_map=AREA_COLORS,
     title="Findings by Area"
 )
 
@@ -540,7 +588,8 @@ area_chart.update_layout(
         b=20
     ),
     xaxis_title="Number of Findings",
-    yaxis_title=""
+    yaxis_title="",
+    showlegend=False
 )
 
 
@@ -588,7 +637,13 @@ category_chart = px.pie(
     names="category",
     values="Findings",
     hole=0.55,
-    title="Findings by Category"
+    title="Findings by Category",
+    color_discrete_sequence=CATEGORY_COLORS
+)
+
+category_chart.update_traces(
+    textposition="inside",
+    textinfo="percent"
 )
 
 category_chart.update_layout(
@@ -621,7 +676,14 @@ shift_chart = px.pie(
     names="shift_letter",
     values="Findings",
     hole=0.55,
-    title="Findings by Shift"
+    title="Findings by Shift",
+    color="shift_letter",
+    color_discrete_map=SHIFT_COLORS
+)
+
+shift_chart.update_traces(
+    textposition="inside",
+    textinfo="label+percent"
 )
 
 shift_chart.update_layout(
@@ -681,6 +743,8 @@ aging_chart = px.bar(
     x="aging_group",
     y="Findings",
     text="Findings",
+    color="aging_group",
+    color_discrete_map=AGING_COLORS,
     title="Open Finding Aging"
 )
 
@@ -697,7 +761,8 @@ aging_chart.update_layout(
         b=20
     ),
     xaxis_title="Aging",
-    yaxis_title="Open Findings"
+    yaxis_title="Open Findings",
+    showlegend=False
 )
 
 
@@ -770,6 +835,7 @@ else:
         "status_clean"
     ]
 
+
     display_columns = [
         column
         for column in display_columns
@@ -790,15 +856,20 @@ else:
                 "id": "ID",
                 "finding_datetime":
                     "Finding Date & Time",
-                "area": "Area",
-                "station": "Station",
+                "area":
+                    "Area",
+                "station":
+                    "Station",
                 "equipment_id":
                     "Equipment ID",
-                "category": "Category",
+                "category":
+                    "Category",
                 "finding_description":
                     "Finding Description",
-                "auditee": "Auditee",
-                "auditor": "Auditor",
+                "auditee":
+                    "Auditee",
+                "auditor":
+                    "Auditor",
                 "aging_days":
                     "Aging (Days)",
                 "status_clean":

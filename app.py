@@ -121,12 +121,22 @@ st.markdown(
         gap: 0.8rem;
     }}
 
+    /* Make both management insight columns stretch equally */
+    div[data-testid="stHorizontalBlock"] {{
+        align-items: stretch;
+    }}
+
+    div[data-testid="column"] > div {{
+        height: 100%;
+    }}
+
     .ai-card {{
         background: {CARD};
         border: 1px solid {BORDER};
         border-radius: 12px;
         padding: 20px 22px;
         min-height: 340px;
+        height: 100%;
         box-sizing: border-box;
     }}
 
@@ -1837,6 +1847,11 @@ if (
     and
     generated_at
 ):
+
+    st.markdown(
+        "<div style='height: 14px;'></div>",
+        unsafe_allow_html=True
+    )
 
     st.caption(
         f"Summary generated: "

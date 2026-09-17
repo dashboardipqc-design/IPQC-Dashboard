@@ -12,7 +12,7 @@ from supabase import create_client
 # ============================================================
 
 st.set_page_config(
-    page_title="IPQC Quality Indicators",
+    page_title="IPQC Finding Monitoring Dashboard",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -20,275 +20,174 @@ st.set_page_config(
 
 
 # ============================================================
-# COLOR PALETTE
+# COLORS
 # ============================================================
 
-BG_COLOR = "#080D16"
-CARD_COLOR = "#111A2B"
-CARD_BORDER = "#293B5A"
-TEXT_COLOR = "#F4F7FB"
-MUTED_TEXT = "#9FB0CC"
-GRID_COLOR = "#344157"
+BG = "#090E17"
+CARD = "#111B2D"
+BORDER = "#2A3C59"
 
-CYAN = "#28C6E5"
-GREEN = "#20D26B"
-ORANGE = "#FFA20B"
-RED = "#FF4747"
-PURPLE = "#9A7CF4"
-BLUE = "#5D64EE"
-TEAL = "#087D9B"
-DARK_BLUE = "#1C2739"
+TEXT = "#F1F5F9"
+MUTED = "#9FB0CA"
+
+CYAN = "#22D3EE"
+BLUE = "#6366F1"
+PURPLE = "#9B7BF3"
+TEAL = "#1489A8"
+
+GREEN = "#22C55E"
+ORANGE = "#F59E0B"
+RED = "#EF4444"
+PINK = "#EC4899"
+
+DARK_RING = "#1E293B"
+
 
 AREA_COLORS = {
-    "DP": "#21D4E8",
-    "FOL": "#5964F2",
-    "MOL": "#15BFA5",
-    "EOL": "#FFA20B"
+    "DP": CYAN,
+    "FOL": BLUE,
+    "MOL": PURPLE,
+    "EOL": ORANGE
 }
 
 SHIFT_COLORS = {
-    "A": "#28C6E5",
-    "B": "#5D64EE",
-    "C": "#087D9B",
-    "D": "#9A7CF4"
+    "A": CYAN,
+    "B": BLUE,
+    "C": TEAL,
+    "D": PURPLE
 }
 
 TIME_COLORS = {
-    "DAY": "#FFA20B",
-    "NIGHT": "#1C2739"
+    "DAY": ORANGE,
+    "NIGHT": DARK_RING
 }
 
 CATEGORY_COLORS = [
-    "#28C6E5",
-    "#FF4747",
-    "#FFA20B",
-    "#9A7CF4",
-    "#15BFA5"
+    RED,
+    ORANGE,
+    CYAN,
+    PURPLE,
+    GREEN
 ]
 
 
 # ============================================================
-# CUSTOM CSS
+# CSS
 # ============================================================
 
 st.markdown(
-    """
+    f"""
     <style>
 
-    /* ======================================================
-       MAIN PAGE
-       ====================================================== */
+    .stApp {{
+        background-color: {BG};
+    }}
 
-    .stApp {
-        background-color: #080D16;
-    }
-
-    .block-container {
+    .block-container {{
         max-width: 1800px;
-        padding-top: 1rem;
-        padding-left: 2.5rem;
-        padding-right: 2.5rem;
+        padding-top: 1.0rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
         padding-bottom: 2rem;
-    }
+    }}
 
-    header[data-testid="stHeader"] {
-        background-color: transparent;
-    }
+    h1 {{
+        color: {TEXT};
+        font-size: 28px !important;
+        margin-bottom: 0 !important;
+    }}
 
+    h2, h3 {{
+        color: {TEXT};
+    }}
 
-    /* ======================================================
-       DASHBOARD HEADER
-       ====================================================== */
+    p {{
+        color: {MUTED};
+    }}
 
-    .dashboard-header {
-        background:
-            linear-gradient(
-                110deg,
-                #F5F5F5 0%,
-                #F5F5F5 68%,
-                #E7E7E7 68%,
-                #B80000 100%
-            );
-
-        padding: 20px 28px;
-        border-bottom: 3px solid #D71920;
-        margin-bottom: 22px;
-    }
-
-    .dashboard-title {
-        color: #050505;
-        font-size: 34px;
-        font-weight: 800;
-        letter-spacing: 0.5px;
-        margin: 0;
-    }
-
-
-    /* ======================================================
-       SECTION / CARD TITLE
-       ====================================================== */
-
-    .card-title {
-        font-size: 14px;
-        font-weight: 800;
-        letter-spacing: 1.5px;
-        color: #9FB0CC;
-        margin-bottom: 5px;
-    }
-
-    .cyan-dot {
-        color: #28C6E5;
-    }
-
-    .green-dot {
-        color: #20D26B;
-    }
-
-    .orange-dot {
-        color: #FFA20B;
-    }
-
-    .purple-dot {
-        color: #9A7CF4;
-    }
-
-    .red-dot {
-        color: #FF4747;
-    }
-
-
-    /* ======================================================
-       TOTAL CASE CARD
-       ====================================================== */
-
-    .total-card {
-        background-color: #111A2B;
-        border: 1px solid #293B5A;
-        border-radius: 12px;
-        height: 330px;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-
-    .total-case-number {
-        text-align: center;
-        color: #28C6E5;
-        font-size: 72px;
-        font-weight: 800;
-        margin-top: 65px;
-        line-height: 1;
-    }
-
-    .total-case-label {
-        text-align: center;
-        color: #9FB0CC;
-        font-size: 13px;
-        margin-top: 15px;
-        letter-spacing: 1px;
-    }
-
-
-    /* ======================================================
-       BOTTOM CARDS
-       ====================================================== */
-
-    .bottom-card {
-        background-color: #111A2B;
-        border: 1px solid #293B5A;
-        border-radius: 12px;
-        min-height: 260px;
-        padding: 18px 20px;
-        box-sizing: border-box;
-    }
-
-    .summary-big {
-        color: #F4F7FB;
-        font-size: 42px;
-        font-weight: 800;
-        line-height: 1;
-    }
-
-    .summary-label {
-        color: #9FB0CC;
-        font-size: 13px;
-        margin-bottom: 17px;
-    }
-
-    .summary-open {
-        color: #FFA20B;
-        font-size: 25px;
-        font-weight: 800;
-    }
-
-    .summary-closed {
-        color: #20D26B;
-        font-size: 25px;
-        font-weight: 800;
-    }
-
-    .summary-rate {
-        color: #28C6E5;
-        font-size: 25px;
-        font-weight: 800;
-    }
-
-
-    /* ======================================================
-       OBSERVATION
-       ====================================================== */
-
-    .observation-box {
-        background-color: #321719;
-        border: 1px solid #853033;
-        color: #FF4747;
-        padding: 12px 15px;
-        border-radius: 8px;
-        font-weight: 700;
-        margin-top: 10px;
-        margin-bottom: 15px;
-    }
-
-
-    /* ======================================================
-       HIGHLIGHT
-       ====================================================== */
-
-    .highlight-box {
-        background-color: #10291C;
-        border: 1px solid #23663C;
-        color: #20D26B;
-        padding: 12px 15px;
-        border-radius: 8px;
-        font-weight: 700;
-        margin-top: 10px;
-        margin-bottom: 15px;
-    }
-
-
-    /* ======================================================
-       GENERAL TEXT
-       ====================================================== */
-
-    p, span, label {
-        color: #DCE5F3;
-    }
-
-    div[data-testid="stDataFrame"] {
-        border: 1px solid #293B5A;
-        border-radius: 10px;
-    }
-
-
-    /* ======================================================
-       PLOTLY CONTAINER
-       ====================================================== */
-
-    div[data-testid="stPlotlyChart"] {
-        background-color: #111A2B;
-        border: 1px solid #293B5A;
+    /* Remove Streamlit chart spacing */
+    div[data-testid="stPlotlyChart"] {{
+        background: {CARD};
+        border: 1px solid {BORDER};
         border-radius: 12px;
         overflow: hidden;
-    }
+    }}
+
+    /* Bottom dashboard cards */
+    .dashboard-card {{
+        background: {CARD};
+        border: 1px solid {BORDER};
+        border-radius: 12px;
+        padding: 18px 20px;
+        height: 210px;
+        box-sizing: border-box;
+    }}
+
+    .card-title {{
+        color: {MUTED};
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        margin-bottom: 8px;
+    }}
+
+    .summary-number {{
+        color: {TEXT};
+        font-size: 44px;
+        font-weight: 700;
+        line-height: 1;
+    }}
+
+    .summary-label {{
+        color: {MUTED};
+        font-size: 13px;
+        margin-top: 6px;
+    }}
+
+    .summary-secondary {{
+        color: {ORANGE};
+        font-size: 30px;
+        font-weight: 700;
+        margin-top: 15px;
+    }}
+
+    .observation-box {{
+        background: rgba(239, 68, 68, 0.10);
+        border: 1px solid rgba(239, 68, 68, 0.50);
+        border-radius: 7px;
+        padding: 11px 14px;
+        color: {RED};
+        font-weight: 700;
+        margin-top: 10px;
+        margin-bottom: 14px;
+    }}
+
+    .highlight-box {{
+        background: rgba(34, 197, 94, 0.10);
+        border: 1px solid rgba(34, 197, 94, 0.45);
+        border-radius: 7px;
+        padding: 11px 14px;
+        color: {GREEN};
+        font-weight: 700;
+        margin-top: 10px;
+        margin-bottom: 14px;
+    }}
+
+    .detail-text {{
+        color: {MUTED};
+        font-size: 14px;
+        line-height: 1.5;
+    }}
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {{
+        background-color: {CARD};
+    }}
+
+    /* Reduce vertical gaps */
+    div[data-testid="stVerticalBlock"] {{
+        gap: 0.8rem;
+    }}
 
     </style>
     """,
@@ -297,12 +196,11 @@ st.markdown(
 
 
 # ============================================================
-# SUPABASE CONNECTION
+# SUPABASE
 # ============================================================
 
 @st.cache_resource
 def init_supabase():
-
     return create_client(
         st.secrets["SUPABASE_URL"],
         st.secrets["SUPABASE_KEY"]
@@ -311,10 +209,6 @@ def init_supabase():
 
 supabase = init_supabase()
 
-
-# ============================================================
-# LOAD FINDINGS
-# ============================================================
 
 @st.cache_data(ttl=60)
 def load_findings():
@@ -330,7 +224,6 @@ def load_findings():
 
 
 try:
-
     df = load_findings()
 
 except Exception as e:
@@ -343,34 +236,45 @@ except Exception as e:
 
 
 # ============================================================
-# CURRENT MALAYSIA TIME
+# HEADER
 # ============================================================
 
 current_time = datetime.now(
     ZoneInfo("Asia/Kuala_Lumpur")
 )
 
-current_week = current_time.isocalendar().week
-
-current_year_short = str(current_time.year)[-2:]
-
-
-# ============================================================
-# DASHBOARD HEADER
-# ============================================================
-
-st.markdown(
-    f"""
-    <div class="dashboard-header">
-
-        <div class="dashboard-title">
-            QUALITY INDICATORS : IPQC WW{current_week}’{current_year_short}
-        </div>
-
-    </div>
-    """,
-    unsafe_allow_html=True
+header1, header2 = st.columns(
+    [4, 1]
 )
+
+with header1:
+
+    st.title(
+        "IPQC Finding Monitoring Dashboard"
+    )
+
+    st.caption(
+        "Finding Trend • Gap Monitoring • Closure Tracking"
+    )
+
+with header2:
+
+    st.markdown(
+        f"""
+        <div style="
+            text-align:right;
+            color:{MUTED};
+            font-size:13px;
+            padding-top:10px;
+        ">
+            Last Updated<br>
+            <b style="color:{TEXT};">
+            {current_time.strftime("%d-%b-%Y %H:%M")}
+            </b>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 # ============================================================
@@ -407,10 +311,6 @@ df["status_clean"] = (
 )
 
 
-# ============================================================
-# SHIFT A/B/C/D
-# ============================================================
-
 df["shift_letter"] = (
     df["shift"]
     .fillna("")
@@ -421,10 +321,6 @@ df["shift_letter"] = (
 )
 
 
-# ============================================================
-# DAY / NIGHT
-# ============================================================
-
 df["shift_type"] = (
     df["shift"]
     .fillna("")
@@ -433,6 +329,28 @@ df["shift_type"] = (
     .str[-1]
     .str.strip()
     .str.upper()
+)
+
+
+# ============================================================
+# AGING
+# ============================================================
+
+today = pd.Timestamp(
+    current_time.date()
+)
+
+df["aging_days"] = (
+    today
+    -
+    df["finding_datetime_parsed"].dt.normalize()
+).dt.days
+
+
+df["aging_days"] = (
+    df["aging_days"]
+    .fillna(0)
+    .clip(lower=0)
 )
 
 
@@ -450,31 +368,7 @@ df["week_number"] = (
 df["work_week"] = (
     "WW"
     +
-    df["week_number"]
-    .astype(str)
-)
-
-
-# ============================================================
-# AGING
-# ============================================================
-
-today = pd.Timestamp(
-    current_time.date()
-)
-
-df["aging_days"] = (
-    today
-    -
-    df["finding_datetime_parsed"]
-    .dt
-    .normalize()
-).dt.days
-
-df["aging_days"] = (
-    df["aging_days"]
-    .fillna(0)
-    .clip(lower=0)
+    df["week_number"].astype(str)
 )
 
 
@@ -487,9 +381,7 @@ st.sidebar.title(
 )
 
 
-# ------------------------------------------------------------
 # AREA
-# ------------------------------------------------------------
 
 area_options = sorted(
     df["area"]
@@ -505,9 +397,7 @@ selected_area = st.sidebar.multiselect(
 )
 
 
-# ------------------------------------------------------------
 # CATEGORY
-# ------------------------------------------------------------
 
 category_options = sorted(
     df["category"]
@@ -523,9 +413,7 @@ selected_category = st.sidebar.multiselect(
 )
 
 
-# ------------------------------------------------------------
 # SHIFT
-# ------------------------------------------------------------
 
 shift_options = sorted(
     df["shift_letter"]
@@ -541,27 +429,7 @@ selected_shift = st.sidebar.multiselect(
 )
 
 
-# ------------------------------------------------------------
-# DAY / NIGHT
-# ------------------------------------------------------------
-
-time_options = sorted(
-    df["shift_type"]
-    .dropna()
-    .unique()
-    .tolist()
-)
-
-selected_time = st.sidebar.multiselect(
-    "Day / Night",
-    time_options,
-    default=time_options
-)
-
-
-# ------------------------------------------------------------
 # STATUS
-# ------------------------------------------------------------
 
 status_options = sorted(
     df["status_clean"]
@@ -578,7 +446,7 @@ selected_status = st.sidebar.multiselect(
 
 
 # ============================================================
-# APPLY FILTERS
+# FILTER DATA
 # ============================================================
 
 filtered_df = df[
@@ -587,8 +455,6 @@ filtered_df = df[
     df["category"].isin(selected_category)
     &
     df["shift_letter"].isin(selected_shift)
-    &
-    df["shift_type"].isin(selected_time)
     &
     df["status_clean"].isin(selected_status)
 ].copy()
@@ -604,44 +470,26 @@ if filtered_df.empty:
 
 
 # ============================================================
-# KPI CALCULATIONS
+# KPI VALUES
 # ============================================================
 
-total_findings = len(
+total_cases = len(
     filtered_df
 )
 
-
-open_findings = len(
+open_cases = len(
     filtered_df[
         filtered_df["status_clean"] == "Open"
     ]
 )
 
-
-closed_findings = len(
+closed_cases = len(
     filtered_df[
         filtered_df["status_clean"] == "Closed"
     ]
 )
 
-
-if total_findings > 0:
-
-    closure_rate = (
-        closed_findings
-        /
-        total_findings
-        *
-        100
-    )
-
-else:
-
-    closure_rate = 0
-
-
-overdue_findings = len(
+overdue_cases = len(
     filtered_df[
         (filtered_df["status_clean"] == "Open")
         &
@@ -650,43 +498,46 @@ overdue_findings = len(
 )
 
 
+if total_cases > 0:
+
+    closure_rate = (
+        closed_cases
+        /
+        total_cases
+        * 100
+    )
+
+else:
+
+    closure_rate = 0
+
+
 # ============================================================
-# COMMON PLOTLY THEME
+# COMMON PLOTLY STYLE
 # ============================================================
 
-def apply_chart_theme(fig):
+def style_chart(fig):
 
     fig.update_layout(
-
-        paper_bgcolor=CARD_COLOR,
-        plot_bgcolor=CARD_COLOR,
-
+        paper_bgcolor=CARD,
+        plot_bgcolor=CARD,
         font=dict(
-            color=TEXT_COLOR,
+            color=TEXT,
             size=12
         ),
-
         title=dict(
             font=dict(
-                color=MUTED_TEXT,
+                color=MUTED,
                 size=15
             ),
             x=0.04,
             xanchor="left"
         ),
-
         margin=dict(
-            l=30,
-            r=30,
-            t=60,
-            b=30
-        ),
-
-        legend=dict(
-            font=dict(
-                color="#DCE5F3",
-                size=11
-            )
+            l=35,
+            r=25,
+            t=55,
+            b=35
         )
     )
 
@@ -694,45 +545,73 @@ def apply_chart_theme(fig):
 
 
 # ============================================================
-# TOP ROW
-#
-# TOTAL CASE
-# SHIFT
-# TIME
-# CATEGORY
+# ROW 1 — TOTAL / SHIFT / TIME / CATEGORY
 # ============================================================
 
-top1, top2, top3, top4 = st.columns(
+row1_col1, row1_col2, row1_col3, row1_col4 = st.columns(
     [1, 1, 1, 1]
 )
 
 
 # ============================================================
-# TOTAL CASE
+# TOTAL CASES
 # ============================================================
 
-with top1:
+total_chart = go.Figure(
+    data=[
+        go.Pie(
+            values=[
+                total_cases
+            ],
+            labels=[
+                "Total Cases"
+            ],
+            hole=0.67,
+            marker=dict(
+                colors=[GREEN]
+            ),
+            textinfo="none",
+            hovertemplate=(
+                "Total Cases: "
+                f"{total_cases}"
+                "<extra></extra>"
+            )
+        )
+    ]
+)
 
-    st.markdown(
-        f"""
-        <div class="total-card">
 
-            <div class="card-title">
-                <span class="green-dot">●</span>
-                TOTAL CASE
-            </div>
+total_chart.add_annotation(
+    text=f"<b>{total_cases}</b>",
+    x=0.5,
+    y=0.50,
+    showarrow=False,
+    font=dict(
+        size=26,
+        color=GREEN
+    )
+)
 
-            <div class="total-case-number">
-                {total_findings}
-            </div>
 
-            <div class="total-case-label">
-                TOTAL FINDINGS
-            </div>
+total_chart.update_layout(
+    title="● TOTAL CASES",
+    showlegend=False,
+    height=250
+)
 
-        </div>
-        """,
-        unsafe_allow_html=True
+style_chart(
+    total_chart
+)
+
+
+with row1_col1:
+
+    st.plotly_chart(
+        total_chart,
+        use_container_width=True,
+        config={
+            "displayModeBar": False
+        }
     )
 
 
@@ -740,89 +619,58 @@ with top1:
 # SHIFT DISTRIBUTION
 # ============================================================
 
-shift_findings = (
+shift_data = (
     filtered_df
     .groupby("shift_letter")
     .size()
     .reset_index(
-        name="Findings"
+        name="Cases"
     )
 )
 
 
 shift_chart = px.pie(
-
-    shift_findings,
-
+    shift_data,
     names="shift_letter",
-    values="Findings",
-
-    hole=0.55,
-
+    values="Cases",
+    hole=0.58,
     color="shift_letter",
-
-    color_discrete_map=SHIFT_COLORS,
-
-    title="● SHIFT DISTRIBUTION (%)"
+    color_discrete_map=SHIFT_COLORS
 )
 
 
 shift_chart.update_traces(
-
     textinfo="none",
-
-    marker=dict(
-        line=dict(
-            color=CARD_COLOR,
-            width=0
-        )
+    hovertemplate=(
+        "Shift %{label}<br>"
+        "Cases: %{value}<br>"
+        "%{percent}"
+        "<extra></extra>"
     )
 )
 
 
 shift_chart.update_layout(
-
-    height=330,
-
-    paper_bgcolor=CARD_COLOR,
-
-    font=dict(
-        color=TEXT_COLOR
-    ),
-
-    title=dict(
-        font=dict(
-            color=MUTED_TEXT,
-            size=14
-        ),
-        x=0.04
-    ),
-
+    title="● SHIFT DISTRIBUTION (%)",
+    height=250,
     legend=dict(
-
         orientation="v",
-
         yanchor="middle",
         y=0.5,
-
         xanchor="left",
-        x=0.72,
-
+        x=0.78,
         font=dict(
             size=10
         )
-    ),
-
-    margin=dict(
-        l=20,
-        r=15,
-        t=55,
-        b=20
     )
 )
 
+style_chart(
+    shift_chart
+)
 
-with top2:
+
+with row1_col2:
 
     st.plotly_chart(
         shift_chart,
@@ -837,81 +685,58 @@ with top2:
 # TIME DISTRIBUTION
 # ============================================================
 
-time_findings = (
+time_data = (
     filtered_df
     .groupby("shift_type")
     .size()
     .reset_index(
-        name="Findings"
+        name="Cases"
     )
 )
 
 
 time_chart = px.pie(
-
-    time_findings,
-
+    time_data,
     names="shift_type",
-    values="Findings",
-
-    hole=0.55,
-
+    values="Cases",
+    hole=0.58,
     color="shift_type",
-
-    color_discrete_map=TIME_COLORS,
-
-    title="● TIME DISTRIBUTION (%)"
+    color_discrete_map=TIME_COLORS
 )
 
 
 time_chart.update_traces(
-    textinfo="none"
-)
-
-
-time_chart.update_layout(
-
-    height=330,
-
-    paper_bgcolor=CARD_COLOR,
-
-    font=dict(
-        color=TEXT_COLOR
-    ),
-
-    title=dict(
-        font=dict(
-            color=MUTED_TEXT,
-            size=14
-        ),
-        x=0.04
-    ),
-
-    legend=dict(
-
-        orientation="v",
-
-        yanchor="middle",
-        y=0.5,
-
-        xanchor="left",
-        x=0.72,
-
-        font=dict(
-            size=10
-        )
-    ),
-
-    margin=dict(
-        l=20,
-        r=15,
-        t=55,
-        b=20
+    textinfo="none",
+    hovertemplate=(
+        "%{label}<br>"
+        "Cases: %{value}<br>"
+        "%{percent}"
+        "<extra></extra>"
     )
 )
 
 
-with top3:
+time_chart.update_layout(
+    title="● TIME DISTRIBUTION (%)",
+    height=250,
+    legend=dict(
+        orientation="v",
+        yanchor="middle",
+        y=0.5,
+        xanchor="left",
+        x=0.78,
+        font=dict(
+            size=10
+        )
+    )
+)
+
+style_chart(
+    time_chart
+)
+
+
+with row1_col3:
 
     st.plotly_chart(
         time_chart,
@@ -926,77 +751,56 @@ with top3:
 # CATEGORY DISTRIBUTION
 # ============================================================
 
-category_findings = (
+category_data = (
     filtered_df
     .groupby("category")
     .size()
     .reset_index(
-        name="Findings"
+        name="Cases"
     )
 )
 
 
 category_chart = px.pie(
-
-    category_findings,
-
+    category_data,
     names="category",
-    values="Findings",
-
-    color_discrete_sequence=CATEGORY_COLORS,
-
-    title="● FINDING CATEGORY (%)"
+    values="Cases",
+    color_discrete_sequence=CATEGORY_COLORS
 )
 
 
 category_chart.update_traces(
-    textinfo="none"
-)
-
-
-category_chart.update_layout(
-
-    height=330,
-
-    paper_bgcolor=CARD_COLOR,
-
-    font=dict(
-        color=TEXT_COLOR
-    ),
-
-    title=dict(
-        font=dict(
-            color=MUTED_TEXT,
-            size=14
-        ),
-        x=0.04
-    ),
-
-    legend=dict(
-
-        orientation="v",
-
-        yanchor="middle",
-        y=0.5,
-
-        xanchor="left",
-        x=0.68,
-
-        font=dict(
-            size=9
-        )
-    ),
-
-    margin=dict(
-        l=15,
-        r=10,
-        t=55,
-        b=20
+    textinfo="none",
+    hovertemplate=(
+        "%{label}<br>"
+        "Cases: %{value}<br>"
+        "%{percent}"
+        "<extra></extra>"
     )
 )
 
 
-with top4:
+category_chart.update_layout(
+    title="● FINDING CATEGORY (%)",
+    height=250,
+    legend=dict(
+        orientation="v",
+        yanchor="middle",
+        y=0.5,
+        xanchor="left",
+        x=0.68,
+        font=dict(
+            size=9
+        )
+    )
+)
+
+style_chart(
+    category_chart
+)
+
+
+with row1_col4:
 
     st.plotly_chart(
         category_chart,
@@ -1008,14 +812,11 @@ with top4:
 
 
 # ============================================================
-# MIDDLE ROW
-#
-# FINDING TREND
-# FINDINGS BY AREA
+# ROW 2 — WEEKLY TREND / AREA
 # ============================================================
 
-middle1, middle2 = st.columns(
-    [1.7, 1]
+row2_col1, row2_col2 = st.columns(
+    [1.65, 1]
 )
 
 
@@ -1023,7 +824,7 @@ middle1, middle2 = st.columns(
 # WEEKLY FINDING TREND
 # ============================================================
 
-weekly_findings = (
+weekly_data = (
     filtered_df
     .dropna(
         subset=["week_number"]
@@ -1033,7 +834,7 @@ weekly_findings = (
     )
     .size()
     .reset_index(
-        name="Findings"
+        name="Cases"
     )
     .sort_values(
         "week_number"
@@ -1041,104 +842,78 @@ weekly_findings = (
 )
 
 
-trend_chart = go.Figure()
+weekly_chart = go.Figure()
 
 
-trend_chart.add_trace(
-
-    go.Scatter(
-
-        x=weekly_findings["work_week"],
-        y=weekly_findings["Findings"],
-
-        mode="lines+markers+text",
-
+weekly_chart.add_trace(
+    go.Bar(
+        x=weekly_data["work_week"],
+        y=weekly_data["Cases"],
         name="Total Findings",
+        marker_color=ORANGE,
+        text=weekly_data["Cases"],
+        textposition="outside",
+        hovertemplate=(
+            "%{x}<br>"
+            "Findings: %{y}"
+            "<extra></extra>"
+        )
+    )
+)
 
+
+weekly_chart.add_trace(
+    go.Scatter(
+        x=weekly_data["work_week"],
+        y=weekly_data["Cases"],
+        name="Finding Trend",
+        mode="lines+markers",
         line=dict(
             color=CYAN,
-            width=4
+            width=3
         ),
-
         marker=dict(
-            color=CYAN,
-            size=8
+            size=7
         ),
-
-        text=weekly_findings["Findings"],
-
-        textposition="top center",
-
-        textfont=dict(
-            color=CYAN
+        hovertemplate=(
+            "%{x}<br>"
+            "Findings: %{y}"
+            "<extra></extra>"
         )
     )
 )
 
 
-trend_chart.update_layout(
-
-    title="● FINDING TREND 2026",
-
-    height=390,
-
-    paper_bgcolor=CARD_COLOR,
-    plot_bgcolor=CARD_COLOR,
-
-    font=dict(
-        color=TEXT_COLOR
-    ),
-
-    title_font=dict(
-        color=MUTED_TEXT,
-        size=15
-    ),
-
-    xaxis=dict(
-
-        title="",
-
-        gridcolor=GRID_COLOR,
-
-        showgrid=False,
-
-        tickfont=dict(
-            color="#DCE5F3"
-        )
-    ),
-
-    yaxis=dict(
-
-        title="Total Findings",
-
-        gridcolor=GRID_COLOR,
-
-        rangemode="tozero",
-
-        tickfont=dict(
-            color="#DCE5F3"
-        )
-    ),
-
-    margin=dict(
-        l=50,
-        r=30,
-        t=65,
-        b=40
-    ),
-
+weekly_chart.update_layout(
+    title="● WEEKLY FINDING TREND",
+    height=315,
+    xaxis_title="",
+    yaxis_title="Cases",
     legend=dict(
         orientation="h",
-        y=1.08,
-        x=0.45
+        yanchor="bottom",
+        y=1.01,
+        xanchor="center",
+        x=0.55
+    ),
+    xaxis=dict(
+        gridcolor="#334155"
+    ),
+    yaxis=dict(
+        gridcolor="#475569",
+        rangemode="tozero"
     )
 )
 
+style_chart(
+    weekly_chart
+)
 
-with middle1:
+
+with row2_col1:
 
     st.plotly_chart(
-        trend_chart,
+        weekly_chart,
         use_container_width=True,
         config={
             "displayModeBar": False
@@ -1150,17 +925,6 @@ with middle1:
 # FINDINGS BY AREA
 # ============================================================
 
-area_findings = (
-    filtered_df
-    .groupby("area")
-    .size()
-    .reset_index(
-        name="Findings"
-    )
-)
-
-
-# Keep area order consistent
 area_order = [
     "DP",
     "FOL",
@@ -1169,104 +933,76 @@ area_order = [
 ]
 
 
-area_findings["area"] = pd.Categorical(
-    area_findings["area"],
-    categories=area_order,
-    ordered=True
-)
-
-area_findings = (
-    area_findings
-    .sort_values("area")
+area_data = (
+    filtered_df
+    .groupby("area")
+    .size()
+    .reindex(
+        area_order,
+        fill_value=0
+    )
+    .reset_index(
+        name="Cases"
+    )
 )
 
 
 area_chart = go.Figure()
 
 
-for _, row in area_findings.iterrows():
-
-    area_chart.add_trace(
-
-        go.Bar(
-
-            x=[row["Findings"]],
-
-            y=[row["area"]],
-
-            orientation="h",
-
-            marker_color=AREA_COLORS.get(
-                str(row["area"]),
-                CYAN
-            ),
-
-            text=[row["Findings"]],
-
-            textposition="outside",
-
-            textfont=dict(
-                color=TEXT_COLOR
-            ),
-
-            showlegend=False
+area_chart.add_trace(
+    go.Bar(
+        x=area_data["Cases"],
+        y=area_data["area"],
+        orientation="h",
+        marker=dict(
+            color=[
+                AREA_COLORS.get(
+                    area,
+                    CYAN
+                )
+                for area
+                in area_data["area"]
+            ]
+        ),
+        text=area_data["Cases"],
+        textposition="outside",
+        hovertemplate=(
+            "%{y}<br>"
+            "Cases: %{x}"
+            "<extra></extra>"
         )
     )
+)
 
 
 area_chart.update_layout(
-
     title="● FINDINGS BY AREA",
-
-    height=390,
-
-    paper_bgcolor=CARD_COLOR,
-    plot_bgcolor=CARD_COLOR,
-
-    font=dict(
-        color=TEXT_COLOR
-    ),
-
-    title_font=dict(
-        color=MUTED_TEXT,
-        size=15
-    ),
-
+    height=315,
+    xaxis_title="Cases",
+    yaxis_title="",
+    showlegend=False,
     xaxis=dict(
-
-        title="Number of Findings",
-
-        gridcolor=GRID_COLOR,
-
+        gridcolor="#475569",
         rangemode="tozero"
     ),
-
     yaxis=dict(
-
-        title="",
-
         categoryorder="array",
-
         categoryarray=[
             "EOL",
             "MOL",
             "FOL",
             "DP"
         ]
-    ),
+    )
+)
 
-    margin=dict(
-        l=55,
-        r=50,
-        t=65,
-        b=40
-    ),
-
-    bargap=0.25
+style_chart(
+    area_chart
 )
 
 
-with middle2:
+with row2_col2:
 
     st.plotly_chart(
         area_chart,
@@ -1278,64 +1014,10 @@ with middle2:
 
 
 # ============================================================
-# AUTOMATIC OBSERVATIONS
+# ROW 3 — SUMMARY / OBSERVATIONS / HIGHLIGHTS
 # ============================================================
 
-if not filtered_df.empty:
-
-    area_counts = (
-        filtered_df["area"]
-        .value_counts()
-    )
-
-    highest_area = (
-        area_counts.index[0]
-        if not area_counts.empty
-        else "-"
-    )
-
-    highest_area_count = (
-        int(area_counts.iloc[0])
-        if not area_counts.empty
-        else 0
-    )
-
-
-    category_counts = (
-        filtered_df["category"]
-        .value_counts()
-    )
-
-    highest_category = (
-        category_counts.index[0]
-        if not category_counts.empty
-        else "-"
-    )
-
-    highest_category_count = (
-        int(category_counts.iloc[0])
-        if not category_counts.empty
-        else 0
-    )
-
-else:
-
-    highest_area = "-"
-    highest_area_count = 0
-
-    highest_category = "-"
-    highest_category_count = 0
-
-
-# ============================================================
-# BOTTOM ROW
-#
-# SUMMARY
-# KEY OBSERVATIONS
-# HIGHLIGHTS
-# ============================================================
-
-bottom1, bottom2, bottom3 = st.columns(
+row3_col1, row3_col2, row3_col3 = st.columns(
     [1, 1, 1]
 )
 
@@ -1344,50 +1026,31 @@ bottom1, bottom2, bottom3 = st.columns(
 # SUMMARY
 # ============================================================
 
-with bottom1:
+with row3_col1:
 
     st.markdown(
         f"""
-        <div class="bottom-card">
+        <div class="dashboard-card">
 
             <div class="card-title">
-                <span class="cyan-dot">●</span>
+                <span style="color:{CYAN};">●</span>
                 SUMMARY
             </div>
 
-            <div class="summary-big">
-                {total_findings}
+            <div class="summary-number">
+                {total_cases}
             </div>
 
             <div class="summary-label">
                 Total Findings
             </div>
 
-
-            <div class="summary-open">
-                {open_findings}
+            <div class="summary-secondary">
+                {open_cases}
             </div>
 
             <div class="summary-label">
                 Open Findings
-            </div>
-
-
-            <div class="summary-closed">
-                {closed_findings}
-            </div>
-
-            <div class="summary-label">
-                Closed Findings
-            </div>
-
-
-            <div class="summary-rate">
-                {closure_rate:.1f}%
-            </div>
-
-            <div class="summary-label">
-                Closure Rate
             </div>
 
         </div>
@@ -1400,50 +1063,95 @@ with bottom1:
 # KEY OBSERVATIONS
 # ============================================================
 
-with bottom2:
+if open_cases > 0:
+
+    oldest_open = (
+        filtered_df[
+            filtered_df["status_clean"]
+            == "Open"
+        ]
+        .sort_values(
+            "aging_days",
+            ascending=False
+        )
+    )
+
+    if not oldest_open.empty:
+
+        oldest_days = int(
+            oldest_open.iloc[0][
+                "aging_days"
+            ]
+        )
+
+        oldest_area = str(
+            oldest_open.iloc[0][
+                "area"
+            ]
+        )
+
+        oldest_station = str(
+            oldest_open.iloc[0][
+                "station"
+            ]
+        )
+
+        observation_title = (
+            f"⚠ Oldest Open — "
+            f"{oldest_days} Days"
+        )
+
+        observation_text = (
+            f"Oldest open finding is at "
+            f"{oldest_area} / "
+            f"{oldest_station}."
+        )
+
+    else:
+
+        observation_title = (
+            "No Open Findings"
+        )
+
+        observation_text = (
+            "No open finding requires "
+            "immediate attention."
+        )
+
+else:
+
+    observation_title = (
+        "No Open Findings"
+    )
+
+    observation_text = (
+        "All findings in the selected "
+        "scope are closed."
+    )
+
+
+with row3_col2:
 
     st.markdown(
         f"""
-        <div class="bottom-card">
+        <div class="dashboard-card">
 
             <div class="card-title">
-                <span class="red-dot">●</span>
+                <span style="color:{RED};">●</span>
                 KEY OBSERVATIONS
             </div>
 
-
             <div class="observation-box">
-                ⚠ ATTENTION — WW{current_week}
+                {observation_title}
             </div>
 
-
-            <div style="
-                color:#9FB0CC;
-                font-size:14px;
-                line-height:1.7;
-            ">
-
-                • Highest finding area:
-                <b style="color:#F4F7FB;">
-                    {highest_area}
-                </b>
-                ({highest_area_count} cases)
-
+            <div class="detail-text">
+                • {observation_text}
                 <br><br>
-
-                • Highest finding category:
-                <b style="color:#F4F7FB;">
-                    {highest_category}
+                • Open >7 Days:
+                <b style="color:{RED};">
+                    {overdue_cases}
                 </b>
-                ({highest_category_count} cases)
-
-                <br><br>
-
-                • Open findings >7 days:
-                <b style="color:#FF4747;">
-                    {overdue_findings}
-                </b>
-
             </div>
 
         </div>
@@ -1456,58 +1164,53 @@ with bottom2:
 # HIGHLIGHTS
 # ============================================================
 
-with bottom3:
+if total_cases > 0:
 
-    if closed_findings > 0:
+    highlight_title = (
+        f"★ Closure Rate — "
+        f"{closure_rate:.1f}%"
+    )
 
-        highlight_message = (
-            f"{closed_findings} finding(s) have been closed."
-        )
+    highlight_text = (
+        f"{closed_cases} of "
+        f"{total_cases} findings "
+        f"are currently closed."
+    )
 
-    else:
+else:
 
-        highlight_message = (
-            "Closure tracking will appear once findings are closed."
-        )
+    highlight_title = (
+        "★ No Findings"
+    )
 
+    highlight_text = (
+        "No findings available "
+        "for the selected scope."
+    )
+
+
+with row3_col3:
 
     st.markdown(
         f"""
-        <div class="bottom-card">
+        <div class="dashboard-card">
 
             <div class="card-title">
-                <span class="green-dot">●</span>
+                <span style="color:{GREEN};">●</span>
                 HIGHLIGHTS
             </div>
 
-
             <div class="highlight-box">
-                ★ HIGHLIGHT — WW{current_week}
+                {highlight_title}
             </div>
 
-
-            <div style="
-                color:#9FB0CC;
-                font-size:14px;
-                line-height:1.7;
-            ">
-
-                • {highlight_message}
-
+            <div class="detail-text">
+                • {highlight_text}
                 <br><br>
-
-                • Current closure rate:
-                <b style="color:#20D26B;">
-                    {closure_rate:.1f}%
+                • Closed Findings:
+                <b style="color:{GREEN};">
+                    {closed_cases}
                 </b>
-
-                <br><br>
-
-                • Total cases monitored:
-                <b style="color:#F4F7FB;">
-                    {total_findings}
-                </b>
-
             </div>
 
         </div>
@@ -1522,20 +1225,21 @@ with bottom3:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-
 with st.expander(
-    f"Open Finding Details ({open_findings})"
+    f"Open Finding Details ({open_cases})"
 ):
 
     open_table = filtered_df[
-        filtered_df["status_clean"] == "Open"
+        filtered_df["status_clean"]
+        == "Open"
     ].copy()
 
 
     if open_table.empty:
 
         st.success(
-            "No open findings for the selected filters."
+            "No open findings for "
+            "the selected filters."
         )
 
     else:
@@ -1543,14 +1247,11 @@ with st.expander(
         display_columns = [
             "id",
             "finding_datetime",
-            "shift",
             "area",
             "station",
             "equipment_id",
             "category",
             "finding_description",
-            "interview_result",
-            "containment_action",
             "auditee",
             "auditor",
             "aging_days",
@@ -1560,8 +1261,10 @@ with st.expander(
 
         display_columns = [
             column
-            for column in display_columns
-            if column in open_table.columns
+            for column
+            in display_columns
+            if column
+            in open_table.columns
         ]
 
 
@@ -1575,15 +1278,11 @@ with st.expander(
             )
             .rename(
                 columns={
-
                     "id":
                         "ID",
 
                     "finding_datetime":
                         "Finding Date & Time",
-
-                    "shift":
-                        "Shift",
 
                     "area":
                         "Area",
@@ -1599,12 +1298,6 @@ with st.expander(
 
                     "finding_description":
                         "Finding Description",
-
-                    "interview_result":
-                        "Interview Result",
-
-                    "containment_action":
-                        "Containment Action",
 
                     "auditee":
                         "Auditee",
@@ -1627,13 +1320,3 @@ with st.expander(
             use_container_width=True,
             hide_index=True
         )
-
-
-# ============================================================
-# FOOTER
-# ============================================================
-
-st.caption(
-    "IPQC Finding Monitoring Dashboard "
-    f"• Last Updated: {current_time.strftime('%d-%b-%Y %H:%M')}"
-)

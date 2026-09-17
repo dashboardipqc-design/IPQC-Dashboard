@@ -1658,7 +1658,7 @@ if (
 
 
     past_occurrence = (
-        "AI summary has not been generated. "
+        "Summary has not been generated. "
         "Generate the summary to compare "
         "current findings with historical "
         "occurrences."
@@ -1674,9 +1674,7 @@ if (
 
     highlight = (
         f"Current {current_work_week}: "
-        f"{current_total} finding(s), "
-        f"{current_open} open and "
-        f"{current_closed} closed."
+        f"{current_total} finding(s)."
     )
 
 

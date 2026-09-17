@@ -1539,7 +1539,7 @@ if generate_ai:
         st.warning(
             f"No findings recorded for "
             f"{current_work_week}. "
-            "AI summary was not generated."
+            "Summary was not generated."
         )
 
 
@@ -1552,7 +1552,7 @@ if generate_ai:
             "OpenAI API is not configured. "
             "Add OPENAI_API_KEY to "
             "Streamlit Secrets when you "
-            "want to generate an AI summary."
+            "want to generate an summary."
         )
 
 
@@ -1563,7 +1563,7 @@ if generate_ai:
             with st.spinner(
                 f"Generating "
                 f"{current_work_week} "
-                "AI summary..."
+                "summary..."
             ):
 
                 new_summary = (
@@ -1599,7 +1599,7 @@ if generate_ai:
 
             st.success(
                 f"{current_work_week} "
-                "AI summary generated."
+                "summary generated."
             )
 
 
@@ -1607,7 +1607,7 @@ if generate_ai:
 
             st.error(
                 "Unable to generate "
-                "AI summary."
+                "summary."
             )
 
             st.caption(
@@ -1840,20 +1840,6 @@ WW Summary
 Total Findings:
 <b style="color:{TEXT};">
 {current_total}
-</b>
-
-<br>
-
-Open:
-<b style="color:{ORANGE};">
-{current_open}
-</b>
-
-<br>
-
-Closed:
-<b style="color:{GREEN};">
-{current_closed}
 </b>
 
 </div>

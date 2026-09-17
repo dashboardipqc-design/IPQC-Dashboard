@@ -1103,7 +1103,7 @@ with row2_col2:
 
 
 # ============================================================
-# AI MANAGEMENT INSIGHTS
+# MANAGEMENT INSIGHTS
 #
 # IMPORTANT:
 # OpenAI is called ONLY when the button is clicked.
@@ -1384,7 +1384,7 @@ Analyze the supplied IPQC data and generate:
 RULES:
 
 - Observation must summarize only findings from the current work week.
-- Highlight must summarize only findings from the current work week.
+- Highlight must summarize only positive from the current work week.
 - Historical findings are provided only to determine whether a similar
   issue occurred previously.
 - Do not summarize historical findings as current-week findings.
@@ -1512,7 +1512,7 @@ with ai_header_col1:
     font-weight:700;
     padding-top:8px;
 ">
-AI MANAGEMENT INSIGHTS — {current_work_week}
+MANAGEMENT INSIGHTS — {current_work_week}
 </div>
         """,
         unsafe_allow_html=True
@@ -1522,7 +1522,7 @@ AI MANAGEMENT INSIGHTS — {current_work_week}
 with ai_header_col2:
 
     generate_ai = st.button(
-        "✨ Generate AI Summary",
+        "✨ Generate Summary",
         use_container_width=True,
         type="primary"
     )

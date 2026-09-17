@@ -5,9 +5,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from supabase import create_client
-from openai import OpenAI
 import json
-import hashlib
 import html
 
 
@@ -42,8 +40,6 @@ TEAL = "#1489A8"
 GREEN = "#22C55E"
 ORANGE = "#F59E0B"
 RED = "#EF4444"
-
-DARK_RING = "#1E293B"
 
 
 AREA_COLORS = {
@@ -131,7 +127,7 @@ st.markdown(
         border: 1px solid {BORDER};
         border-radius: 12px;
         padding: 20px 22px;
-        min-height: 330px;
+        min-height: 340px;
         box-sizing: border-box;
     }}
 
@@ -184,7 +180,7 @@ st.markdown(
 
 
 # ============================================================
-# SUPABASE
+# SUPABASE CONNECTION
 # ============================================================
 
 @st.cache_resource
@@ -197,21 +193,6 @@ def init_supabase():
 
 
 supabase = init_supabase()
-
-
-# ============================================================
-# OPENAI
-# ============================================================
-
-@st.cache_resource
-def init_openai():
-
-    return OpenAI(
-        api_key=st.secrets["OPENAI_API_KEY"]
-    )
-
-
-openai_client = init_openai()
 
 
 # ============================================================
@@ -371,7 +352,7 @@ df["aging_days"] = (
 
 
 # ============================================================
-# WORK WEEK
+# ISO WORK WEEK
 # ============================================================
 
 df["week_number"] = (
@@ -401,7 +382,7 @@ df["work_week"] = (
 
 
 # ============================================================
-# SHORT CATEGORY
+# SHORT CATEGORY NAME
 # ============================================================
 
 def shorten_category(category):
@@ -444,8 +425,6 @@ st.sidebar.title(
 )
 
 
-# AREA
-
 area_options = sorted(
     df["area"]
     .dropna()
@@ -460,8 +439,6 @@ selected_area = st.sidebar.multiselect(
     default=area_options
 )
 
-
-# CATEGORY
 
 category_options = sorted(
     df["category_short"]
@@ -478,8 +455,6 @@ selected_category = st.sidebar.multiselect(
 )
 
 
-# SHIFT
-
 shift_options = sorted(
     df["shift_letter"]
     .dropna()
@@ -494,8 +469,6 @@ selected_shift = st.sidebar.multiselect(
     default=shift_options
 )
 
-
-# STATUS
 
 status_options = sorted(
     df["status_clean"]
@@ -513,7 +486,7 @@ selected_status = st.sidebar.multiselect(
 
 
 # ============================================================
-# FILTER DATA
+# APPLY FILTERS
 # ============================================================
 
 filtered_df = df[
@@ -546,7 +519,7 @@ total_cases = len(
 
 
 # ============================================================
-# CHART STYLE
+# COMMON CHART STYLE
 # ============================================================
 
 def style_chart(fig):
@@ -612,17 +585,12 @@ total_chart = go.Figure(
     data=[
         go.Pie(
             values=[total_cases],
-
             labels=["Total Cases"],
-
             hole=0.67,
-
             marker=dict(
                 colors=[GREEN]
             ),
-
             textinfo="none",
-
             hovertemplate=(
                 f"Total Cases: {total_cases}"
                 "<extra></extra>"
@@ -634,12 +602,9 @@ total_chart = go.Figure(
 
 total_chart.add_annotation(
     text=f"<b>{total_cases}</b>",
-
     x=0.5,
     y=0.5,
-
     showarrow=False,
-
     font=dict(
         size=28,
         color=GREEN
@@ -649,9 +614,7 @@ total_chart.add_annotation(
 
 total_chart.update_layout(
     title="● TOTAL CASES — OVERALL",
-
     showlegend=False,
-
     height=290
 )
 
@@ -684,12 +647,9 @@ shift_data = (
 
 shift_chart = px.pie(
     shift_data,
-
     names="shift_letter",
     values="Cases",
-
     hole=0.58,
-
     color="shift_letter",
     color_discrete_map=SHIFT_COLORS
 )
@@ -697,7 +657,6 @@ shift_chart = px.pie(
 
 shift_chart.update_traces(
     textinfo="none",
-
     hovertemplate=(
         "Shift %{label}<br>"
         "Cases: %{value}<br>"
@@ -709,9 +668,7 @@ shift_chart.update_traces(
 
 shift_chart.update_layout(
     title="● SHIFT DISTRIBUTION (%) — OVERALL",
-
     height=290,
-
     legend=BOTTOM_LEGEND
 )
 
@@ -744,12 +701,9 @@ time_data = (
 
 time_chart = px.pie(
     time_data,
-
     names="shift_type",
     values="Cases",
-
     hole=0.58,
-
     color="shift_type",
     color_discrete_map=TIME_COLORS
 )
@@ -757,7 +711,6 @@ time_chart = px.pie(
 
 time_chart.update_traces(
     textinfo="none",
-
     hovertemplate=(
         "%{label}<br>"
         "Cases: %{value}<br>"
@@ -769,9 +722,7 @@ time_chart.update_traces(
 
 time_chart.update_layout(
     title="● TIME DISTRIBUTION (%) — OVERALL",
-
     height=290,
-
     legend=BOTTOM_LEGEND
 )
 
@@ -804,19 +755,15 @@ category_data = (
 
 category_chart = px.pie(
     category_data,
-
     names="category_short",
     values="Cases",
-
     color="category_short",
-
     color_discrete_map=CATEGORY_COLORS
 )
 
 
 category_chart.update_traces(
     textinfo="none",
-
     hovertemplate=(
         "%{label}<br>"
         "Cases: %{value}<br>"
@@ -828,18 +775,13 @@ category_chart.update_traces(
 
 category_chart.update_layout(
     title="● FINDING CATEGORY (%) — OVERALL",
-
     height=290,
-
     legend=dict(
         orientation="h",
-
         yanchor="top",
         y=-0.03,
-
         xanchor="center",
         x=0.5,
-
         font=dict(size=9)
     )
 )
@@ -869,7 +811,7 @@ row2_col1, row2_col2 = st.columns(
 
 
 # ============================================================
-# LATEST 10 WORK WEEKS
+# WEEKLY FINDING TREND — LATEST 10 ISO WEEKS
 # ============================================================
 
 current_date = current_time.date()
@@ -964,12 +906,10 @@ weekly_data = (
     week_template
     .merge(
         weekly_counts,
-
         on=[
             "week_year",
             "week_number"
         ],
-
         how="left"
     )
 )
@@ -983,7 +923,7 @@ weekly_data["Cases"] = (
 
 
 # ============================================================
-# WEEKLY TREND
+# WEEKLY TREND CHART
 # ============================================================
 
 weekly_chart = go.Figure()
@@ -993,15 +933,10 @@ weekly_chart.add_trace(
     go.Bar(
         x=weekly_data["work_week"],
         y=weekly_data["Cases"],
-
         name="Total Findings",
-
         marker_color=ORANGE,
-
         text=weekly_data["Cases"],
-
         textposition="outside",
-
         hovertemplate=(
             "%{x}<br>"
             "Findings: %{y}"
@@ -1015,20 +950,15 @@ weekly_chart.add_trace(
     go.Scatter(
         x=weekly_data["work_week"],
         y=weekly_data["Cases"],
-
         name="Finding Trend",
-
         mode="lines+markers",
-
         line=dict(
             color=CYAN,
             width=3
         ),
-
         marker=dict(
             size=7
         ),
-
         hovertemplate=(
             "%{x}<br>"
             "Findings: %{y}"
@@ -1040,34 +970,24 @@ weekly_chart.add_trace(
 
 weekly_chart.update_layout(
     title="● WEEKLY FINDING TREND — LATEST 10 WEEKS",
-
     height=315,
-
     xaxis_title="",
     yaxis_title="Cases",
-
     legend=dict(
         orientation="h",
-
         yanchor="bottom",
         y=1.01,
-
         xanchor="center",
         x=0.55,
-
         font=dict(size=10)
     ),
-
     xaxis=dict(
         gridcolor="#334155",
-
         categoryorder="array",
-
         categoryarray=weekly_data[
             "work_week"
         ].tolist()
     ),
-
     yaxis=dict(
         gridcolor="#475569",
         rangemode="tozero",
@@ -1121,9 +1041,7 @@ area_chart.add_trace(
     go.Bar(
         x=area_data["Cases"],
         y=area_data["area"],
-
         orientation="h",
-
         marker=dict(
             color=[
                 AREA_COLORS.get(
@@ -1134,11 +1052,8 @@ area_chart.add_trace(
                 in area_data["area"]
             ]
         ),
-
         text=area_data["Cases"],
-
         textposition="outside",
-
         hovertemplate=(
             "%{y}<br>"
             "Cases: %{x}"
@@ -1150,23 +1065,17 @@ area_chart.add_trace(
 
 area_chart.update_layout(
     title="● FINDINGS BY AREA — OVERALL",
-
     height=315,
-
     xaxis_title="Cases",
     yaxis_title="",
-
     showlegend=False,
-
     xaxis=dict(
         gridcolor="#475569",
         rangemode="tozero",
         dtick=1
     ),
-
     yaxis=dict(
         categoryorder="array",
-
         categoryarray=[
             "EOL",
             "MOL",
@@ -1192,13 +1101,33 @@ with row2_col2:
 
 
 # ============================================================
-# AI SECTION
+# AI MANAGEMENT INSIGHTS
 #
-# CURRENT WW:
-# Used for Observation + Highlight
-#
-# HISTORICAL DATA:
-# Used only for Past Occurrence comparison
+# IMPORTANT:
+# - Dashboard refresh DOES NOT call OpenAI
+# - Changing filters DOES NOT call OpenAI
+# - Only button click calls OpenAI
+# - Generated summary has NO TTL
+# ============================================================
+
+
+# ============================================================
+# SHARED AI SUMMARY STORE
+# ============================================================
+
+@st.cache_resource
+def get_ai_summary_store():
+
+    return {}
+
+
+ai_summary_store = (
+    get_ai_summary_store()
+)
+
+
+# ============================================================
+# CURRENT WORK WEEK
 # ============================================================
 
 current_iso_year, current_iso_week, _ = (
@@ -1216,27 +1145,38 @@ current_work_week = (
 # ============================================================
 
 current_week_df = filtered_df[
-    (filtered_df["week_year"] == current_iso_year)
+    (
+        filtered_df["week_year"]
+        == current_iso_year
+    )
     &
-    (filtered_df["week_number"] == current_iso_week)
+    (
+        filtered_df["week_number"]
+        == current_iso_week
+    )
 ].copy()
 
 
 # ============================================================
 # HISTORICAL FINDINGS
-#
-# Anything before current WW.
 # ============================================================
 
 historical_df = filtered_df[
     (
-        filtered_df["week_year"] < current_iso_year
+        filtered_df["week_year"]
+        < current_iso_year
     )
     |
     (
-        (filtered_df["week_year"] == current_iso_year)
+        (
+            filtered_df["week_year"]
+            == current_iso_year
+        )
         &
-        (filtered_df["week_number"] < current_iso_week)
+        (
+            filtered_df["week_number"]
+            < current_iso_week
+        )
     )
 ].copy()
 
@@ -1252,14 +1192,16 @@ current_total = len(
 
 current_open = len(
     current_week_df[
-        current_week_df["status_clean"] == "Open"
+        current_week_df["status_clean"]
+        == "Open"
     ]
 )
 
 
 current_closed = len(
     current_week_df[
-        current_week_df["status_clean"] == "Closed"
+        current_week_df["status_clean"]
+        == "Closed"
     ]
 )
 
@@ -1290,7 +1232,7 @@ current_shift_counts = (
 
 
 # ============================================================
-# PREPARE CURRENT FINDINGS FOR AI
+# CURRENT WW RECORDS FOR AI
 # ============================================================
 
 AI_COLUMNS = [
@@ -1325,11 +1267,7 @@ current_records = (
 
 
 # ============================================================
-# PREPARE HISTORICAL FINDINGS FOR AI
-#
-# Historical data is supporting context only.
-# Limit size to keep API cost controlled.
-# Most recent 150 findings are supplied.
+# HISTORICAL RECORDS FOR AI
 # ============================================================
 
 HISTORY_COLUMNS = [
@@ -1375,24 +1313,40 @@ historical_records = (
 
 
 # ============================================================
-# BUILD AI INPUT
+# AI PAYLOAD
 # ============================================================
 
 ai_payload = {
-    "current_work_week": current_work_week,
+
+    "current_work_week":
+        current_work_week,
 
     "current_week_statistics": {
-        "total_findings": current_total,
-        "open_findings": current_open,
-        "closed_findings": current_closed,
-        "area_counts": current_area_counts,
-        "category_counts": current_category_counts,
-        "shift_counts": current_shift_counts
+
+        "total_findings":
+            current_total,
+
+        "open_findings":
+            current_open,
+
+        "closed_findings":
+            current_closed,
+
+        "area_counts":
+            current_area_counts,
+
+        "category_counts":
+            current_category_counts,
+
+        "shift_counts":
+            current_shift_counts
     },
 
-    "current_week_findings": current_records,
+    "current_week_findings":
+        current_records,
 
-    "historical_findings": historical_records
+    "historical_findings":
+        historical_records
 }
 
 
@@ -1404,83 +1358,97 @@ payload_json = json.dumps(
 
 
 # ============================================================
-# CREATE HASH
+# GENERATE NEW AI SUMMARY
 #
-# If finding data changes, AI summary is regenerated.
-# Otherwise cached result is reused.
+# NOT CACHED.
+# This function runs only when the button is clicked.
 # ============================================================
 
-payload_hash = hashlib.sha256(
-    payload_json.encode("utf-8")
-).hexdigest()
-
-
-# ============================================================
-# AI GENERATION
-# ============================================================
-
-@st.cache_data(
-    ttl=3600,
-    show_spinner=False
-)
-def generate_ai_summary(
-    data_hash,
+def generate_new_ai_summary(
     data_payload
 ):
+
+    # Import OpenAI only when needed.
+    # This allows the rest of the dashboard to work
+    # without an API key.
+
+    from openai import OpenAI
+
+    client = OpenAI(
+        api_key=st.secrets[
+            "OPENAI_API_KEY"
+        ]
+    )
+
 
     prompt = f"""
 You are supporting an IPQC management dashboard for a semiconductor
 assembly operation.
 
-The CURRENT work week is {current_work_week}.
+The current work week is {current_work_week}.
 
-Your job is to analyze the CURRENT WORK WEEK findings and generate:
+Analyze the supplied IPQC data and generate:
 
 1. LOW LIGHT / KEY OBSERVATION
 2. PAST OCCURRENCE
 3. RECOMMENDATION
 4. HIGHLIGHT
 
-IMPORTANT ANALYSIS RULES:
+RULES:
 
-- LOW LIGHT must summarize only findings from the current work week.
-- HIGHLIGHT must summarize only the current work week.
-- Historical findings are provided ONLY to determine whether a similar
+- Observation must summarize only findings from the current work week.
+- Highlight must summarize only findings from the current work week.
+
+- Historical findings are provided only to determine whether a similar
   issue occurred previously.
-- Do not summarize historical findings as if they occurred this week.
-- Do not invent a root cause.
+
+- Do not summarize historical findings as current-week findings.
+
+- Do not invent root causes.
+
 - Do not invent corrective actions.
+
 - Do not invent past occurrences.
-- Do not assume two findings are the same simply because they share
-  the same broad category.
-- A past occurrence should be considered similar only when the
-  finding description, station/process, equipment context, or issue
-  mechanism is reasonably related.
-- If no reasonably similar historical occurrence is found, state:
+
+- Do not consider two findings similar merely because they have the
+  same broad category.
+
+- When identifying a similar historical occurrence, consider the
+  finding description, issue mechanism, process, station and equipment.
+
+- If a reasonably similar historical occurrence exists, state the
+  previous work week and relevant area/station.
+
+- If there is no reasonably similar historical occurrence, state:
   "No similar historical occurrence identified."
-- When a similar past occurrence exists, mention the work week and
-  relevant area/station.
-- Recommendation should be practical for IPQC / Quality / Production /
-  Process Engineering follow-up.
-- Recommendations may suggest verification, review, investigation,
-  recurrence checking, containment verification, or corrective-action
-  effectiveness review.
-- Do not state that a corrective action failed unless the supplied
-  records prove this.
-- Do not state that an area performed well merely because it has zero
-  findings unless you phrase it factually as "No findings recorded".
-- Be concise and management-friendly.
+
+- Recommendation must be practical for IPQC, Quality, Production
+  or Process Engineering follow-up.
+
+- Recommendations may include verification, investigation,
+  recurrence review, containment verification, corrective-action
+  review or effectiveness verification.
+
+- Do not state that a previous corrective action failed unless the
+  supplied records provide evidence for that conclusion.
+
+- Zero findings means only "No findings recorded".
+  Do not interpret zero findings as proof of good compliance or
+  process performance.
+
+- Use concise management-level wording.
+
 - Do not use markdown.
-- Do not use bullet symbols.
+
 - Return ONLY valid JSON.
 
-Use exactly this JSON structure:
+Return exactly this structure:
 
 {{
-    "observation": "1 concise paragraph, maximum 70 words",
-    "past_occurrence": "1 concise paragraph, maximum 50 words",
-    "recommendation": "1 concise paragraph, maximum 60 words",
-    "highlight": "1 concise paragraph, maximum 70 words"
+    "observation": "Maximum 70 words",
+    "past_occurrence": "Maximum 50 words",
+    "recommendation": "Maximum 60 words",
+    "highlight": "Maximum 70 words"
 }}
 
 DATA:
@@ -1488,10 +1456,27 @@ DATA:
 {data_payload}
 """
 
-    response = openai_client.responses.create(
-        model="gpt-5.6-luna",
-        input=prompt
+
+    # Model can later be changed in Streamlit Secrets:
+    #
+    # OPENAI_MODEL = "your-model"
+    #
+    # If OPENAI_MODEL is not configured,
+    # the default below is used.
+
+    model_name = st.secrets.get(
+        "OPENAI_MODEL",
+        "gpt-5.6-luna"
     )
+
+
+    response = (
+        client.responses.create(
+            model=model_name,
+            input=prompt
+        )
+    )
+
 
     output_text = (
         response.output_text
@@ -1499,14 +1484,20 @@ DATA:
     )
 
 
-    # Remove accidental markdown fences if returned
+    # Remove accidental code fences
 
     if output_text.startswith("```"):
 
         output_text = (
             output_text
-            .replace("```json", "")
-            .replace("```", "")
+            .replace(
+                "```json",
+                ""
+            )
+            .replace(
+                "```",
+                ""
+            )
             .strip()
         )
 
@@ -1517,38 +1508,13 @@ DATA:
 
 
 # ============================================================
-# AI RESULT
-# ============================================================
-
-ai_result = None
-ai_error = None
-
-
-if current_total > 0:
-
-    try:
-
-        with st.spinner(
-            f"Analyzing {current_work_week} findings..."
-        ):
-
-            ai_result = generate_ai_summary(
-                payload_hash,
-                payload_json
-            )
-
-    except Exception as e:
-
-        ai_error = str(e)
-
-
-# ============================================================
-# SAFE HTML FUNCTION
+# SAFE HTML
 # ============================================================
 
 def safe_text(value):
 
     if value is None:
+
         return ""
 
     return html.escape(
@@ -1557,7 +1523,7 @@ def safe_text(value):
 
 
 # ============================================================
-# ROW 3 — AI MANAGEMENT INSIGHTS
+# AI SECTION HEADER
 # ============================================================
 
 st.markdown(
@@ -1566,162 +1532,293 @@ st.markdown(
 )
 
 
+ai_header_col1, ai_header_col2 = (
+    st.columns(
+        [4, 1]
+    )
+)
+
+
+with ai_header_col1:
+
+    st.markdown(
+        f"""
+<div style="
+    color:{MUTED};
+    font-size:14px;
+    font-weight:700;
+    padding-top:8px;
+">
+AI MANAGEMENT INSIGHTS — {current_work_week}
+</div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+with ai_header_col2:
+
+    generate_ai = st.button(
+        "✨ Generate AI Summary",
+        use_container_width=True,
+        type="primary"
+    )
+
+
+# ============================================================
+# GENERATE BUTTON
+#
+# OPENAI IS CALLED ONLY HERE
+# ============================================================
+
+if generate_ai:
+
+    # --------------------------------------------------------
+    # NO FINDINGS
+    # --------------------------------------------------------
+
+    if current_total == 0:
+
+        st.warning(
+            f"No findings recorded for "
+            f"{current_work_week}. "
+            "AI summary was not generated."
+        )
+
+
+    # --------------------------------------------------------
+    # NO API KEY
+    # --------------------------------------------------------
+
+    elif (
+        "OPENAI_API_KEY"
+        not in st.secrets
+    ):
+
+        st.warning(
+            "OpenAI API is not configured. "
+            "Add OPENAI_API_KEY to "
+            "Streamlit Secrets when you "
+            "want to generate an AI summary."
+        )
+
+
+    # --------------------------------------------------------
+    # GENERATE
+    # --------------------------------------------------------
+
+    else:
+
+        try:
+
+            with st.spinner(
+                f"Generating "
+                f"{current_work_week} "
+                "AI summary..."
+            ):
+
+                new_summary = (
+                    generate_new_ai_summary(
+                        payload_json
+                    )
+                )
+
+
+                # ============================================
+                # REPLACE PREVIOUS SUMMARY
+                # ============================================
+
+                ai_summary_store[
+                    "summary"
+                ] = new_summary
+
+
+                ai_summary_store[
+                    "work_week"
+                ] = current_work_week
+
+
+                ai_summary_store[
+                    "generated_at"
+                ] = (
+                    datetime.now(
+                        ZoneInfo(
+                            "Asia/Kuala_Lumpur"
+                        )
+                    )
+                    .strftime(
+                        "%d-%b-%Y %H:%M"
+                    )
+                )
+
+
+            st.success(
+                f"{current_work_week} "
+                "AI summary generated."
+            )
+
+
+        except Exception as e:
+
+            st.error(
+                "Unable to generate "
+                "AI summary."
+            )
+
+            st.caption(
+                str(e)
+            )
+
+
+# ============================================================
+# READ EXISTING AI SUMMARY
+# ============================================================
+
+cached_summary = (
+    ai_summary_store.get(
+        "summary"
+    )
+)
+
+
+cached_week = (
+    ai_summary_store.get(
+        "work_week"
+    )
+)
+
+
+generated_at = (
+    ai_summary_store.get(
+        "generated_at"
+    )
+)
+
+
+# ============================================================
+# DEFAULT SENTENCES
+#
+# These are shown when AI has NOT been generated.
+# ============================================================
+
+if (
+    cached_summary is None
+    or
+    cached_week != current_work_week
+):
+
+    observation = (
+        f"{current_total} finding(s) "
+        f"recorded in {current_work_week} "
+        "for the selected scope."
+    )
+
+
+    past_occurrence = (
+        "AI summary has not been generated. "
+        "Generate the summary to compare "
+        "current findings with historical "
+        "occurrences."
+    )
+
+
+    recommendation = (
+        "Continue IPQC monitoring and "
+        "follow up on the current "
+        "open findings."
+    )
+
+
+    highlight = (
+        f"Current {current_work_week}: "
+        f"{current_total} finding(s), "
+        f"{current_open} open and "
+        f"{current_closed} closed."
+    )
+
+
+    showing_ai = False
+
+
+# ============================================================
+# CACHED AI SUMMARY
+# ============================================================
+
+else:
+
+    observation = (
+        cached_summary.get(
+            "observation",
+            ""
+        )
+    )
+
+
+    past_occurrence = (
+        cached_summary.get(
+            "past_occurrence",
+            ""
+        )
+    )
+
+
+    recommendation = (
+        cached_summary.get(
+            "recommendation",
+            ""
+        )
+    )
+
+
+    highlight = (
+        cached_summary.get(
+            "highlight",
+            ""
+        )
+    )
+
+
+    showing_ai = True
+
+
+# ============================================================
+# SAFE OUTPUT
+# ============================================================
+
+observation = safe_text(
+    observation
+)
+
+past_occurrence = safe_text(
+    past_occurrence
+)
+
+recommendation = safe_text(
+    recommendation
+)
+
+highlight = safe_text(
+    highlight
+)
+
+
+# ============================================================
+# AI CARDS
+# ============================================================
+
 ai_col1, ai_col2 = st.columns(
     [1.35, 1]
 )
 
 
 # ============================================================
-# NO CURRENT WW FINDINGS
+# KEY OBSERVATIONS / LOW LIGHT
 # ============================================================
 
-if current_total == 0:
+with ai_col1:
 
-    with ai_col1:
-
-        st.markdown(
-            f"""
-<div class="ai-card">
-
-<div class="ai-title">
-<span style="color:{RED};">●</span>
-KEY OBSERVATIONS / LOW LIGHT
-</div>
-
-<div class="lowlight-header">
-⚠ {current_work_week}
-</div>
-
-<div class="ai-label">
-Observation
-</div>
-
-<div class="ai-text">
-No findings recorded for {current_work_week}.
-</div>
-
-<div class="ai-label">
-Past Occurrence
-</div>
-
-<div class="ai-text">
-Not applicable because there are no current-week findings to compare.
-</div>
-
-<div class="ai-label">
-Recommendation
-</div>
-
-<div class="ai-text">
-Continue routine IPQC monitoring and verification.
-</div>
-
-</div>
-            """,
-            unsafe_allow_html=True
-        )
-
-
-    with ai_col2:
-
-        st.markdown(
-            f"""
-<div class="ai-card">
-
-<div class="ai-title">
-<span style="color:{GREEN};">●</span>
-HIGHLIGHTS
-</div>
-
-<div class="highlight-header">
-★ {current_work_week}
-</div>
-
-<div class="ai-label">
-Current Week
-</div>
-
-<div class="ai-text">
-No IPQC findings were recorded in the selected dashboard scope for
-{current_work_week}.
-</div>
-
-</div>
-            """,
-            unsafe_allow_html=True
-        )
-
-
-# ============================================================
-# AI ERROR
-# ============================================================
-
-elif ai_error is not None:
-
-    with ai_col1:
-
-        st.error(
-            "Unable to generate AI Key Observation."
-        )
-
-        st.caption(
-            ai_error
-        )
-
-
-    with ai_col2:
-
-        st.error(
-            "Unable to generate AI Highlight."
-        )
-
-
-# ============================================================
-# DISPLAY AI RESULTS
-# ============================================================
-
-else:
-
-    observation = safe_text(
-        ai_result.get(
-            "observation",
-            "No observation generated."
-        )
-    )
-
-
-    past_occurrence = safe_text(
-        ai_result.get(
-            "past_occurrence",
-            "No similar historical occurrence identified."
-        )
-    )
-
-
-    recommendation = safe_text(
-        ai_result.get(
-            "recommendation",
-            "Continue monitoring."
-        )
-    )
-
-
-    highlight = safe_text(
-        ai_result.get(
-            "highlight",
-            "No highlight generated."
-        )
-    )
-
-
-    # ========================================================
-    # LOW LIGHT CARD
-    # ========================================================
-
-    with ai_col1:
-
-        st.markdown(
-            f"""
+    st.markdown(
+        f"""
 <div class="ai-card">
 
 <div class="ai-title">
@@ -1758,19 +1855,19 @@ Recommendation
 </div>
 
 </div>
-            """,
-            unsafe_allow_html=True
-        )
+        """,
+        unsafe_allow_html=True
+    )
 
 
-    # ========================================================
-    # HIGHLIGHT CARD
-    # ========================================================
+# ============================================================
+# HIGHLIGHTS
+# ============================================================
 
-    with ai_col2:
+with ai_col2:
 
-        st.markdown(
-            f"""
+    st.markdown(
+        f"""
 <div class="ai-card">
 
 <div class="ai-title">
@@ -1795,17 +1892,47 @@ WW Summary
 </div>
 
 <div class="ai-text">
+
 Total Findings:
-<b style="color:{TEXT};">{current_total}</b>
+<b style="color:{TEXT};">
+{current_total}
+</b>
+
 <br>
+
 Open:
-<b style="color:{ORANGE};">{current_open}</b>
+<b style="color:{ORANGE};">
+{current_open}
+</b>
+
 <br>
+
 Closed:
-<b style="color:{GREEN};">{current_closed}</b>
+<b style="color:{GREEN};">
+{current_closed}
+</b>
+
 </div>
 
 </div>
-            """,
-            unsafe_allow_html=True
-        )
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# AI GENERATION INFORMATION
+# ============================================================
+
+if (
+    showing_ai
+    and
+    generated_at
+):
+
+    st.caption(
+        f"AI summary generated: "
+        f"{generated_at} • "
+        "Dashboard refresh does not "
+        "regenerate the AI summary."
+    )

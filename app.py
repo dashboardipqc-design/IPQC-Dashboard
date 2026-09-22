@@ -121,7 +121,6 @@ st.markdown(
         gap: 0.8rem;
     }}
 
-    /* Make both management insight columns stretch equally */
     div[data-testid="stHorizontalBlock"] {{
         align-items: stretch;
     }}
@@ -221,14 +220,36 @@ def load_findings():
     return pd.DataFrame(response.data)
 
 
+# ============================================================
+# LOAD CHECKLIST SUBMISSIONS
+# ============================================================
+
+@st.cache_data(ttl=60)
+def load_checklist_submissions():
+
+    response = (
+        supabase
+        .table("inspection_header")
+        .select("*")
+        .execute()
+    )
+
+    return pd.DataFrame(response.data)
+
+
+# ============================================================
+# LOAD DATABASE DATA
+# ============================================================
+
 try:
 
     df = load_findings()
+    checklist_df = load_checklist_submissions()
 
 except Exception as e:
 
     st.error(
-        f"Unable to load findings from Supabase: {e}"
+        f"Unable to load dashboard data from Supabase: {e}"
     )
 
     st.stop()
@@ -279,7 +300,7 @@ Last Updated<br>
 
 
 # ============================================================
-# EMPTY DATABASE
+# EMPTY FINDINGS DATABASE
 # ============================================================
 
 if df.empty:
@@ -426,6 +447,45 @@ df["category_short"] = (
 
 
 # ============================================================
+# TOTAL COMPLIANCE — OVERALL
+# UNAFFECTED BY SIDEBAR FILTERS
+# ============================================================
+
+total_findings = len(df)
+total_checklists = len(checklist_df)
+
+
+if total_checklists > 0:
+
+    compliance_percentage = (
+        1
+        -
+        (
+            total_findings
+            /
+            total_checklists
+        )
+    ) * 100
+
+    compliance_percentage = max(
+        0,
+        min(
+            100,
+            compliance_percentage
+        )
+    )
+
+else:
+
+    compliance_percentage = 0
+
+
+non_compliance_percentage = (
+    100 - compliance_percentage
+)
+
+
+# ============================================================
 # SIDEBAR FILTERS
 # ============================================================
 
@@ -519,15 +579,6 @@ if filtered_df.empty:
 
 
 # ============================================================
-# TOTAL CASES
-# ============================================================
-
-total_cases = len(
-    filtered_df
-)
-
-
-# ============================================================
 # COMMON CHART STYLE
 # ============================================================
 
@@ -584,21 +635,30 @@ row1_col1, row1_col2, row1_col3, row1_col4 = st.columns(
 
 
 # ============================================================
-# TOTAL CASES
+# TOTAL COMPLIANCE
 # ============================================================
 
-total_chart = go.Figure(
+compliance_chart = go.Figure(
     data=[
         go.Pie(
-            values=[total_cases],
-            labels=["Total Cases"],
+            values=[
+                compliance_percentage,
+                non_compliance_percentage
+            ],
+            labels=[
+                "Compliance",
+                "Finding Rate"
+            ],
             hole=0.67,
             marker=dict(
-                colors=[GREEN]
+                colors=[
+                    GREEN,
+                    "#334155"
+                ]
             ),
             textinfo="none",
             hovertemplate=(
-                f"Total Cases: {total_cases}"
+                "%{label}: %{value:.1f}%"
                 "<extra></extra>"
             )
         )
@@ -606,34 +666,49 @@ total_chart = go.Figure(
 )
 
 
-total_chart.add_annotation(
-    text=f"<b>{total_cases}</b>",
+compliance_chart.add_annotation(
+    text=f"<b>{compliance_percentage:.1f}%</b>",
     x=0.5,
-    y=0.5,
+    y=0.55,
     showarrow=False,
     font=dict(
-        size=28,
+        size=27,
         color=GREEN
     )
 )
 
 
-total_chart.update_layout(
-    title="● TOTAL CASES — OVERALL",
+compliance_chart.add_annotation(
+    text=(
+        f"{total_findings} findings / "
+        f"{total_checklists} checks"
+    ),
+    x=0.5,
+    y=0.40,
+    showarrow=False,
+    font=dict(
+        size=10,
+        color=MUTED
+    )
+)
+
+
+compliance_chart.update_layout(
+    title="● TOTAL COMPLIANCE (%) — OVERALL",
     showlegend=False,
     height=290
 )
 
 
 style_chart(
-    total_chart
+    compliance_chart
 )
 
 
 with row1_col1:
 
     st.plotly_chart(
-        total_chart,
+        compliance_chart,
         use_container_width=True,
         config={"displayModeBar": False}
     )
@@ -1114,9 +1189,6 @@ with row2_col2:
 
 # ============================================================
 # MANAGEMENT INSIGHTS
-#
-# IMPORTANT:
-# OpenAI is called ONLY when the button is clicked.
 # ============================================================
 
 @st.cache_resource
@@ -1540,7 +1612,7 @@ if generate_ai:
             "OpenAI API is not configured. "
             "Add OPENAI_API_KEY to "
             "Streamlit Secrets when you "
-            "want to generate an summary."
+            "want to generate a summary."
         )
 
 

@@ -2042,13 +2042,23 @@ SUMMARY
 </div>
 
 <div style="
+    margin-top:20px;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+">
+
+<span style="
     color:{TEXT};
     font-size:42px;
     font-weight:700;
     line-height:1.1;
-    margin-top:20px;
 ">
 {latest_week_checklist_count}
+</span>
+
+{checklist_change_html}
+
 </div>
 
 <div class="ai-text"

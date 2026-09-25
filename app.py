@@ -1364,16 +1364,15 @@ current_work_week = (
 
 current_week_df = filtered_df[
     (
-        filtered_df["week_year"]
-        == current_iso_year
+        filtered_df["finding_datetime_report"]
+        >= report_start
     )
     &
     (
-        filtered_df["week_number"]
-        == current_iso_week
+        filtered_df["finding_datetime_report"]
+        < report_end
     )
 ].copy()
-
 
 # ============================================================
 # HISTORICAL FINDINGS
@@ -1381,20 +1380,8 @@ current_week_df = filtered_df[
 
 historical_df = filtered_df[
     (
-        filtered_df["week_year"]
-        < current_iso_year
-    )
-    |
-    (
-        (
-            filtered_df["week_year"]
-            == current_iso_year
-        )
-        &
-        (
-            filtered_df["week_number"]
-            < current_iso_week
-        )
+        filtered_df["finding_datetime_report"]
+        < report_start
     )
 ].copy()
 

@@ -2163,17 +2163,6 @@ Current Week
 {highlight}
 </div>
 
-<div class="ai-label">
-WW Summary
-</div>
-
-<div class="ai-text">
-
-Total Findings:
-<b style="color:{TEXT};">
-{current_total}
-</b>
-
 </div>
 
 </div>

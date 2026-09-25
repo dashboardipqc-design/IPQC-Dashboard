@@ -127,27 +127,13 @@ st.markdown(
     border: 1px solid {BORDER};
     border-radius: 12px;
     padding: 20px 22px;
-    min-height: 340px;
-    height: 100%;
+    min-height: 510px;
+    height: 510px;
     box-sizing: border-box;
+    overflow-y: auto;
 }}
 
 /* Make Streamlit column content fill available height */
-div[data-testid="stColumn"] > div {{
-    height: 100%;
-}}
-
-div[data-testid="column"] > div {{
-    height: 100%;
-}}
-
-div[data-testid="stColumn"] div[data-testid="stMarkdownContainer"] {{
-    height: 100%;
-}}
-
-div[data-testid="column"] div[data-testid="stMarkdownContainer"] {{
-    height: 100%;
-}}
 
     .ai-title {{
         color: {MUTED};

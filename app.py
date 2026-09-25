@@ -121,24 +121,27 @@ st.markdown(
         gap: 0.8rem;
     }}
 
-    div[data-testid="stHorizontalBlock"] {{
-        align-items: stretch;
-    }}
 
-    div[data-testid="column"] > div {{
-        height: 100%;
-    }}
+.ai-card {
+    background: {CARD};
+    border: 1px solid {BORDER};
+    border-radius: 12px;
+    padding: 20px 22px;
+    min-height: 340px;
+    height: 100%;
+    box-sizing: border-box;
+}
 
-    .ai-card {{
-        background: {CARD};
-        border: 1px solid {BORDER};
-        border-radius: 12px;
-        padding: 20px 22px;
-        min-height: 340px;
-        height: 100%;
-        box-sizing: border-box;
-    }}
+/* Make Streamlit markdown wrapper fill the column height */
+div[data-testid="stColumn"] > div,
+div[data-testid="column"] > div {
+    height: 100%;
+}
 
+div[data-testid="stColumn"] div[data-testid="stMarkdownContainer"],
+div[data-testid="column"] div[data-testid="stMarkdownContainer"] {
+    height: 100%;
+}
     .ai-title {{
         color: {MUTED};
         font-size: 14px;
@@ -1940,9 +1943,9 @@ highlight = safe_text(
 # ============================================================
 
 summary_col, ai_col1, ai_col2 = st.columns(
-    [0.75, 1.35, 1]
+    [0.75, 1.35, 1],
+    vertical_alignment="stretch"
 )
-
 
 # ============================================================
 # WEEKLY SUMMARY

@@ -1657,30 +1657,20 @@ RULES:
 
 - Observation must summarize only findings from the current work week.
 - Highlight must summarize only positive from the current work week.
-- Historical findings are provided only to determine whether a similar
-  issue occurred previously.
+- Historical findings are provided only to determine whether a similar issue occurred previously.
 - Do not summarize historical findings as current-week findings.
 - Do not invent root causes.
 - Do not invent corrective actions.
 - Do not invent past occurrences.
-- Do not consider two findings similar merely because they have the
-  same broad category.
-- When identifying a similar historical occurrence, consider the
-  finding description, issue mechanism, process, station and equipment.
-- If a reasonably similar historical occurrence exists, state the
-  previous work week and relevant area/station.
+- Do not consider two findings similar merely because they have the same broad category.
+- When identifying a similar historical occurrence, consider the finding description, issue mechanism, process, station and equipment.
+- If a reasonably similar historical occurrence exists, state the previous work week and relevant area/station.
 - If there is no reasonably similar historical occurrence, state:
   "No similar historical occurrence identified."
-- Recommendation must be practical for IPQC, Quality, Production
-  or Process Engineering follow-up.
-- Recommendations may include verification, investigation,
-  recurrence review, containment verification, corrective-action
-  review or effectiveness verification.
-- Do not state that a previous corrective action failed unless the
-  supplied records provide evidence for that conclusion.
-- Zero findings means only "No findings recorded".
-  Do not interpret zero findings as proof of good compliance or
-  process performance.
+- Recommendation must be practical for IPQC, Quality, Production or Process Engineering follow-up.
+- Recommendations may include verification, investigation, recurrence review, containment verification, corrective-action review or effectiveness verification.
+- Do not state that a previous corrective action failed unless the supplied records provide evidence for that conclusion.
+- Zero findings means only "No findings recorded". Do not interpret zero findings as proof of good compliance or process performance.
 - Use concise management-level wording.
 - Do not use markdown.
 - Return ONLY valid JSON.

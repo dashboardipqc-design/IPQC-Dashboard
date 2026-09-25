@@ -263,6 +263,55 @@ current_time = datetime.now(
     ZoneInfo("Asia/Kuala_Lumpur")
 )
 
+# ============================================================
+# LATEST COMPLETED REPORTING WEEK
+# FRIDAY 06:30 -> FRIDAY 06:30
+# ============================================================
+
+MALAYSIA_TZ = ZoneInfo(
+    "Asia/Kuala_Lumpur"
+)
+
+
+# Find the most recent Friday
+days_since_friday = (
+    current_time.weekday() - 4
+) % 7
+
+most_recent_friday = (
+    current_time.date()
+    - timedelta(days=days_since_friday)
+)
+
+
+friday_cutoff = datetime(
+    most_recent_friday.year,
+    most_recent_friday.month,
+    most_recent_friday.day,
+    6,
+    30,
+    tzinfo=MALAYSIA_TZ
+)
+
+
+# If it is Friday but before 06:30,
+# the latest completed period ended last Friday
+if current_time < friday_cutoff:
+
+    report_end = (
+        friday_cutoff
+        - timedelta(days=7)
+    )
+
+else:
+
+    report_end = friday_cutoff
+
+
+report_start = (
+    report_end
+    - timedelta(days=7)
+)
 
 # ============================================================
 # HEADER
@@ -410,6 +459,99 @@ df["work_week"] = (
     .zfill(2)
 )
 
+# ============================================================
+# LATEST COMPLETED WEEK SUMMARY
+# FRIDAY 06:30 -> FRIDAY 06:30
+# ============================================================
+
+# ------------------------------------------------------------
+# FINDING DATETIME FOR REPORTING WINDOW
+# ------------------------------------------------------------
+
+df["finding_datetime_report"] = (
+    pd.to_datetime(
+        df["finding_datetime"],
+        format="%d-%b-%Y %H:%M:%S",
+        errors="coerce"
+    )
+    .dt.tz_localize(
+        MALAYSIA_TZ
+    )
+)
+
+
+# ------------------------------------------------------------
+# CHECKLIST DATETIME FOR REPORTING WINDOW
+# ------------------------------------------------------------
+
+if not checklist_df.empty:
+
+    checklist_df[
+        "inspection_datetime_report"
+    ] = pd.to_datetime(
+        checklist_df[
+            "inspection_datetime"
+        ],
+        errors="coerce",
+        utc=True
+    ).dt.tz_convert(
+        MALAYSIA_TZ
+    )
+
+
+    latest_week_checklists = (
+        checklist_df[
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                >= report_start
+            )
+            &
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                < report_end
+            )
+        ]
+        .copy()
+    )
+
+
+    latest_week_checklist_count = len(
+        latest_week_checklists
+    )
+
+
+else:
+
+    latest_week_checklist_count = 0
+
+
+# ------------------------------------------------------------
+# FINDINGS FOR SAME REPORTING WINDOW
+# ------------------------------------------------------------
+
+latest_week_findings = (
+    df[
+        (
+            df["finding_datetime_report"]
+            >= report_start
+        )
+        &
+        (
+            df["finding_datetime_report"]
+            < report_end
+        )
+    ]
+    .copy()
+)
+
+
+latest_week_finding_count = len(
+    latest_week_findings
+)
 
 # ============================================================
 # SHORT CATEGORY NAME
@@ -1807,13 +1949,78 @@ highlight = safe_text(
 
 
 # ============================================================
-# AI CARDS
+# SUMMARY + AI CARDS
 # ============================================================
 
-ai_col1, ai_col2 = st.columns(
-    [1.35, 1]
+summary_col, ai_col1, ai_col2 = st.columns(
+    [0.75, 1.35, 1]
 )
 
+
+# ============================================================
+# WEEKLY SUMMARY
+# ============================================================
+
+with summary_col:
+
+    st.markdown(
+        f"""
+<div class="ai-card">
+
+<div class="ai-title">
+<span style="color:{CYAN};">●</span>
+SUMMARY
+</div>
+
+<div style="
+    color:{TEXT};
+    font-size:42px;
+    font-weight:700;
+    line-height:1.1;
+    margin-top:20px;
+">
+{latest_week_checklist_count}
+</div>
+
+<div class="ai-text"
+     style="margin-top:8px;">
+Total Checklist Completed
+</div>
+
+
+<div style="
+    color:{GREEN};
+    font-size:38px;
+    font-weight:700;
+    line-height:1.1;
+    margin-top:32px;
+">
+{latest_week_finding_count}
+</div>
+
+<div class="ai-text"
+     style="margin-top:8px;">
+Total Findings
+</div>
+
+
+<div style="
+    color:{MUTED};
+    font-size:10px;
+    margin-top:25px;
+    line-height:1.5;
+">
+{report_start.strftime("%d-%b-%Y %H:%M")}
+<br>
+to
+<br>
+{report_end.strftime("%d-%b-%Y %H:%M")}
+</div>
+
+</div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # ============================================================
 # KEY OBSERVATIONS / LOW LIGHT

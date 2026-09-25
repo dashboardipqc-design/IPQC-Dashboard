@@ -1992,11 +1992,7 @@ Total Findings
     margin-top:25px;
     line-height:1.5;
 ">
-{report_start.strftime("%d-%b-%Y %H:%M")}
-<br>
-to
-<br>
-{report_end.strftime("%d-%b-%Y %H:%M")}
+{report_start.strftime("%d-%b-%Y %H:%M")} to {report_end.strftime("%d-%b-%Y %H:%M")}
 </div>
 
 </div>

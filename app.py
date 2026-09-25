@@ -122,7 +122,7 @@ st.markdown(
     }}
 
 
-.ai-card {
+.ai-card {{
     background: {CARD};
     border: 1px solid {BORDER};
     border-radius: 12px;
@@ -130,18 +130,25 @@ st.markdown(
     min-height: 340px;
     height: 100%;
     box-sizing: border-box;
-}
+}}
 
-/* Make Streamlit markdown wrapper fill the column height */
-div[data-testid="stColumn"] > div,
-div[data-testid="column"] > div {
+/* Make Streamlit column content fill available height */
+div[data-testid="stColumn"] > div {{
     height: 100%;
-}
+}}
 
-div[data-testid="stColumn"] div[data-testid="stMarkdownContainer"],
-div[data-testid="column"] div[data-testid="stMarkdownContainer"] {
+div[data-testid="column"] > div {{
     height: 100%;
-}
+}}
+
+div[data-testid="stColumn"] div[data-testid="stMarkdownContainer"] {{
+    height: 100%;
+}}
+
+div[data-testid="column"] div[data-testid="stMarkdownContainer"] {{
+    height: 100%;
+}}
+
     .ai-title {{
         color: {MUTED};
         font-size: 14px;

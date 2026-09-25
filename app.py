@@ -524,6 +524,93 @@ else:
 
     latest_week_checklist_count = 0
 
+# ------------------------------------------------------------
+# PREVIOUS WEEK CHECKLIST COUNT
+# ------------------------------------------------------------
+
+previous_report_end = report_start
+
+previous_report_start = (
+    previous_report_end
+    - timedelta(days=7)
+)
+
+
+if not checklist_df.empty:
+
+    previous_week_checklists = (
+        checklist_df[
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                >= previous_report_start
+            )
+            &
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                < previous_report_end
+            )
+        ]
+        .copy()
+    )
+
+    previous_week_checklist_count = len(
+        previous_week_checklists
+    )
+
+
+else:
+
+    previous_week_checklist_count = 0
+
+
+# ------------------------------------------------------------
+# CHECKLIST WEEK-ON-WEEK CHANGE
+# ------------------------------------------------------------
+
+checklist_change = (
+    latest_week_checklist_count
+    - previous_week_checklist_count
+)
+
+
+if checklist_change > 0:
+
+    checklist_change_html = (
+        f'<span style="'
+        f'color:{GREEN}; '
+        f'font-size:20px; '
+        f'font-weight:700;">'
+        f'▲ {checklist_change}'
+        f'</span>'
+    )
+
+
+elif checklist_change < 0:
+
+    checklist_change_html = (
+        f'<span style="'
+        f'color:{RED}; '
+        f'font-size:20px; '
+        f'font-weight:700;">'
+        f'▼ {abs(checklist_change)}'
+        f'</span>'
+    )
+
+
+else:
+
+    checklist_change_html = (
+        f'<span style="'
+        f'color:{TEXT}; '
+        f'font-size:20px; '
+        f'font-weight:700;">'
+        f'—'
+        f'</span>'
+    )
 
 # ------------------------------------------------------------
 # FINDINGS FOR SAME REPORTING WINDOW

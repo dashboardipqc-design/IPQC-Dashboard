@@ -1931,20 +1931,26 @@ if generate_ai:
                 )
 
 
-ai_summary_store[selected_week_label] = {
-    "summary": new_summary,
+            # Save AI summary separately for each work week
+            ai_summary_store[
+                selected_week_label
+            ] = {
 
-    "generated_at": (
-        datetime.now(
-            ZoneInfo(
-                "Asia/Kuala_Lumpur"
-            )
-        )
-        .strftime(
-            "%d-%b-%Y %H:%M"
-        )
-    )
-}
+                "summary":
+                    new_summary,
+
+                "generated_at":
+                    (
+                        datetime.now(
+                            ZoneInfo(
+                                "Asia/Kuala_Lumpur"
+                            )
+                        )
+                        .strftime(
+                            "%d-%b-%Y %H:%M"
+                        )
+                    )
+            }
 
 
             st.success(

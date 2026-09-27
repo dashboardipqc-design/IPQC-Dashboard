@@ -1662,8 +1662,8 @@ historical_records = (
 
 ai_payload = {
 
-    "current_work_week":
-        current_work_week,
+    "selected_week_label":
+        selected_week_label,
 
     "current_week_statistics": {
 
@@ -1715,7 +1715,7 @@ def generate_new_ai_summary(
     prompt = f"""
 You are supporting an IPQC management dashboard for a semiconductor assembly operation.
 
-The current work week is {current_work_week}.
+The current work week is {selected_week_label}.
 
 Analyze the supplied IPQC data and generate:
 
@@ -1873,7 +1873,7 @@ selected_report_end = (
 )
 
 
-current_work_week = (
+selected_week_label = (
     selected_week_label
 )
 selected_reporting_week = next(
@@ -1900,7 +1900,7 @@ selected_iso_week = (
 )
 
 
-current_work_week = (
+selected_week_label = (
     selected_week_label
 )
 
@@ -1919,7 +1919,7 @@ with ai_header_col1:
     font-weight:700;
     padding-top:8px;
 ">
-MANAGEMENT INSIGHTS — {current_work_week}
+MANAGEMENT INSIGHTS — {selected_week_label}
 </div>
         """,
         unsafe_allow_html=True
@@ -1949,7 +1949,7 @@ if generate_ai:
 
         st.warning(
             f"No findings recorded for "
-            f"{current_work_week}. "
+            f"{selected_week_label}. "
             "Summary was not generated."
         )
 
@@ -1973,7 +1973,7 @@ if generate_ai:
 
             with st.spinner(
                 f"Generating "
-                f"{current_work_week} "
+                f"{selected_week_label} "
                 "summary..."
             ):
 
@@ -1991,7 +1991,7 @@ if generate_ai:
 
                 ai_summary_store[
                     "work_week"
-                ] = current_work_week
+                ] = selected_week_label
 
 
                 ai_summary_store[
@@ -2009,7 +2009,7 @@ if generate_ai:
 
 
             st.success(
-                f"{current_work_week} "
+                f"{selected_week_label} "
                 "summary generated."
             )
 
@@ -2058,12 +2058,12 @@ generated_at = (
 if (
     cached_summary is None
     or
-    cached_week != current_work_week
+    cached_week != selected_week_label
 ):
 
     observation = (
         f"{current_total} finding(s) "
-        f"recorded in {current_work_week} "
+        f"recorded in {selected_week_label} "
         "for the selected scope."
     )
 
@@ -2084,7 +2084,7 @@ if (
 
 
     highlight = (
-        f"Current {current_work_week}: "
+        f"Current {selected_week_label}: "
         f"{current_total} finding(s)."
     )
 
@@ -2252,7 +2252,7 @@ KEY OBSERVATIONS / LOW LIGHT
 </div>
 
 <div class="lowlight-header">
-⚠ Low Light — {current_work_week}
+⚠ Low Light — {selected_week_label}
 </div>
 
 <div class="ai-label">
@@ -2301,7 +2301,7 @@ HIGHLIGHTS
 </div>
 
 <div class="highlight-header">
-★ Highlight — {current_work_week}
+★ Highlight — {selected_week_label}
 </div>
 
 <div class="ai-label">

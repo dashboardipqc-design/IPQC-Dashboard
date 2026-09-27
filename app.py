@@ -1512,25 +1512,6 @@ for weeks_ago in range(52):
 
 
 
-selected_reporting_week = next(
-    week
-    for week in available_reporting_weeks
-    if week["label"] == selected_week_label
-)
-
-
-selected_report_start = (
-    selected_reporting_week["start"]
-)
-
-selected_report_end = (
-    selected_reporting_week["end"]
-)
-
-
-current_work_week = (
-    selected_week_label
-)
 
 # ============================================================
 # CURRENT WW FINDINGS
@@ -1872,6 +1853,29 @@ with ai_header_col2:
     )
 
 
+# ============================================================
+# SELECTED REPORTING WEEK
+# ============================================================
+
+selected_reporting_week = next(
+    week
+    for week in available_reporting_weeks
+    if week["label"] == selected_week_label
+)
+
+
+selected_report_start = (
+    selected_reporting_week["start"]
+)
+
+selected_report_end = (
+    selected_reporting_week["end"]
+)
+
+
+current_work_week = (
+    selected_week_label
+)
 selected_reporting_week = next(
     week
     for week in available_reporting_weeks

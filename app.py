@@ -1845,28 +1845,12 @@ st.markdown(
 )
 
 
-ai_header_col1, ai_header_col2, ai_header_col3 = (
+ai_header_col1, ai_header_col3 = (
     st.columns(
-        [3, 1, 1.4]
+        [4, 1]
     )
 )
 
-with ai_header_col2:
-
-    st.markdown(
-        f"""
-<div style="
-    color:{TEXT};
-    font-size:14px;
-    font-weight:700;
-    text-align:center;
-    padding-top:8px;
-">
-{selected_week_label}
-</div>
-        """,
-        unsafe_allow_html=True
-    )
 
 # ============================================================
 # MANAGEMENT INSIGHTS TITLE

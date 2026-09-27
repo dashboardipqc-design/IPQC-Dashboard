@@ -1315,7 +1315,7 @@ with ai_header_col1:
     font-weight:700;
     padding-top:8px;
 ">
-MANAGEMENT INSIGHTS — Select Work Week
+MANAGEMENT INSIGHTS
 </div>
         """,
         unsafe_allow_html=True

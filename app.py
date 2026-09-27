@@ -1681,12 +1681,20 @@ latest_week_finding_count = len(
 
 current_week_df = filtered_df[
     (
-        filtered_df["finding_datetime_report"]
+        pd.to_datetime(
+            filtered_df["finding_datetime"],
+            format="%d-%b-%Y %H:%M:%S",
+            errors="coerce"
+        ).dt.tz_localize(MALAYSIA_TZ)
         >= selected_report_start
     )
     &
     (
-        filtered_df["finding_datetime_report"]
+        pd.to_datetime(
+            filtered_df["finding_datetime"],
+            format="%d-%b-%Y %H:%M:%S",
+            errors="coerce"
+        ).dt.tz_localize(MALAYSIA_TZ)
         < selected_report_end
     )
 ].copy()
@@ -1698,7 +1706,11 @@ current_week_df = filtered_df[
 
 historical_df = filtered_df[
     (
-        filtered_df["finding_datetime_report"]
+        pd.to_datetime(
+            filtered_df["finding_datetime"],
+            format="%d-%b-%Y %H:%M:%S",
+            errors="coerce"
+        ).dt.tz_localize(MALAYSIA_TZ)
         < selected_report_start
     )
 ].copy()

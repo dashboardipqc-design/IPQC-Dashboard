@@ -1290,17 +1290,6 @@ ai_summary_store = (
 # REPORTING WEEK DROPDOWN
 # ============================================================
 
-selected_week_label = st.selectbox(
-    "Reporting Week",
-    options=[
-        week["label"]
-        for week in available_reporting_weeks
-    ],
-    index=0,
-    key="management_reporting_week"
-)
-
-
 selected_reporting_week = next(
     week
     for week in available_reporting_weeks
@@ -1845,12 +1834,11 @@ st.markdown(
 )
 
 
-ai_header_col1, ai_header_col3 = (
+ai_header_col1, ai_header_col2, ai_header_col3 = (
     st.columns(
-        [4, 1]
+        [1.55, 1, 1]
     )
 )
-
 
 # ============================================================
 # MANAGEMENT INSIGHTS TITLE
@@ -1866,13 +1854,25 @@ with ai_header_col1:
     font-weight:700;
     padding-top:8px;
 ">
-MANAGEMENT INSIGHTS — {selected_week_label}
+MANAGEMENT INSIGHTS — Select Work Week
 </div>
         """,
         unsafe_allow_html=True
     )
 
+with ai_header_col2:
 
+    selected_week_label = st.selectbox(
+        "Select Work Week",
+        options=[
+            week["label"]
+            for week in available_reporting_weeks
+        ],
+        index=0,
+        key="management_reporting_week",
+        label_visibility="collapsed"
+    )
+    
 # ============================================================
 # GENERATE SUMMARY BUTTON
 # ============================================================

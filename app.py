@@ -1931,28 +1931,20 @@ if generate_ai:
                 )
 
 
-                ai_summary_store[
-                    "summary"
-                ] = new_summary
+ai_summary_store[selected_week_label] = {
+    "summary": new_summary,
 
-
-                ai_summary_store[
-                    "work_week"
-                ] = selected_week_label
-
-
-                ai_summary_store[
-                    "generated_at"
-                ] = (
-                    datetime.now(
-                        ZoneInfo(
-                            "Asia/Kuala_Lumpur"
-                        )
-                    )
-                    .strftime(
-                        "%d-%b-%Y %H:%M"
-                    )
-                )
+    "generated_at": (
+        datetime.now(
+            ZoneInfo(
+                "Asia/Kuala_Lumpur"
+            )
+        )
+        .strftime(
+            "%d-%b-%Y %H:%M"
+        )
+    )
+}
 
 
             st.success(
@@ -1974,39 +1966,40 @@ if generate_ai:
 
 
 # ============================================================
-# READ EXISTING AI SUMMARY
+# READ EXISTING AI SUMMARY FOR SELECTED WEEK
 # ============================================================
 
-cached_summary = (
+selected_week_cache = (
     ai_summary_store.get(
-        "summary"
+        selected_week_label
     )
 )
 
 
-cached_week = (
-    ai_summary_store.get(
-        "work_week"
+if selected_week_cache:
+
+    cached_summary = (
+        selected_week_cache.get(
+            "summary"
+        )
     )
-)
 
-
-generated_at = (
-    ai_summary_store.get(
-        "generated_at"
+    generated_at = (
+        selected_week_cache.get(
+            "generated_at"
+        )
     )
-)
 
+else:
+
+    cached_summary = None
+    generated_at = None
 
 # ============================================================
 # DEFAULT SENTENCES
 # ============================================================
 
-if (
-    cached_summary is None
-    or
-    cached_week != selected_week_label
-):
+if cached_summary is None:
 
     observation = (
         f"{current_total} finding(s) "

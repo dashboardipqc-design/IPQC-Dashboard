@@ -1285,6 +1285,66 @@ def get_ai_summary_store():
 ai_summary_store = (
     get_ai_summary_store()
 )
+# ============================================================
+# AI SECTION HEADER
+# ============================================================
+
+st.markdown(
+    "<br>",
+    unsafe_allow_html=True
+)
+
+
+ai_header_col1, ai_header_col2, ai_header_col3 = (
+    st.columns(
+        [1.55, 1, 1]
+    )
+)
+
+# ============================================================
+# MANAGEMENT INSIGHTS TITLE
+# ============================================================
+
+with ai_header_col1:
+
+    st.markdown(
+        f"""
+<div style="
+    color:{MUTED};
+    font-size:14px;
+    font-weight:700;
+    padding-top:8px;
+">
+MANAGEMENT INSIGHTS — Select Work Week
+</div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with ai_header_col2:
+
+    selected_week_label = st.selectbox(
+        "Select Work Week",
+        options=[
+            week["label"]
+            for week in available_reporting_weeks
+        ],
+        index=0,
+        key="management_reporting_week",
+        label_visibility="collapsed"
+    )
+    
+# ============================================================
+# GENERATE SUMMARY BUTTON
+# ============================================================
+
+with ai_header_col3:
+
+    generate_ai = st.button(
+        "✨ Generate Summary",
+        use_container_width=True,
+        type="primary"
+    )
 
 # ============================================================
 # REPORTING WEEK DROPDOWN
@@ -1824,66 +1884,6 @@ def safe_text(value):
     )
 
 
-# ============================================================
-# AI SECTION HEADER
-# ============================================================
-
-st.markdown(
-    "<br>",
-    unsafe_allow_html=True
-)
-
-
-ai_header_col1, ai_header_col2, ai_header_col3 = (
-    st.columns(
-        [1.55, 1, 1]
-    )
-)
-
-# ============================================================
-# MANAGEMENT INSIGHTS TITLE
-# ============================================================
-
-with ai_header_col1:
-
-    st.markdown(
-        f"""
-<div style="
-    color:{MUTED};
-    font-size:14px;
-    font-weight:700;
-    padding-top:8px;
-">
-MANAGEMENT INSIGHTS — Select Work Week
-</div>
-        """,
-        unsafe_allow_html=True
-    )
-
-with ai_header_col2:
-
-    selected_week_label = st.selectbox(
-        "Select Work Week",
-        options=[
-            week["label"]
-            for week in available_reporting_weeks
-        ],
-        index=0,
-        key="management_reporting_week",
-        label_visibility="collapsed"
-    )
-    
-# ============================================================
-# GENERATE SUMMARY BUTTON
-# ============================================================
-
-with ai_header_col3:
-
-    generate_ai = st.button(
-        "✨ Generate Summary",
-        use_container_width=True,
-        type="primary"
-    )
 
 
 # ============================================================

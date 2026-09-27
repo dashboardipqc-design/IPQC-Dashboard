@@ -1510,14 +1510,6 @@ for weeks_ago in range(52):
     )
 
 
-selected_week_label = st.selectbox(
-    "Reporting Week",
-    options=[
-        week["label"]
-        for week in available_reporting_weeks
-    ],
-    index=0
-)
 
 
 selected_reporting_week = next(

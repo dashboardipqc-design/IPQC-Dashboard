@@ -308,7 +308,47 @@ report_start = (
     report_end
     - timedelta(days=7)
 )
+# ============================================================
+# AVAILABLE REPORTING WEEKS
+# ============================================================
 
+available_reporting_weeks = []
+
+
+for weeks_ago in range(52):
+
+    week_end = (
+        report_end
+        - timedelta(weeks=weeks_ago)
+    )
+
+    week_start = (
+        week_end
+        - timedelta(days=7)
+    )
+
+    iso_year, iso_week, _ = (
+        week_end.date().isocalendar()
+    )
+
+    available_reporting_weeks.append(
+        {
+            "label":
+                f"WW{iso_week:02d}'{str(iso_year)[-2:]}",
+
+            "year":
+                iso_year,
+
+            "week":
+                iso_week,
+
+            "start":
+                week_start,
+
+            "end":
+                week_end
+        }
+    )
 # ============================================================
 # HEADER
 # ============================================================
@@ -1428,18 +1468,77 @@ ai_summary_store = (
 
 
 # ============================================================
-# CURRENT WORK WEEK
+# REPORTING WEEK SELECTION
 # ============================================================
 
-current_iso_year, current_iso_week, _ = (
-    current_date.isocalendar()
+available_reporting_weeks = []
+
+
+for weeks_ago in range(52):
+
+    week_end = (
+        report_end
+        - timedelta(weeks=weeks_ago)
+    )
+
+    week_start = (
+        week_end
+        - timedelta(days=7)
+    )
+
+    iso_year, iso_week, _ = (
+        week_end.date().isocalendar()
+    )
+
+    available_reporting_weeks.append(
+        {
+            "label":
+                f"WW{iso_week:02d}'{str(iso_year)[-2:]}",
+
+            "year":
+                iso_year,
+
+            "week":
+                iso_week,
+
+            "start":
+                week_start,
+
+            "end":
+                week_end
+        }
+    )
+
+
+selected_week_label = st.selectbox(
+    "Reporting Week",
+    options=[
+        week["label"]
+        for week in available_reporting_weeks
+    ],
+    index=0
+)
+
+
+selected_reporting_week = next(
+    week
+    for week in available_reporting_weeks
+    if week["label"] == selected_week_label
+)
+
+
+selected_report_start = (
+    selected_reporting_week["start"]
+)
+
+selected_report_end = (
+    selected_reporting_week["end"]
 )
 
 
 current_work_week = (
-    f"WW{current_iso_week:02d}"
+    selected_week_label
 )
-
 
 # ============================================================
 # CURRENT WW FINDINGS
@@ -1757,12 +1856,62 @@ st.markdown(
 )
 
 
-ai_header_col1, ai_header_col2 = (
+ai_header_col1, ai_header_col2, ai_header_col3 = (
     st.columns(
-        [4, 1]
+        [3, 1, 1.4]
     )
 )
 
+
+# ============================================================
+# REPORTING WEEK DROPDOWN
+# ============================================================
+
+with ai_header_col2:
+
+    selected_week_label = st.selectbox(
+        "Reporting Week",
+        options=[
+            week["label"]
+            for week in available_reporting_weeks
+        ],
+        index=0,
+        label_visibility="collapsed"
+    )
+
+
+selected_reporting_week = next(
+    week
+    for week in available_reporting_weeks
+    if week["label"] == selected_week_label
+)
+
+
+selected_report_start = (
+    selected_reporting_week["start"]
+)
+
+selected_report_end = (
+    selected_reporting_week["end"]
+)
+
+selected_iso_year = (
+    selected_reporting_week["year"]
+)
+
+selected_iso_week = (
+    selected_reporting_week["week"]
+)
+
+
+current_work_week = (
+    selected_week_label
+)
+
+
+# ============================================================
+# MANAGEMENT INSIGHTS TITLE
+# ============================================================
 
 with ai_header_col1:
 
@@ -1781,7 +1930,11 @@ MANAGEMENT INSIGHTS — {current_work_week}
     )
 
 
-with ai_header_col2:
+# ============================================================
+# GENERATE SUMMARY BUTTON
+# ============================================================
+
+with ai_header_col3:
 
     generate_ai = st.button(
         "✨ Generate Summary",

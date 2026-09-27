@@ -495,186 +495,6 @@ df["work_week"] = (
     .zfill(2)
 )
 
-# ============================================================
-# LATEST COMPLETED WEEK SUMMARY
-# FRIDAY 06:30 -> FRIDAY 06:30
-# ============================================================
-
-# ------------------------------------------------------------
-# FINDING DATETIME FOR REPORTING WINDOW
-# ------------------------------------------------------------
-
-df["finding_datetime_report"] = (
-    pd.to_datetime(
-        df["finding_datetime"],
-        format="%d-%b-%Y %H:%M:%S",
-        errors="coerce"
-    )
-    .dt.tz_localize(
-        MALAYSIA_TZ
-    )
-)
-
-
-# ------------------------------------------------------------
-# CHECKLIST DATETIME FOR REPORTING WINDOW
-# ------------------------------------------------------------
-
-if not checklist_df.empty:
-
-    checklist_df[
-        "inspection_datetime_report"
-    ] = pd.to_datetime(
-        checklist_df[
-            "inspection_datetime"
-        ],
-        errors="coerce",
-        utc=True
-    ).dt.tz_convert(
-        MALAYSIA_TZ
-    )
-
-
-    latest_week_checklists = (
-        checklist_df[
-            (
-                checklist_df[
-                    "inspection_datetime_report"
-                ]
-                >= report_start
-            )
-            &
-            (
-                checklist_df[
-                    "inspection_datetime_report"
-                ]
-                < report_end
-            )
-        ]
-        .copy()
-    )
-
-
-    latest_week_checklist_count = len(
-        latest_week_checklists
-    )
-
-
-else:
-
-    latest_week_checklist_count = 0
-
-# ------------------------------------------------------------
-# PREVIOUS WEEK CHECKLIST COUNT
-# ------------------------------------------------------------
-
-previous_report_end = report_start
-
-previous_report_start = (
-    previous_report_end
-    - timedelta(days=7)
-)
-
-
-if not checklist_df.empty:
-
-    previous_week_checklists = (
-        checklist_df[
-            (
-                checklist_df[
-                    "inspection_datetime_report"
-                ]
-                >= previous_report_start
-            )
-            &
-            (
-                checklist_df[
-                    "inspection_datetime_report"
-                ]
-                < previous_report_end
-            )
-        ]
-        .copy()
-    )
-
-    previous_week_checklist_count = len(
-        previous_week_checklists
-    )
-
-
-else:
-
-    previous_week_checklist_count = 0
-
-
-# ------------------------------------------------------------
-# CHECKLIST WEEK-ON-WEEK CHANGE
-# ------------------------------------------------------------
-
-checklist_change = (
-    latest_week_checklist_count
-    - previous_week_checklist_count
-)
-
-
-if checklist_change > 0:
-
-    checklist_change_html = (
-        f'<span style="'
-        f'color:{GREEN}; '
-        f'font-size:20px; '
-        f'font-weight:700;">'
-        f'▲ {checklist_change}'
-        f'</span>'
-    )
-
-
-elif checklist_change < 0:
-
-    checklist_change_html = (
-        f'<span style="'
-        f'color:{RED}; '
-        f'font-size:20px; '
-        f'font-weight:700;">'
-        f'▼ {abs(checklist_change)}'
-        f'</span>'
-    )
-
-
-else:
-
-    checklist_change_html = (
-        f'<span style="'
-        f'color:{TEXT}; '
-        f'font-size:20px; '
-        f'font-weight:700;">'
-        f'—'
-        f'</span>'
-    )
-
-# ------------------------------------------------------------
-# FINDINGS FOR SAME REPORTING WINDOW
-# ------------------------------------------------------------
-
-latest_week_findings = (
-    df[
-        (
-            df["finding_datetime_report"]
-            >= report_start
-        )
-        &
-        (
-            df["finding_datetime_report"]
-            < report_end
-        )
-    ]
-    .copy()
-)
-
-
-latest_week_finding_count = len(
-    latest_week_findings
-)
 
 # ============================================================
 # SHORT CATEGORY NAME
@@ -1466,68 +1286,411 @@ ai_summary_store = (
     get_ai_summary_store()
 )
 
+# ============================================================
+# REPORTING WEEK DROPDOWN
+# ============================================================
+
+selected_week_label = st.selectbox(
+    "Reporting Week",
+    options=[
+        week["label"]
+        for week in available_reporting_weeks
+    ],
+    index=0,
+    key="management_reporting_week"
+)
+
+
+selected_reporting_week = next(
+    week
+    for week in available_reporting_weeks
+    if week["label"] == selected_week_label
+)
+
+
+selected_report_start = (
+    selected_reporting_week["start"]
+)
+
+selected_report_end = (
+    selected_reporting_week["end"]
+)
+
+selected_iso_year = (
+    selected_reporting_week["year"]
+)
+
+selected_iso_week = (
+    selected_reporting_week["week"]
+)
 
 # ============================================================
-# REPORTING WEEK SELECTION
+# SELECTED WEEK SUMMARY
+# FRIDAY 06:30 -> FRIDAY 06:30
 # ============================================================
 
-available_reporting_weeks = []
+# ------------------------------------------------------------
+# FINDING DATETIME FOR REPORTING WINDOW
+# ------------------------------------------------------------
 
-
-for weeks_ago in range(52):
-
-    week_end = (
-        report_end
-        - timedelta(weeks=weeks_ago)
+df["finding_datetime_report"] = (
+    pd.to_datetime(
+        df["finding_datetime"],
+        format="%d-%b-%Y %H:%M:%S",
+        errors="coerce"
     )
-
-    week_start = (
-        week_end
-        - timedelta(days=7)
+    .dt.tz_localize(
+        MALAYSIA_TZ
     )
+)
 
-    iso_year, iso_week, _ = (
-        week_end.date().isocalendar()
-    )
 
-    available_reporting_weeks.append(
-        {
-            "label":
-                f"WW{iso_week:02d}'{str(iso_year)[-2:]}",
+# ------------------------------------------------------------
+# CHECKLIST DATETIME FOR REPORTING WINDOW
+# ------------------------------------------------------------
 
-            "year":
-                iso_year,
+if not checklist_df.empty:
 
-            "week":
-                iso_week,
-
-            "start":
-                week_start,
-
-            "end":
-                week_end
-        }
+    checklist_df[
+        "inspection_datetime_report"
+    ] = pd.to_datetime(
+        checklist_df[
+            "inspection_datetime"
+        ],
+        errors="coerce",
+        utc=True
+    ).dt.tz_convert(
+        MALAYSIA_TZ
     )
 
 
+    # --------------------------------------------------------
+    # SELECTED WEEK CHECKLIST COUNT
+    # --------------------------------------------------------
+
+    latest_week_checklists = (
+        checklist_df[
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                >= selected_report_start
+            )
+            &
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                < selected_report_end
+            )
+        ]
+        .copy()
+    )
 
 
+    latest_week_checklist_count = len(
+        latest_week_checklists
+    )
+
+
+else:
+
+    latest_week_checklist_count = 0
+
+
+# ------------------------------------------------------------
+# PREVIOUS WEEK CHECKLIST COUNT
+# ------------------------------------------------------------
+
+previous_report_end = (
+    selected_report_start
+)
+
+previous_report_start = (
+    previous_report_end
+    - timedelta(days=7)
+)
+
+
+if not checklist_df.empty:
+
+    previous_week_checklists = (
+        checklist_df[
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                >= previous_report_start
+            )
+            &
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                < previous_report_end
+            )
+        ]
+        .copy()
+    )
+
+
+    previous_week_checklist_count = len(
+        previous_week_checklists
+    )
+
+
+else:
+
+    previous_week_checklist_count = 0
+
+
+# ------------------------------------------------------------
+# CHECKLIST WEEK-ON-WEEK CHANGE
+# ------------------------------------------------------------
+
+checklist_change = (
+    latest_week_checklist_count
+    - previous_week_checklist_count
+)
+
+
+if checklist_change > 0:
+
+    checklist_change_html = (
+        f'<span style="'
+        f'color:{GREEN}; '
+        f'font-size:20px; '
+        f'font-weight:700;">'
+        f'▲ {checklist_change}'
+        f'</span>'
+    )
+
+
+elif checklist_change < 0:
+
+    checklist_change_html = (
+        f'<span style="'
+        f'color:{RED}; '
+        f'font-size:20px; '
+        f'font-weight:700;">'
+        f'▼ {abs(checklist_change)}'
+        f'</span>'
+    )
+
+
+else:
+
+    checklist_change_html = (
+        f'<span style="'
+        f'color:{TEXT}; '
+        f'font-size:20px; '
+        f'font-weight:700;">'
+        f'—'
+        f'</span>'
+    )
+
+
+# ------------------------------------------------------------
+# FINDINGS FOR SELECTED REPORTING WINDOW
+# ------------------------------------------------------------
+
+latest_week_findings = (
+    df[
+        (
+            df["finding_datetime_report"]
+            >= selected_report_start
+        )
+        &
+        (
+            df["finding_datetime_report"]
+            < selected_report_end
+        )
+    ]
+    .copy()
+)
+
+
+latest_week_finding_count = len(
+    latest_week_findings
+)
+
+
+# ------------------------------------------------------------
+# CHECKLIST DATETIME FOR REPORTING WINDOW
+# ------------------------------------------------------------
+
+if not checklist_df.empty:
+
+    checklist_df[
+        "inspection_datetime_report"
+    ] = pd.to_datetime(
+        checklist_df[
+            "inspection_datetime"
+        ],
+        errors="coerce",
+        utc=True
+    ).dt.tz_convert(
+        MALAYSIA_TZ
+    )
+
+
+    latest_week_checklists = (
+        checklist_df[
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                >= report_start
+            )
+            &
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                < report_end
+            )
+        ]
+        .copy()
+    )
+
+
+    latest_week_checklist_count = len(
+        latest_week_checklists
+    )
+
+
+else:
+
+    latest_week_checklist_count = 0
+
+# ------------------------------------------------------------
+# PREVIOUS WEEK CHECKLIST COUNT
+# ------------------------------------------------------------
+
+previous_report_end = report_start
+
+previous_report_start = (
+    previous_report_end
+    - timedelta(days=7)
+)
+
+
+if not checklist_df.empty:
+
+    previous_week_checklists = (
+        checklist_df[
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                >= previous_report_start
+            )
+            &
+            (
+                checklist_df[
+                    "inspection_datetime_report"
+                ]
+                < previous_report_end
+            )
+        ]
+        .copy()
+    )
+
+    previous_week_checklist_count = len(
+        previous_week_checklists
+    )
+
+
+else:
+
+    previous_week_checklist_count = 0
+
+
+# ------------------------------------------------------------
+# CHECKLIST WEEK-ON-WEEK CHANGE
+# ------------------------------------------------------------
+
+checklist_change = (
+    latest_week_checklist_count
+    - previous_week_checklist_count
+)
+
+
+if checklist_change > 0:
+
+    checklist_change_html = (
+        f'<span style="'
+        f'color:{GREEN}; '
+        f'font-size:20px; '
+        f'font-weight:700;">'
+        f'▲ {checklist_change}'
+        f'</span>'
+    )
+
+
+elif checklist_change < 0:
+
+    checklist_change_html = (
+        f'<span style="'
+        f'color:{RED}; '
+        f'font-size:20px; '
+        f'font-weight:700;">'
+        f'▼ {abs(checklist_change)}'
+        f'</span>'
+    )
+
+
+else:
+
+    checklist_change_html = (
+        f'<span style="'
+        f'color:{TEXT}; '
+        f'font-size:20px; '
+        f'font-weight:700;">'
+        f'—'
+        f'</span>'
+    )
+
+# ------------------------------------------------------------
+# FINDINGS FOR SAME REPORTING WINDOW
+# ------------------------------------------------------------
+
+latest_week_findings = (
+    df[
+        (
+            df["finding_datetime_report"]
+            >= report_start
+        )
+        &
+        (
+            df["finding_datetime_report"]
+            < report_end
+        )
+    ]
+    .copy()
+)
+
+
+latest_week_finding_count = len(
+    latest_week_findings
+)
 
 # ============================================================
-# CURRENT WW FINDINGS
+# SELECTED WW FINDINGS
 # ============================================================
 
 current_week_df = filtered_df[
     (
         filtered_df["finding_datetime_report"]
-        >= report_start
+        >= selected_report_start
     )
     &
     (
         filtered_df["finding_datetime_report"]
-        < report_end
+        < selected_report_end
     )
 ].copy()
+
 
 # ============================================================
 # HISTORICAL FINDINGS
@@ -1536,7 +1699,7 @@ current_week_df = filtered_df[
 historical_df = filtered_df[
     (
         filtered_df["finding_datetime_report"]
-        < report_start
+        < selected_report_start
     )
 ].copy()
 
@@ -1835,75 +1998,22 @@ ai_header_col1, ai_header_col2, ai_header_col3 = (
     )
 )
 
-
-# ============================================================
-# REPORTING WEEK DROPDOWN
-# ============================================================
-
 with ai_header_col2:
 
-    selected_week_label = st.selectbox(
-        "Reporting Week",
-        options=[
-            week["label"]
-            for week in available_reporting_weeks
-        ],
-        index=0,
-        label_visibility="collapsed"
+    st.markdown(
+        f"""
+<div style="
+    color:{TEXT};
+    font-size:14px;
+    font-weight:700;
+    text-align:center;
+    padding-top:8px;
+">
+{selected_week_label}
+</div>
+        """,
+        unsafe_allow_html=True
     )
-
-
-# ============================================================
-# SELECTED REPORTING WEEK
-# ============================================================
-
-selected_reporting_week = next(
-    week
-    for week in available_reporting_weeks
-    if week["label"] == selected_week_label
-)
-
-
-selected_report_start = (
-    selected_reporting_week["start"]
-)
-
-selected_report_end = (
-    selected_reporting_week["end"]
-)
-
-
-selected_week_label = (
-    selected_week_label
-)
-selected_reporting_week = next(
-    week
-    for week in available_reporting_weeks
-    if week["label"] == selected_week_label
-)
-
-
-selected_report_start = (
-    selected_reporting_week["start"]
-)
-
-selected_report_end = (
-    selected_reporting_week["end"]
-)
-
-selected_iso_year = (
-    selected_reporting_week["year"]
-)
-
-selected_iso_week = (
-    selected_reporting_week["week"]
-)
-
-
-selected_week_label = (
-    selected_week_label
-)
-
 
 # ============================================================
 # MANAGEMENT INSIGHTS TITLE

@@ -2175,8 +2175,10 @@ Total Findings
     margin-top:25px;
     line-height:1.5;
 ">
-{selected_report_start.strftime("%d-%b-%Y %H:%M")} 
-to 
+{selected_report_start.strftime("%d-%b-%Y %H:%M")}
+<br>
+to
+<br>
 {selected_report_end.strftime("%d-%b-%Y %H:%M")}
 </div>
 

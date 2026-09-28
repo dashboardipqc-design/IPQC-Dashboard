@@ -780,7 +780,7 @@ compliance_chart.add_annotation(
 
 
 compliance_chart.update_layout(
-    title="● TOTAL COMPLIANCE (%) — '26 to Date",
+    title="● TOTAL COMPLIANCE (%) - '26 to Date",
     showlegend=False,
     height=290
 )
@@ -834,7 +834,7 @@ shift_chart.update_traces(
 
 
 shift_chart.update_layout(
-    title="● SHIFT DISTRIBUTION (%) — '26 to Date",
+    title="● SHIFT DISTRIBUTION (%) - '26 to Date",
     height=290,
     legend=BOTTOM_LEGEND
 )
@@ -888,7 +888,7 @@ time_chart.update_traces(
 
 
 time_chart.update_layout(
-    title="● TIME DISTRIBUTION (%) — '26 to Date",
+    title="● TIME DISTRIBUTION (%) - '26 to Date",
     height=290,
     legend=BOTTOM_LEGEND
 )
@@ -941,7 +941,7 @@ category_chart.update_traces(
 
 
 category_chart.update_layout(
-    title="● FINDING CATEGORY (%) — '26 to Date",
+    title="● FINDING CATEGORY (%) - '26 to Date",
     height=290,
     legend=dict(
         orientation="h",

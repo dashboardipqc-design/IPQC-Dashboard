@@ -1349,7 +1349,7 @@ area_chart.add_trace(
 
 
 area_chart.update_layout(
-    title="● FINDINGS BY AREA — OVERALL",
+    title="● FINDINGS BY AREA - '26 to Date",
     height=315,
     xaxis_title="Cases",
     yaxis_title="",

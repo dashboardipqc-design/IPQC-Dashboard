@@ -1488,7 +1488,7 @@ with ai_header_col2:
 with ai_header_col3:
 
     generate_ai = st.button(
-        "✨ Click Here to Generate Summary",
+        "✨ Click to Generate Summary",
         use_container_width=True,
         type="primary"
     )

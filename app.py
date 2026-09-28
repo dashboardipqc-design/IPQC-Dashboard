@@ -1354,11 +1354,16 @@ area_chart.update_layout(
     xaxis_title="Cases",
     yaxis_title="",
     showlegend=False,
+
+    # X-axis locked
     xaxis=dict(
         gridcolor="#475569",
         rangemode="tozero",
-        dtick=1
+        dtick=1,
+        fixedrange=True
     ),
+
+    # Y-axis locked
     yaxis=dict(
         categoryorder="array",
         categoryarray=[
@@ -1366,7 +1371,8 @@ area_chart.update_layout(
             "MOL",
             "FOL",
             "DP"
-        ]
+        ],
+        fixedrange=True
     )
 )
 
@@ -1382,10 +1388,10 @@ with row2_col2:
         area_chart,
         use_container_width=True,
         config={
-            "displayModeBar": False
+            "displayModeBar": False,
+            "scrollZoom": False
         }
     )
-
 
 # ============================================================
 # MANAGEMENT INSIGHTS

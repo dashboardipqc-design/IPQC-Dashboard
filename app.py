@@ -177,11 +177,25 @@ st.markdown(
         line-height: 1.55;
     }}
 
+
+    /* Generate Summary button */
+    .stButton > button[kind="primary"] {{
+        background-color: {BLUE} !important;
+        color: white !important;
+        border: 1px solid {BLUE} !important;
+    }}
+
+    .stButton > button[kind="primary"]:hover {{
+        background-color: {PURPLE} !important;
+        color: white !important;
+        border-color: {PURPLE} !important;
+    }}
+
+
     </style>
     """,
     unsafe_allow_html=True
 )
-
 
 # ============================================================
 # SUPABASE CONNECTION

@@ -183,12 +183,14 @@ st.markdown(
         background-color: {BLUE} !important;
         color: white !important;
         border: 1px solid {BLUE} !important;
+        font-weight: 700 !important;
     }}
 
     .stButton > button[kind="primary"]:hover {{
         background-color: {PURPLE} !important;
         color: white !important;
         border-color: {PURPLE} !important;
+        font-weight: 700 !important;
     }}
 
 

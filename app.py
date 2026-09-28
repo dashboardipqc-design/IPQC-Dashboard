@@ -319,6 +319,7 @@ for weeks_ago in range(52):
 
     week_end = (
         report_end
+        + timedelta(days=7)
         - timedelta(weeks=weeks_ago)
     )
 

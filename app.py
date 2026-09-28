@@ -69,7 +69,6 @@ CATEGORY_COLORS = {
     "Personnel Compliance": GREEN
 }
 
-
 # ============================================================
 # CSS
 # ============================================================
@@ -122,18 +121,20 @@ st.markdown(
     }}
 
 
-.ai-card {{
-    background: {CARD};
-    border: 1px solid {BORDER};
-    border-radius: 12px;
-    padding: 20px 22px;
-    min-height: 510px;
-    height: 510px;
-    box-sizing: border-box;
-    overflow-y: auto;
-}}
+    /* ========================================================
+       AI CARDS
+       ======================================================== */
 
-/* Make Streamlit column content fill available height */
+    .ai-card {{
+        background: {CARD};
+        border: 1px solid {BORDER};
+        border-radius: 12px;
+        padding: 20px 22px;
+        min-height: 510px;
+        height: 510px;
+        box-sizing: border-box;
+        overflow-y: auto;
+    }}
 
     .ai-title {{
         color: {MUTED};
@@ -178,18 +179,28 @@ st.markdown(
     }}
 
 
-    /* Generate Summary button */
+    /* ========================================================
+       GENERATE SUMMARY BUTTON
+       ======================================================== */
+
     .stButton > button[kind="primary"] {{
         background-color: {BLUE} !important;
-        color: white !important;
         border: 1px solid {BLUE} !important;
+        font-weight: 700 !important;
+    }}
+
+    .stButton > button[kind="primary"] p {{
+        color: #FFFFFF !important;
         font-weight: 700 !important;
     }}
 
     .stButton > button[kind="primary"]:hover {{
         background-color: {PURPLE} !important;
-        color: white !important;
         border-color: {PURPLE} !important;
+    }}
+
+    .stButton > button[kind="primary"]:hover p {{
+        color: #FFFFFF !important;
         font-weight: 700 !important;
     }}
 
@@ -198,7 +209,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 # ============================================================
 # SUPABASE CONNECTION
 # ============================================================

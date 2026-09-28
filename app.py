@@ -1952,7 +1952,7 @@ RULES:
   "No similar historical occurrence identified."
 - Recommendation must be practical for IPQC, Quality, Production or Process Engineering follow-up.
 - Recommendations may include verification, investigation, recurrence review, containment verification, corrective-action review or effectiveness verification.
-- Recommendations may benchmark or look online for suitable corrective action
+- Recommendations may benchmark other industry or look into online solutions for suitable corrective action
 - Do not state that a previous corrective action failed unless the supplied records provide evidence for that conclusion.
 - Zero findings means only "No findings recorded". Do not interpret zero findings as proof of good compliance or process performance.
 - Use concise management-level wording.

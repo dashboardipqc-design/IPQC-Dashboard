@@ -981,6 +981,7 @@ row2_col1, row2_col2 = st.columns(
 
 # ============================================================
 # WEEKLY FINDING TREND
+# 52 WEEKS AVAILABLE / LATEST 10 VISIBLE
 # ============================================================
 
 current_date = current_time.date()
@@ -995,10 +996,14 @@ current_week_monday = (
 )
 
 
-latest_10_weeks = []
+# ------------------------------------------------------------
+# BUILD 52-WEEK HISTORY
+# ------------------------------------------------------------
+
+latest_52_weeks = []
 
 
-for weeks_ago in range(9, -1, -1):
+for weeks_ago in range(51, -1, -1):
 
     week_date = (
         current_week_monday
@@ -1012,19 +1017,30 @@ for weeks_ago in range(9, -1, -1):
         week_date.isocalendar()
     )
 
-    latest_10_weeks.append(
+    latest_52_weeks.append(
         {
             "week_year": iso_year,
             "week_number": iso_week,
-            "work_week": f"WW{iso_week:02d}"
+
+            # Unique category internally
+            "week_key":
+                f"{iso_year}-WW{iso_week:02d}",
+
+            # What user sees
+            "work_week":
+                f"WW{iso_week:02d}"
         }
     )
 
 
 week_template = pd.DataFrame(
-    latest_10_weeks
+    latest_52_weeks
 )
 
+
+# ------------------------------------------------------------
+# COUNT FINDINGS BY WEEK
+# ------------------------------------------------------------
 
 weekly_counts = (
     filtered_df
@@ -1091,19 +1107,32 @@ weekly_data["Cases"] = (
 )
 
 
+# ------------------------------------------------------------
+# CREATE CHART
+# ------------------------------------------------------------
+
 weekly_chart = go.Figure()
 
 
 weekly_chart.add_trace(
     go.Bar(
-        x=weekly_data["work_week"],
+        x=weekly_data["week_key"],
         y=weekly_data["Cases"],
         name="Total Findings",
         marker_color=ORANGE,
         text=weekly_data["Cases"],
         textposition="outside",
+
+        customdata=weekly_data[
+            [
+                "work_week",
+                "week_year"
+            ]
+        ],
+
         hovertemplate=(
-            "%{x}<br>"
+            "%{customdata[0]}'"
+            "%{customdata[1]:.0f}<br>"
             "Findings: %{y}"
             "<extra></extra>"
         )
@@ -1113,19 +1142,30 @@ weekly_chart.add_trace(
 
 weekly_chart.add_trace(
     go.Scatter(
-        x=weekly_data["work_week"],
+        x=weekly_data["week_key"],
         y=weekly_data["Cases"],
         name="Finding Trend",
         mode="lines+markers",
+
         line=dict(
             color=CYAN,
             width=3
         ),
+
         marker=dict(
             size=7
         ),
+
+        customdata=weekly_data[
+            [
+                "work_week",
+                "week_year"
+            ]
+        ],
+
         hovertemplate=(
-            "%{x}<br>"
+            "%{customdata[0]}'"
+            "%{customdata[1]:.0f}<br>"
             "Findings: %{y}"
             "<extra></extra>"
         )
@@ -1133,11 +1173,38 @@ weekly_chart.add_trace(
 )
 
 
+# ------------------------------------------------------------
+# INITIAL VIEW = LATEST 10 WEEKS
+# ------------------------------------------------------------
+
+week_keys = (
+    weekly_data["week_key"]
+    .tolist()
+)
+
+
+latest_10_keys = (
+    week_keys[-10:]
+)
+
+
+# ------------------------------------------------------------
+# CHART LAYOUT
+# ------------------------------------------------------------
+
 weekly_chart.update_layout(
-    title="● WEEKLY FINDING TREND — LATEST 10 WEEKS",
+
+    title=(
+        "● WEEKLY FINDING TREND — "
+        "LATEST 10 WEEKS"
+    ),
+
     height=315,
+
     xaxis_title="",
+
     yaxis_title="Cases",
+
     legend=dict(
         orientation="h",
         yanchor="bottom",
@@ -1148,18 +1215,42 @@ weekly_chart.update_layout(
             size=10
         )
     ),
+
     xaxis=dict(
         gridcolor="#334155",
+
+        type="category",
+
         categoryorder="array",
-        categoryarray=weekly_data[
+
+        categoryarray=week_keys,
+
+        # Initially show latest 10 weeks only
+        range=[
+            len(week_keys) - 10.5,
+            len(week_keys) - 0.5
+        ],
+
+        tickmode="array",
+
+        tickvals=week_keys,
+
+        ticktext=weekly_data[
             "work_week"
-        ].tolist()
+        ].tolist(),
+
+        fixedrange=False
     ),
+
     yaxis=dict(
         gridcolor="#475569",
         rangemode="tozero",
-        dtick=1
-    )
+        dtick=1,
+        fixedrange=False
+    ),
+
+    # Makes dragging behave as PAN
+    dragmode="pan"
 )
 
 
@@ -1168,16 +1259,21 @@ style_chart(
 )
 
 
+# ------------------------------------------------------------
+# DISPLAY
+# ------------------------------------------------------------
+
 with row2_col1:
 
     st.plotly_chart(
         weekly_chart,
         use_container_width=True,
+
         config={
-            "displayModeBar": False
+            "displayModeBar": False,
+            "scrollZoom": False
         }
     )
-
 
 # ============================================================
 # FINDINGS BY AREA

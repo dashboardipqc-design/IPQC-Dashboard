@@ -982,6 +982,7 @@ row2_col1, row2_col2 = st.columns(
 # ============================================================
 # WEEKLY FINDING TREND
 # 52 WEEKS AVAILABLE / LATEST 10 VISIBLE
+# HORIZONTAL PAN ONLY
 # ============================================================
 
 current_date = current_time.date()
@@ -1022,11 +1023,11 @@ for weeks_ago in range(51, -1, -1):
             "week_year": iso_year,
             "week_number": iso_week,
 
-            # Unique category internally
+            # Unique internal key
             "week_key":
                 f"{iso_year}-WW{iso_week:02d}",
 
-            # What user sees
+            # Display label
             "work_week":
                 f"WW{iso_week:02d}"
         }
@@ -1114,6 +1115,7 @@ weekly_data["Cases"] = (
 weekly_chart = go.Figure()
 
 
+# BAR
 weekly_chart.add_trace(
     go.Bar(
         x=weekly_data["week_key"],
@@ -1140,6 +1142,7 @@ weekly_chart.add_trace(
 )
 
 
+# TREND LINE
 weekly_chart.add_trace(
     go.Scatter(
         x=weekly_data["week_key"],
@@ -1174,7 +1177,7 @@ weekly_chart.add_trace(
 
 
 # ------------------------------------------------------------
-# INITIAL VIEW = LATEST 10 WEEKS
+# X-AXIS DATA
 # ------------------------------------------------------------
 
 week_keys = (
@@ -1183,8 +1186,9 @@ week_keys = (
 )
 
 
-latest_10_keys = (
-    week_keys[-10:]
+week_labels = (
+    weekly_data["work_week"]
+    .tolist()
 )
 
 
@@ -1216,6 +1220,12 @@ weekly_chart.update_layout(
         )
     ),
 
+    # --------------------------------------------------------
+    # X AXIS
+    # Initially latest 10 weeks
+    # User can pan left/right
+    # --------------------------------------------------------
+
     xaxis=dict(
         gridcolor="#334155",
 
@@ -1225,7 +1235,6 @@ weekly_chart.update_layout(
 
         categoryarray=week_keys,
 
-        # Initially show latest 10 weeks only
         range=[
             len(week_keys) - 10.5,
             len(week_keys) - 0.5
@@ -1235,24 +1244,34 @@ weekly_chart.update_layout(
 
         tickvals=week_keys,
 
-        ticktext=weekly_data[
-            "work_week"
-        ].tolist(),
+        ticktext=week_labels,
 
         fixedrange=False
     ),
+
+    # --------------------------------------------------------
+    # Y AXIS
+    # Locked so user cannot drag vertically
+    # --------------------------------------------------------
 
     yaxis=dict(
         gridcolor="#475569",
         rangemode="tozero",
         dtick=1,
-        fixedrange=False
+        fixedrange=True
     ),
 
-    # Makes dragging behave as PAN
+    # --------------------------------------------------------
+    # PAN MODE
+    # --------------------------------------------------------
+
     dragmode="pan"
 )
 
+
+# ------------------------------------------------------------
+# APPLY DASHBOARD CHART STYLE
+# ------------------------------------------------------------
 
 style_chart(
     weekly_chart
@@ -1260,7 +1279,7 @@ style_chart(
 
 
 # ------------------------------------------------------------
-# DISPLAY
+# DISPLAY CHART
 # ------------------------------------------------------------
 
 with row2_col1:
@@ -1274,7 +1293,6 @@ with row2_col1:
             "scrollZoom": False
         }
     )
-
 # ============================================================
 # FINDINGS BY AREA
 # ============================================================

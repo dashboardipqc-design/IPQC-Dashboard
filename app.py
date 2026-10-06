@@ -1089,27 +1089,17 @@ row2_col1, row2_col2 = st.columns(
     [1.65, 1]
 )
 
-
 # ============================================================
-# WEEKLY FINDING TREND
+# WEEKLY COMPLIANCE & FINDING TREND
 # 52 WEEKS AVAILABLE / LATEST 10 VISIBLE
-# HORIZONTAL PAN ONLY
+# FRIDAY 06:30 -> FRIDAY 06:30
+# LEFT Y-AXIS  = COMPLIANCE %
+# RIGHT Y-AXIS = TOTAL FINDINGS
 # ============================================================
-
-current_date = current_time.date()
-
-
-current_week_monday = (
-    current_date
-    -
-    timedelta(
-        days=current_date.weekday()
-    )
-)
 
 
 # ------------------------------------------------------------
-# BUILD 52-WEEK HISTORY
+# BUILD 52 REPORTING WEEKS
 # ------------------------------------------------------------
 
 latest_52_weeks = []
@@ -1117,16 +1107,19 @@ latest_52_weeks = []
 
 for weeks_ago in range(51, -1, -1):
 
-    week_date = (
-        current_week_monday
-        -
-        timedelta(
-            weeks=weeks_ago
-        )
+    week_end = (
+        report_end
+        + timedelta(days=7)
+        - timedelta(weeks=weeks_ago)
+    )
+
+    week_start = (
+        week_end
+        - timedelta(days=7)
     )
 
     iso_year, iso_week, _ = (
-        week_date.isocalendar()
+        week_end.date().isocalendar()
     )
 
     latest_52_weeks.append(
@@ -1134,13 +1127,17 @@ for weeks_ago in range(51, -1, -1):
             "week_year": iso_year,
             "week_number": iso_week,
 
-            # Unique internal key
             "week_key":
                 f"{iso_year}-WW{iso_week:02d}",
 
-            # Display label
             "work_week":
-                f"WW{iso_week:02d}"
+                f"WW{iso_week:02d}",
+
+            "week_start":
+                week_start,
+
+            "week_end":
+                week_end
         }
     )
 
@@ -1151,71 +1148,199 @@ week_template = pd.DataFrame(
 
 
 # ------------------------------------------------------------
-# COUNT FINDINGS BY WEEK
+# PREPARE FINDING DATETIME
 # ------------------------------------------------------------
 
-weekly_counts = (
-    filtered_df
-    .dropna(
-        subset=[
-            "week_year",
-            "week_number"
-        ]
-    )
-    .groupby(
-        [
-            "week_year",
-            "week_number"
-        ]
-    )
-    .size()
-    .reset_index(
-        name="Cases"
-    )
+weekly_finding_df = (
+    filtered_df.copy()
 )
 
 
-week_template["week_year"] = (
-    week_template["week_year"]
-    .astype(int)
-)
-
-
-week_template["week_number"] = (
-    week_template["week_number"]
-    .astype(int)
-)
-
-
-weekly_counts["week_year"] = (
-    weekly_counts["week_year"]
-    .astype(int)
-)
-
-
-weekly_counts["week_number"] = (
-    weekly_counts["week_number"]
-    .astype(int)
-)
-
-
-weekly_data = (
-    week_template
-    .merge(
-        weekly_counts,
-        on=[
-            "week_year",
-            "week_number"
+weekly_finding_df[
+    "finding_datetime_weekly"
+] = (
+    pd.to_datetime(
+        weekly_finding_df[
+            "finding_datetime"
         ],
-        how="left"
+        format="%d-%b-%Y %H:%M:%S",
+        errors="coerce"
+    )
+    .dt.tz_localize(
+        MALAYSIA_TZ
     )
 )
 
 
-weekly_data["Cases"] = (
-    weekly_data["Cases"]
-    .fillna(0)
-    .astype(int)
+# ------------------------------------------------------------
+# PREPARE CHECKLIST DATETIME
+# ------------------------------------------------------------
+
+weekly_checklist_df = (
+    completed_checklist_df.copy()
+)
+
+
+if not weekly_checklist_df.empty:
+
+    weekly_checklist_df[
+        "inspection_datetime_weekly"
+    ] = (
+        pd.to_datetime(
+            weekly_checklist_df[
+                "inspection_datetime"
+            ],
+            errors="coerce",
+            utc=True
+        )
+        .dt.tz_convert(
+            MALAYSIA_TZ
+        )
+    )
+
+
+# ------------------------------------------------------------
+# COUNT FINDINGS + CHECKLISTS FOR EACH REPORTING WEEK
+# ------------------------------------------------------------
+
+weekly_records = []
+
+
+for week in latest_52_weeks:
+
+    week_start = week[
+        "week_start"
+    ]
+
+    week_end = week[
+        "week_end"
+    ]
+
+
+    # --------------------------------------------------------
+    # FINDINGS
+    # --------------------------------------------------------
+
+    week_findings = (
+        weekly_finding_df[
+            (
+                weekly_finding_df[
+                    "finding_datetime_weekly"
+                ]
+                >= week_start
+            )
+            &
+            (
+                weekly_finding_df[
+                    "finding_datetime_weekly"
+                ]
+                < week_end
+            )
+        ]
+    )
+
+
+    finding_count = len(
+        week_findings
+    )
+
+
+    # --------------------------------------------------------
+    # COMPLETED CHECKLISTS
+    # --------------------------------------------------------
+
+    if not weekly_checklist_df.empty:
+
+        week_checklists = (
+            weekly_checklist_df[
+                (
+                    weekly_checklist_df[
+                        "inspection_datetime_weekly"
+                    ]
+                    >= week_start
+                )
+                &
+                (
+                    weekly_checklist_df[
+                        "inspection_datetime_weekly"
+                    ]
+                    < week_end
+                )
+            ]
+        )
+
+
+        checklist_count = len(
+            week_checklists
+        )
+
+
+    else:
+
+        checklist_count = 0
+
+
+    # --------------------------------------------------------
+    # WEEKLY COMPLIANCE
+    # --------------------------------------------------------
+
+    if checklist_count > 0:
+
+        compliance = (
+            1
+            -
+            (
+                finding_count
+                /
+                checklist_count
+            )
+        ) * 100
+
+
+        compliance = max(
+            0,
+            min(
+                100,
+                compliance
+            )
+        )
+
+
+    else:
+
+        # No completed checklist means
+        # compliance cannot be calculated.
+        compliance = None
+
+
+    weekly_records.append(
+        {
+            "week_year":
+                week["week_year"],
+
+            "week_number":
+                week["week_number"],
+
+            "week_key":
+                week["week_key"],
+
+            "work_week":
+                week["work_week"],
+
+            "Findings":
+                finding_count,
+
+            "Checklists":
+                checklist_count,
+
+            "Compliance":
+                compliance
+        }
+    )
+
+
+weekly_data = pd.DataFrame(
+    weekly_records
 )
 
 
@@ -1226,40 +1351,27 @@ weekly_data["Cases"] = (
 weekly_chart = go.Figure()
 
 
-# BAR
-weekly_chart.add_trace(
-    go.Bar(
-        x=weekly_data["week_key"],
-        y=weekly_data["Cases"],
-        name="Total Findings",
-        marker_color=ORANGE,
-        text=weekly_data["Cases"],
-        textposition="outside",
+# ------------------------------------------------------------
+# COMPLIANCE LINE
+# LEFT Y-AXIS
+# ------------------------------------------------------------
 
-        customdata=weekly_data[
-            [
-                "work_week",
-                "week_year"
-            ]
-        ],
-
-        hovertemplate=(
-            "%{customdata[0]}'"
-            "%{customdata[1]:.0f}<br>"
-            "Findings: %{y}"
-            "<extra></extra>"
-        )
-    )
-)
-
-
-# TREND LINE
 weekly_chart.add_trace(
     go.Scatter(
-        x=weekly_data["week_key"],
-        y=weekly_data["Cases"],
-        name="Finding Trend",
+
+        x=weekly_data[
+            "week_key"
+        ],
+
+        y=weekly_data[
+            "Compliance"
+        ],
+
+        name="Compliance %",
+
         mode="lines+markers",
+
+        yaxis="y",
 
         line=dict(
             color=CYAN,
@@ -1273,14 +1385,70 @@ weekly_chart.add_trace(
         customdata=weekly_data[
             [
                 "work_week",
-                "week_year"
+                "week_year",
+                "Findings",
+                "Checklists"
             ]
         ],
 
         hovertemplate=(
             "%{customdata[0]}'"
             "%{customdata[1]:.0f}<br>"
-            "Findings: %{y}"
+            "Compliance: %{y:.1f}%<br>"
+            "Findings: %{customdata[2]}<br>"
+            "Checklists Completed: "
+            "%{customdata[3]}"
+            "<extra></extra>"
+        )
+    )
+)
+
+
+# ------------------------------------------------------------
+# TOTAL FINDINGS BAR
+# RIGHT Y-AXIS
+# ------------------------------------------------------------
+
+weekly_chart.add_trace(
+    go.Bar(
+
+        x=weekly_data[
+            "week_key"
+        ],
+
+        y=weekly_data[
+            "Findings"
+        ],
+
+        name="Total Findings",
+
+        yaxis="y2",
+
+        marker_color=ORANGE,
+
+        text=weekly_data[
+            "Findings"
+        ],
+
+        textposition="outside",
+
+        customdata=weekly_data[
+            [
+                "work_week",
+                "week_year",
+                "Checklists",
+                "Compliance"
+            ]
+        ],
+
+        hovertemplate=(
+            "%{customdata[0]}'"
+            "%{customdata[1]:.0f}<br>"
+            "Findings: %{y}<br>"
+            "Checklists Completed: "
+            "%{customdata[2]}<br>"
+            "Compliance: "
+            "%{customdata[3]:.1f}%"
             "<extra></extra>"
         )
     )
@@ -1292,15 +1460,45 @@ weekly_chart.add_trace(
 # ------------------------------------------------------------
 
 week_keys = (
-    weekly_data["week_key"]
+    weekly_data[
+        "week_key"
+    ]
     .tolist()
 )
 
 
 week_labels = (
-    weekly_data["work_week"]
+    weekly_data[
+        "work_week"
+    ]
     .tolist()
 )
+
+
+# ------------------------------------------------------------
+# FINDING AXIS MAXIMUM
+# Gives bar labels enough room
+# ------------------------------------------------------------
+
+max_findings = (
+    weekly_data[
+        "Findings"
+    ]
+    .max()
+)
+
+
+if max_findings <= 0:
+
+    finding_axis_max = 1
+
+
+else:
+
+    finding_axis_max = (
+        max_findings
+        + 1
+    )
 
 
 # ------------------------------------------------------------
@@ -1310,15 +1508,16 @@ week_labels = (
 weekly_chart.update_layout(
 
     title=(
-        "● WEEKLY FINDING TREND — "
+        "● WEEKLY COMPLIANCE & FINDING TREND — "
         "LATEST 10 WEEKS"
     ),
 
     height=315,
 
-    xaxis_title="",
 
-    yaxis_title="Cases",
+    # --------------------------------------------------------
+    # LEGEND
+    # --------------------------------------------------------
 
     legend=dict(
         orientation="h",
@@ -1331,13 +1530,15 @@ weekly_chart.update_layout(
         )
     ),
 
+
     # --------------------------------------------------------
     # X AXIS
-    # Initially latest 10 weeks
-    # User can pan left/right
+    # Latest 10 weeks initially visible
+    # Horizontal pan remains available
     # --------------------------------------------------------
 
     xaxis=dict(
+
         gridcolor="#334155",
 
         type="category",
@@ -1360,28 +1561,81 @@ weekly_chart.update_layout(
         fixedrange=False
     ),
 
+
     # --------------------------------------------------------
-    # Y AXIS
-    # Locked so user cannot drag vertically
+    # LEFT Y AXIS
+    # COMPLIANCE %
     # --------------------------------------------------------
 
     yaxis=dict(
+
+        title="Compliance (%)",
+
+        range=[
+            0,
+            105
+        ],
+
+        tickvals=[
+            0,
+            20,
+            40,
+            60,
+            80,
+            100
+        ],
+
+        ticksuffix="%",
+
         gridcolor="#475569",
-        rangemode="tozero",
-        dtick=1,
+
         fixedrange=True
     ),
+
+
+    # --------------------------------------------------------
+    # RIGHT Y AXIS
+    # TOTAL FINDINGS
+    # --------------------------------------------------------
+
+    yaxis2=dict(
+
+        title="Findings",
+
+        overlaying="y",
+
+        side="right",
+
+        range=[
+            0,
+            finding_axis_max
+        ],
+
+        dtick=1,
+
+        showgrid=False,
+
+        fixedrange=True
+    ),
+
 
     # --------------------------------------------------------
     # PAN MODE
     # --------------------------------------------------------
 
-    dragmode="pan"
+    dragmode="pan",
+
+
+    # --------------------------------------------------------
+    # BAR / LINE LAYERING
+    # --------------------------------------------------------
+
+    barmode="overlay"
 )
 
 
 # ------------------------------------------------------------
-# APPLY DASHBOARD CHART STYLE
+# APPLY DASHBOARD STYLE
 # ------------------------------------------------------------
 
 style_chart(
@@ -1404,6 +1658,7 @@ with row2_col1:
             "scrollZoom": False
         }
     )
+
 # ============================================================
 # COMPLIANCE BY AREA
 # ============================================================

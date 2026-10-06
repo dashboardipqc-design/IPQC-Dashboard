@@ -260,13 +260,69 @@ def load_checklist_submissions():
 
 
 # ============================================================
+# LOAD CHECKLIST MASTER
+# ============================================================
+
+@st.cache_data(ttl=60)
+def load_checklist_master():
+
+    response = (
+        supabase
+        .table("checklist_master")
+        .select("id, area, process")
+        .execute()
+    )
+
+    return pd.DataFrame(response.data)
+
+# ============================================================
 # LOAD DATABASE DATA
 # ============================================================
 
 try:
 
     df = load_findings()
+
     checklist_df = load_checklist_submissions()
+
+    checklist_master_df = load_checklist_master()
+
+
+    # ========================================================
+    # ADD AREA / PROCESS TO CHECKLIST SUBMISSIONS
+    # ========================================================
+
+    if (
+        not checklist_df.empty
+        and
+        not checklist_master_df.empty
+    ):
+
+        checklist_lookup_df = (
+            checklist_master_df[
+                [
+                    "id",
+                    "area",
+                    "process"
+                ]
+            ]
+            .rename(
+                columns={
+                    "id": "checklist_id_master"
+                }
+            )
+        )
+
+        checklist_df = (
+            checklist_df.merge(
+                checklist_lookup_df,
+                left_on="checklist_id",
+                right_on="checklist_id_master",
+                how="left"
+            )
+        )
+
+
     # ========================================================
     # COMPLETED CHECKLIST SUBMISSIONS
     # NORMAL + ADDITIONAL ONLY
@@ -296,6 +352,8 @@ try:
         completed_checklist_df = (
             checklist_df.copy()
         )
+
+
 except Exception as e:
 
     st.error(

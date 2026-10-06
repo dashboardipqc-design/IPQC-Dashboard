@@ -1338,7 +1338,6 @@ weekly_data = pd.DataFrame(
     weekly_records
 )
 
-
 # ------------------------------------------------------------
 # CREATE CHART
 # ------------------------------------------------------------
@@ -1347,8 +1346,61 @@ weekly_chart = go.Figure()
 
 
 # ------------------------------------------------------------
+# TOTAL FINDINGS BAR
+# RIGHT Y-AXIS
+# DRAW FIRST SO COMPLIANCE LINE STAYS ABOVE IT
+# ------------------------------------------------------------
+
+weekly_chart.add_trace(
+    go.Bar(
+
+        x=weekly_data[
+            "week_key"
+        ],
+
+        y=weekly_data[
+            "Findings"
+        ],
+
+        name="Total Findings",
+
+        yaxis="y2",
+
+        marker_color=ORANGE,
+
+        text=weekly_data[
+            "Findings"
+        ],
+
+        textposition="outside",
+
+        customdata=weekly_data[
+            [
+                "work_week",
+                "week_year",
+                "Checklists",
+                "Compliance"
+            ]
+        ],
+
+        hovertemplate=(
+            "%{customdata[0]}'"
+            "%{customdata[1]:.0f}<br>"
+            "Findings: %{y}<br>"
+            "Checklists Completed: "
+            "%{customdata[2]}<br>"
+            "Compliance: "
+            "%{customdata[3]:.1f}%"
+            "<extra></extra>"
+        )
+    )
+)
+
+
+# ------------------------------------------------------------
 # COMPLIANCE LINE
 # LEFT Y-AXIS
+# DRAW AFTER BAR SO LINE STAYS ON TOP
 # ------------------------------------------------------------
 
 weekly_chart.add_trace(
@@ -1400,58 +1452,6 @@ weekly_chart.add_trace(
         )
     )
 )
-
-
-# ------------------------------------------------------------
-# TOTAL FINDINGS BAR
-# RIGHT Y-AXIS
-# ------------------------------------------------------------
-
-weekly_chart.add_trace(
-    go.Bar(
-
-        x=weekly_data[
-            "week_key"
-        ],
-
-        y=weekly_data[
-            "Findings"
-        ],
-
-        name="Total Findings",
-
-        yaxis="y2",
-
-        marker_color=ORANGE,
-
-        text=weekly_data[
-            "Findings"
-        ],
-
-        textposition="outside",
-
-        customdata=weekly_data[
-            [
-                "work_week",
-                "week_year",
-                "Checklists",
-                "Compliance"
-            ]
-        ],
-
-        hovertemplate=(
-            "%{customdata[0]}'"
-            "%{customdata[1]:.0f}<br>"
-            "Findings: %{y}<br>"
-            "Checklists Completed: "
-            "%{customdata[2]}<br>"
-            "Compliance: "
-            "%{customdata[3]:.1f}%"
-            "<extra></extra>"
-        )
-    )
-)
-
 
 # ------------------------------------------------------------
 # X-AXIS DATA

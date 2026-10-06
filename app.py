@@ -1417,6 +1417,19 @@ area_order = [
 
 
 # ------------------------------------------------------------
+# AREA COLOR GRADIENT
+# DP -> FOL -> MOL -> EOL
+# ------------------------------------------------------------
+
+area_compliance_colors = {
+    "DP": "#22D3EE",
+    "FOL": "#6366F1",
+    "MOL": "#A855F7",
+    "EOL": "#F59E0B"
+}
+
+
+# ------------------------------------------------------------
 # FINDINGS BY AREA
 # ------------------------------------------------------------
 
@@ -1435,7 +1448,11 @@ area_findings = (
 # COMPLETED CHECKLISTS BY AREA
 # ------------------------------------------------------------
 
-if not completed_checklist_df.empty:
+if (
+    not completed_checklist_df.empty
+    and
+    "area" in completed_checklist_df.columns
+):
 
     area_checklists = (
         completed_checklist_df
@@ -1456,21 +1473,34 @@ else:
 
 
 # ------------------------------------------------------------
-# CALCULATE COMPLIANCE BY AREA
+# BUILD AREA DATA
 # ------------------------------------------------------------
 
 area_data = pd.DataFrame({
+
     "area": area_order,
+
     "Findings": [
-        area_findings.get(area, 0)
+        area_findings.get(
+            area,
+            0
+        )
         for area in area_order
     ],
+
     "Checklists": [
-        area_checklists.get(area, 0)
+        area_checklists.get(
+            area,
+            0
+        )
         for area in area_order
     ]
 })
 
+
+# ------------------------------------------------------------
+# CALCULATE COMPLIANCE
+# ------------------------------------------------------------
 
 def calculate_area_compliance(row):
 
@@ -1513,16 +1543,18 @@ area_chart = go.Figure()
 
 area_chart.add_trace(
     go.Bar(
+
         x=area_data["Compliance"],
+
         y=area_data["area"],
+
         orientation="h",
 
         marker=dict(
             color=[
-                AREA_COLORS.get(
-                    area,
-                    CYAN
-                )
+                area_compliance_colors[
+                    area
+                ]
                 for area
                 in area_data["area"]
             ]
@@ -1535,6 +1567,8 @@ area_chart.add_trace(
         ],
 
         textposition="outside",
+
+        cliponaxis=False,
 
         customdata=area_data[
             [
@@ -1559,27 +1593,60 @@ area_chart.add_trace(
 # ------------------------------------------------------------
 
 area_chart.update_layout(
-    title="● COMPLIANCE BY AREA (%) - Y26 to Date",
+
+    title=(
+        "● COMPLIANCE BY AREA (%) - Y26 to Date"
+    ),
+
     height=315,
+
     xaxis_title="Compliance (%)",
+
     yaxis_title="",
+
     showlegend=False,
+
+    margin=dict(
+        l=60,
+        r=65,
+        t=55,
+        b=50
+    ),
 
     xaxis=dict(
         gridcolor="#475569",
-        range=[0, 105],
+
+        # Extra space allows 100.0% text
+        # to display outside the bar
+        range=[
+            0,
+            108
+        ],
+
         fixedrange=True,
-        ticksuffix="%"
+
+        ticksuffix="%",
+
+        tickvals=[
+            0,
+            20,
+            40,
+            60,
+            80,
+            100
+        ]
     ),
 
     yaxis=dict(
         categoryorder="array",
+
         categoryarray=[
             "EOL",
             "MOL",
             "FOL",
             "DP"
         ],
+
         fixedrange=True
     )
 )
@@ -1600,6 +1667,7 @@ with row2_col2:
             "scrollZoom": False
         }
     )
+    
 # ============================================================
 # MANAGEMENT INSIGHTS
 # ============================================================

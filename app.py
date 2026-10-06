@@ -267,7 +267,35 @@ try:
 
     df = load_findings()
     checklist_df = load_checklist_submissions()
+    # ========================================================
+    # COMPLETED CHECKLIST SUBMISSIONS
+    # NORMAL + ADDITIONAL ONLY
+    # NOT_RUNNING IS NOT A COMPLETED CHECKLIST
+    # ========================================================
 
+    if (
+        not checklist_df.empty
+        and
+        "submission_type" in checklist_df.columns
+    ):
+
+        completed_checklist_df = (
+            checklist_df[
+                checklist_df["submission_type"].isin(
+                    [
+                        "NORMAL",
+                        "ADDITIONAL"
+                    ]
+                )
+            ]
+            .copy()
+        )
+
+    else:
+
+        completed_checklist_df = (
+            checklist_df.copy()
+        )
 except Exception as e:
 
     st.error(
@@ -564,7 +592,7 @@ df["category_short"] = (
 # ============================================================
 
 total_findings = len(df)
-total_checklists = len(checklist_df)
+total_checklists = len(completed_checklist_df)
 
 
 if total_checklists > 0:
@@ -1545,12 +1573,12 @@ df["finding_datetime_report"] = (
 # CHECKLIST DATETIME FOR REPORTING WINDOW
 # ------------------------------------------------------------
 
-if not checklist_df.empty:
+if not completed_checklist_df.empty:
 
-    checklist_df[
+    completed_checklist_df[
         "inspection_datetime_report"
     ] = pd.to_datetime(
-        checklist_df[
+        completed_checklist_df[
             "inspection_datetime"
         ],
         errors="coerce",
@@ -1565,16 +1593,16 @@ if not checklist_df.empty:
     # --------------------------------------------------------
 
     latest_week_checklists = (
-        checklist_df[
+        completed_checklist_df[
             (
-                checklist_df[
+                completed_checklist_df[
                     "inspection_datetime_report"
                 ]
                 >= selected_report_start
             )
             &
             (
-                checklist_df[
+                completed_checklist_df[
                     "inspection_datetime_report"
                 ]
                 < selected_report_end
@@ -1608,19 +1636,19 @@ previous_report_start = (
 )
 
 
-if not checklist_df.empty:
+if not completed_checklist_df.empty:
 
     previous_week_checklists = (
-        checklist_df[
+        completed_checklist_df[
             (
-                checklist_df[
+                completed_checklist_df[
                     "inspection_datetime_report"
                 ]
                 >= previous_report_start
             )
             &
             (
-                checklist_df[
+                completed_checklist_df[
                     "inspection_datetime_report"
                 ]
                 < previous_report_end

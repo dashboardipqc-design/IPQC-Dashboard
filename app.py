@@ -50,10 +50,10 @@ AREA_COLORS = {
 }
 
 SHIFT_COLORS = {
-    "A": CYAN,
-    "B": BLUE,
-    "C": TEAL,
-    "D": PURPLE
+    "A": "#22D3EE",   # Cyan
+    "B": "#22C55E",   # Green
+    "C": "#F59E0B",   # Orange
+    "D": "#A855F7"    # Purple
 }
 
 TIME_COLORS = {

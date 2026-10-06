@@ -1347,7 +1347,7 @@ with row2_col1:
         }
     )
 # ============================================================
-# FINDINGS BY AREA
+# COMPLIANCE BY AREA
 # ============================================================
 
 area_order = [
@@ -1358,28 +1358,107 @@ area_order = [
 ]
 
 
-area_data = (
-    filtered_df
+# ------------------------------------------------------------
+# FINDINGS BY AREA
+# ------------------------------------------------------------
+
+area_findings = (
+    df
     .groupby("area")
     .size()
     .reindex(
         area_order,
         fill_value=0
     )
-    .reset_index(
-        name="Cases"
+)
+
+
+# ------------------------------------------------------------
+# COMPLETED CHECKLISTS BY AREA
+# ------------------------------------------------------------
+
+if not completed_checklist_df.empty:
+
+    area_checklists = (
+        completed_checklist_df
+        .groupby("area")
+        .size()
+        .reindex(
+            area_order,
+            fill_value=0
+        )
+    )
+
+else:
+
+    area_checklists = pd.Series(
+        0,
+        index=area_order
+    )
+
+
+# ------------------------------------------------------------
+# CALCULATE COMPLIANCE BY AREA
+# ------------------------------------------------------------
+
+area_data = pd.DataFrame({
+    "area": area_order,
+    "Findings": [
+        area_findings.get(area, 0)
+        for area in area_order
+    ],
+    "Checklists": [
+        area_checklists.get(area, 0)
+        for area in area_order
+    ]
+})
+
+
+def calculate_area_compliance(row):
+
+    if row["Checklists"] <= 0:
+        return 0
+
+    compliance = (
+        1
+        -
+        (
+            row["Findings"]
+            /
+            row["Checklists"]
+        )
+    ) * 100
+
+    return max(
+        0,
+        min(
+            100,
+            compliance
+        )
+    )
+
+
+area_data["Compliance"] = (
+    area_data.apply(
+        calculate_area_compliance,
+        axis=1
     )
 )
 
+
+# ------------------------------------------------------------
+# CREATE CHART
+# ------------------------------------------------------------
 
 area_chart = go.Figure()
 
 
 area_chart.add_trace(
     go.Bar(
-        x=area_data["Cases"],
+        x=area_data["Compliance"],
         y=area_data["area"],
         orientation="h",
+
         marker=dict(
             color=[
                 AREA_COLORS.get(
@@ -1390,33 +1469,51 @@ area_chart.add_trace(
                 in area_data["area"]
             ]
         ),
-        text=area_data["Cases"],
+
+        text=[
+            f"{value:.1f}%"
+            for value
+            in area_data["Compliance"]
+        ],
+
         textposition="outside",
+
+        customdata=area_data[
+            [
+                "Findings",
+                "Checklists"
+            ]
+        ],
+
         hovertemplate=(
             "%{y}<br>"
-            "Cases: %{x}"
+            "Compliance: %{x:.1f}%<br>"
+            "Findings: %{customdata[0]}<br>"
+            "Checklists Completed: %{customdata[1]}"
             "<extra></extra>"
         )
     )
 )
 
 
+# ------------------------------------------------------------
+# CHART LAYOUT
+# ------------------------------------------------------------
+
 area_chart.update_layout(
-    title="● FINDINGS BY AREA - Y26 to Date",
+    title="● COMPLIANCE BY AREA (%) - Y26 to Date",
     height=315,
-    xaxis_title="Cases",
+    xaxis_title="Compliance (%)",
     yaxis_title="",
     showlegend=False,
 
-    # X-axis locked
     xaxis=dict(
         gridcolor="#475569",
-        rangemode="tozero",
-        dtick=1,
-        fixedrange=True
+        range=[0, 105],
+        fixedrange=True,
+        ticksuffix="%"
     ),
 
-    # Y-axis locked
     yaxis=dict(
         categoryorder="array",
         categoryarray=[
@@ -1445,7 +1542,6 @@ with row2_col2:
             "scrollZoom": False
         }
     )
-
 # ============================================================
 # MANAGEMENT INSIGHTS
 # ============================================================

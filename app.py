@@ -1142,11 +1142,6 @@ for weeks_ago in range(51, -1, -1):
     )
 
 
-week_template = pd.DataFrame(
-    latest_52_weeks
-)
-
-
 # ------------------------------------------------------------
 # PREPARE FINDING DATETIME
 # ------------------------------------------------------------
@@ -1308,9 +1303,9 @@ for week in latest_52_weeks:
 
     else:
 
-        # No completed checklist means
-        # compliance cannot be calculated.
-        compliance = None
+        # No completed checklist
+        # Display as 0% so trend line remains connected
+        compliance = 0
 
 
     weekly_records.append(
@@ -1374,13 +1369,16 @@ weekly_chart.add_trace(
         yaxis="y",
 
         line=dict(
-            color=CYAN,
+            color=RED,
             width=3
         ),
 
         marker=dict(
-            size=7
+            size=7,
+            color=RED
         ),
+
+        connectgaps=True,
 
         customdata=weekly_data[
             [
@@ -1477,7 +1475,6 @@ week_labels = (
 
 # ------------------------------------------------------------
 # FINDING AXIS MAXIMUM
-# Gives bar labels enough room
 # ------------------------------------------------------------
 
 max_findings = (
@@ -1491,7 +1488,6 @@ max_findings = (
 if max_findings <= 0:
 
     finding_axis_max = 1
-
 
 else:
 
@@ -1516,15 +1512,15 @@ weekly_chart.update_layout(
 
 
     # --------------------------------------------------------
-    # LEGEND
+    # LEGEND — BOTTOM
     # --------------------------------------------------------
 
     legend=dict(
         orientation="h",
-        yanchor="bottom",
-        y=1.01,
+        yanchor="top",
+        y=-0.18,
         xanchor="center",
-        x=0.55,
+        x=0.5,
         font=dict(
             size=10
         )
@@ -1533,8 +1529,6 @@ weekly_chart.update_layout(
 
     # --------------------------------------------------------
     # X AXIS
-    # Latest 10 weeks initially visible
-    # Horizontal pan remains available
     # --------------------------------------------------------
 
     xaxis=dict(
@@ -1563,8 +1557,7 @@ weekly_chart.update_layout(
 
 
     # --------------------------------------------------------
-    # LEFT Y AXIS
-    # COMPLIANCE %
+    # LEFT Y AXIS — COMPLIANCE %
     # --------------------------------------------------------
 
     yaxis=dict(
@@ -1594,8 +1587,7 @@ weekly_chart.update_layout(
 
 
     # --------------------------------------------------------
-    # RIGHT Y AXIS
-    # TOTAL FINDINGS
+    # RIGHT Y AXIS — FINDINGS
     # --------------------------------------------------------
 
     yaxis2=dict(
@@ -1619,16 +1611,15 @@ weekly_chart.update_layout(
     ),
 
 
-    # --------------------------------------------------------
-    # PAN MODE
-    # --------------------------------------------------------
+    # Extra bottom space for legend
+    margin=dict(
+        l=55,
+        r=55,
+        t=55,
+        b=85
+    ),
 
     dragmode="pan",
-
-
-    # --------------------------------------------------------
-    # BAR / LINE LAYERING
-    # --------------------------------------------------------
 
     barmode="overlay"
 )
@@ -1640,6 +1631,18 @@ weekly_chart.update_layout(
 
 style_chart(
     weekly_chart
+)
+
+
+# Re-apply bottom margin because style_chart
+# applies the standard dashboard margins
+weekly_chart.update_layout(
+    margin=dict(
+        l=55,
+        r=55,
+        t=55,
+        b=85
+    )
 )
 
 

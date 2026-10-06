@@ -793,7 +793,7 @@ compliance_chart = go.Figure(
             marker=dict(
                 colors=[
                     GREEN,
-                    "#334155"
+                    RED
                 ]
             ),
             textinfo="none",
@@ -852,8 +852,7 @@ with row1_col1:
         use_container_width=True,
         config={"displayModeBar": False}
     )
-
-
+    
 # ============================================================
 # SHIFT DISTRIBUTION
 # ============================================================

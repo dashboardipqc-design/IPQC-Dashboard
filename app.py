@@ -466,8 +466,8 @@ for weeks_ago in range(52):
 # HEADER
 # ============================================================
 
-header1, header2 = st.columns(
-    [4, 1]
+header1, header2, header3 = st.columns(
+    [3.2, 1.2, 1]
 )
 
 
@@ -483,6 +483,20 @@ with header1:
 
 
 with header2:
+
+    st.write("")
+
+    if st.button(
+        "📋 Inspection History",
+        use_container_width=True
+    ):
+
+        st.switch_page(
+            "pages/1_Inspection_History.py"
+        )
+
+
+with header3:
 
     st.markdown(
         f"""

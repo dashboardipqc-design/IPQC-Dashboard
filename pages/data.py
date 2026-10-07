@@ -965,13 +965,19 @@ display_columns = [
     "Type / Status"
 ]
 
+table_height = min(
+    500,
+    38 + (len(display_df) * 35)
+)
+
+
 table_event = st.dataframe(
     display_df[
         display_columns
     ],
     width="stretch",
     hide_index=True,
-    height=500,
+    height=table_height,
     on_select="rerun",
     selection_mode="single-row"
 )

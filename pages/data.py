@@ -822,26 +822,42 @@ filtered_df = filtered_df.sort_values(
 
 
 # ============================================================
-# RECORD COUNT
+# RECORD COUNT / DISPLAY LIMIT
 # ============================================================
 
-st.markdown(
-    f"""
-    <div style="
-        color:{MUTED};
-        font-size:14px;
-        margin-top:10px;
-        margin-bottom:10px;
-    ">
-        Showing
-        <b style="color:{TEXT};">
-            {len(filtered_df):,}
-        </b>
-        IPQC record(s)
-    </div>
-    """,
-    unsafe_allow_html=True
+count_col, limit_col = st.columns(
+    [5, 1]
 )
+
+
+with count_col:
+
+    st.markdown(
+        f"""
+        <div style="
+            color:{MUTED};
+            font-size:14px;
+            margin-top:10px;
+            margin-bottom:10px;
+        ">
+            Showing
+            <b style="color:{TEXT};">
+                {len(filtered_df):,}
+            </b>
+            IPQC record(s)
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+with limit_col:
+
+    display_limit = st.selectbox(
+        "Rows",
+        [10, 20, 50, 100],
+        index=0
+    )
 
 
 # ============================================================
@@ -857,8 +873,11 @@ if filtered_df.empty:
     st.stop()
 
 
-display_df = filtered_df.copy()
-
+display_df = (
+    filtered_df
+    .head(display_limit)
+    .copy()
+)
 
 display_df["Date / Time"] = (
     display_df["record_datetime"]

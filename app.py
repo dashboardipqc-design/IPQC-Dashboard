@@ -1565,16 +1565,15 @@ weekly_chart.update_layout(
         title="Compliance (%)",
 
         range=[
-            0,
-            105
+            80,
+            100
         ],
 
         tickvals=[
-            0,
-            20,
-            40,
-            60,
             80,
+            85,
+            90,
+            95,
             100
         ],
 
@@ -1584,7 +1583,6 @@ weekly_chart.update_layout(
 
         fixedrange=True
     ),
-
 
     # --------------------------------------------------------
     # RIGHT Y AXIS — FINDINGS

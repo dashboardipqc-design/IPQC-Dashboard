@@ -820,9 +820,8 @@ filtered_df = filtered_df.sort_values(
     ascending=False
 )
 
-
 # ============================================================
-# RECORD COUNT / DISPLAY LIMIT
+# RECORD COUNT / PAGINATION
 # ============================================================
 
 count_col, limit_col = st.columns(
@@ -856,9 +855,50 @@ with limit_col:
     display_limit = st.selectbox(
         "Rows",
         [10, 20, 50, 100],
-        index=0
+        index=0,
+        key="history_display_limit"
     )
 
+
+total_records = len(filtered_df)
+
+total_pages = max(
+    1,
+    (
+        total_records
+        + display_limit
+        - 1
+    )
+    // display_limit
+)
+
+
+if "history_page" not in st.session_state:
+
+    st.session_state.history_page = 1
+
+
+if (
+    st.session_state.history_page
+    > total_pages
+):
+
+    st.session_state.history_page = total_pages
+
+
+current_page = (
+    st.session_state.history_page
+)
+
+
+start_index = (
+    current_page - 1
+) * display_limit
+
+end_index = min(
+    start_index + display_limit,
+    total_records
+)
 
 # ============================================================
 # HISTORY TABLE
@@ -873,11 +913,19 @@ if filtered_df.empty:
     st.stop()
 
 
-display_df = (
+page_df = (
     filtered_df
-    .head(display_limit)
+    .iloc[
+        start_index:end_index
+    ]
     .copy()
+    .reset_index(
+        drop=True
+    )
 )
+
+
+display_df = page_df.copy()
 
 display_df["Date / Time"] = (
     display_df["record_datetime"]
@@ -927,6 +975,82 @@ table_event = st.dataframe(
     on_select="rerun",
     selection_mode="single-row"
 )
+
+# ============================================================
+# PAGE NAVIGATION
+# ============================================================
+
+if total_pages > 1:
+
+    st.markdown("")
+
+    nav_left, nav_pages, nav_right = st.columns(
+        [1, 6, 1]
+    )
+
+
+    with nav_left:
+
+        if st.button(
+            "◀ Previous",
+            disabled=(
+                current_page == 1
+            ),
+            width="stretch"
+        ):
+
+            st.session_state.history_page -= 1
+
+            st.rerun()
+
+
+    with nav_pages:
+
+        page_options = list(
+            range(
+                1,
+                total_pages + 1
+            )
+        )
+
+        selected_page = st.selectbox(
+            "Page",
+            page_options,
+            index=current_page - 1,
+            format_func=lambda x: (
+                f"Page {x} of {total_pages}"
+            ),
+            label_visibility="collapsed"
+        )
+
+
+        if (
+            selected_page
+            != current_page
+        ):
+
+            st.session_state.history_page = (
+                selected_page
+            )
+
+            st.rerun()
+
+
+    with nav_right:
+
+        if st.button(
+            "Next ▶",
+            disabled=(
+                current_page
+                == total_pages
+            ),
+            width="stretch"
+        ):
+
+            st.session_state.history_page += 1
+
+            st.rerun()
+
 
 # ============================================================
 # FINDING DETAIL VIEWER

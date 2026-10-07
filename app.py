@@ -323,36 +323,36 @@ try:
         )
 
 
-# ============================================================
-# CHECKLIST SUBMISSIONS
-# NORMAL + ADDITIONAL + NOT_RUNNING
-# ALL SUBMISSION TYPES COUNT AS CHECKLISTS
-# ============================================================
+    # ========================================================
+    # CHECKLIST SUBMISSIONS
+    # NORMAL + ADDITIONAL + NOT_RUNNING
+    # ALL THREE COUNT AS CHECKLISTS
+    # ========================================================
 
-if (
-    not checklist_df.empty
-    and
-    "submission_type" in checklist_df.columns
-):
+    if (
+        not checklist_df.empty
+        and
+        "submission_type" in checklist_df.columns
+    ):
 
-    completed_checklist_df = (
-        checklist_df[
-            checklist_df["submission_type"].isin(
-                [
-                    "NORMAL",
-                    "ADDITIONAL",
-                    "NOT_RUNNING"
-                ]
-            )
-        ]
-        .copy()
-    )
+        completed_checklist_df = (
+            checklist_df[
+                checklist_df["submission_type"].isin(
+                    [
+                        "NORMAL",
+                        "ADDITIONAL",
+                        "NOT_RUNNING"
+                    ]
+                )
+            ]
+            .copy()
+        )
 
-else:
+    else:
 
-    completed_checklist_df = (
-        checklist_df.copy()
-    )
+        completed_checklist_df = (
+            checklist_df.copy()
+        )
     
 except Exception as e:
 

@@ -486,14 +486,13 @@ with header2:
 
     st.write("")
 
-    if st.button(
-        "📋 Inspection History",
-        use_container_width=True
-    ):
+if st.button(
+    "📋 Inspection History",
+    use_container_width=True
+):
 
-        st.switch_page(
-            "pages/data.py"
-        )
+    st.session_state["dashboard_page"] = "history"
+    st.rerun()
 
 
 with header3:

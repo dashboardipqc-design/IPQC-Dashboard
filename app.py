@@ -1565,15 +1565,16 @@ weekly_chart.update_layout(
         title="Compliance (%)",
 
         range=[
-            80,
-            100
+            0,
+            105
         ],
 
         tickvals=[
+            0,
+            20,
+            40,
+            60,
             80,
-            85,
-            90,
-            95,
             100
         ],
 

@@ -462,14 +462,14 @@ for weeks_ago in range(52):
                 week_end
         }
     )
+
 # ============================================================
 # HEADER
 # ============================================================
 
 header1, header2, header3 = st.columns(
-    [3.2, 1.2, 1]
+    [5, 1.3, 1]
 )
-
 
 with header1:
 
@@ -481,19 +481,18 @@ with header1:
         "Total Summary"
     )
 
-
 with header2:
 
     st.write("")
 
-if st.button(
-    "📋 Inspection History",
-    use_container_width=True
-):
+    if st.button(
+        "📋 Inspection History",
+        width="content"
+    ):
 
-    st.switch_page(
-        "pages/data.py"
-    )
+        st.switch_page(
+            "pages/data.py"
+        )
 
 with header3:
 

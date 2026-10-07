@@ -492,7 +492,7 @@ with header2:
     ):
 
         st.switch_page(
-            "pages/1_Inspection_History.py"
+            "pages/data.py"
         )
 
 

@@ -1128,39 +1128,21 @@ if selected_rows:
             )
 
 
-            st.markdown(
-                "**Finding Description**"
-            )
-
-            st.write(
-                finding_record[
-                    "finding_description"
-                ]
-                or "-"
+            show_detail_value(
+                "Finding Description",
+                finding_record["finding_description"]
             )
 
 
-            st.markdown(
-                "**Interview Result**"
-            )
-
-            st.write(
-                finding_record[
-                    "interview_result"
-                ]
-                or "-"
+            show_detail_value(
+                "Interview Result",
+                finding_record["interview_result"]
             )
 
 
-            st.markdown(
-                "**Containment Action**"
-            )
-
-            st.write(
-                finding_record[
-                    "containment_action"
-                ]
-                or "-"
+            show_detail_value(
+                "Containment Action",
+                finding_record["containment_action"]
             )
 
 
@@ -1171,23 +1153,15 @@ if selected_rows:
 
             with detail1:
 
-                st.markdown(
-                    "**Auditee**"
-                )
-
-                st.write(
+                show_detail_value(
+                    "Auditee",
                     finding_record["auditee"]
-                    or "-"
                 )
 
 
             with detail2:
 
-                st.markdown(
-                    "**Auditor**"
-                )
-
-                st.write(
+                show_detail_value(
+                    "Auditor",
                     finding_record["auditor"]
-                    or "-"
                 )

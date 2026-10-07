@@ -343,6 +343,175 @@ for column in [
             .astype(str)
         )
 
+# ============================================================
+# NORMALIZE CHECKLIST RECORDS
+# ============================================================
+
+checklist_history_df = pd.DataFrame()
+
+checklist_history_df["record_datetime"] = (
+    inspection_df["inspection_datetime_myt"]
+)
+
+checklist_history_df["record_date"] = (
+    inspection_df["inspection_date"]
+)
+
+checklist_history_df["record_no"] = (
+    inspection_df["inspection_no"]
+)
+
+checklist_history_df["record_type"] = "Checklist"
+
+checklist_history_df["factory"] = (
+    inspection_df["factory"]
+)
+
+checklist_history_df["area"] = (
+    inspection_df["area"]
+)
+
+checklist_history_df["process_station"] = (
+    inspection_df["process"]
+)
+
+checklist_history_df["lot_number"] = (
+    inspection_df["lot_number"]
+)
+
+checklist_history_df["machine"] = (
+    inspection_df["machine"]
+)
+
+checklist_history_df["inspector_auditor"] = (
+    inspection_df["inspector"]
+)
+
+checklist_history_df["shift"] = (
+    inspection_df["shift"]
+)
+
+checklist_history_df["type_status"] = (
+    inspection_df["submission_type"]
+)
+
+
+# ============================================================
+# NORMALIZE FINDING RECORDS
+# ============================================================
+
+if not findings_df.empty:
+
+    findings_df["created_at"] = pd.to_datetime(
+        findings_df["created_at"],
+        errors="coerce",
+        utc=True
+    )
+
+    findings_df["record_datetime"] = (
+        findings_df["created_at"]
+        .dt.tz_convert(
+            MALAYSIA_TZ
+        )
+    )
+
+    findings_df["record_date"] = (
+        findings_df["record_datetime"]
+        .dt.date
+    )
+
+    for column in [
+        "factory",
+        "area",
+        "station",
+        "equipment_id",
+        "lot_number",
+        "auditor",
+        "shift",
+        "status"
+    ]:
+
+        findings_df[column] = (
+            findings_df[column]
+            .fillna("")
+            .astype(str)
+        )
+
+
+    finding_history_df = pd.DataFrame()
+
+    finding_history_df["record_datetime"] = (
+        findings_df["record_datetime"]
+    )
+
+    finding_history_df["record_date"] = (
+        findings_df["record_date"]
+    )
+
+    finding_history_df["record_no"] = (
+        "FIND-"
+        + findings_df["id"].astype(str)
+    )
+
+    finding_history_df["record_type"] = "Finding"
+
+    finding_history_df["factory"] = (
+        findings_df["factory"]
+    )
+
+    finding_history_df["area"] = (
+        findings_df["area"]
+    )
+
+    finding_history_df["process_station"] = (
+        findings_df["station"]
+    )
+
+    finding_history_df["lot_number"] = (
+        findings_df["lot_number"]
+    )
+
+    finding_history_df["machine"] = (
+        findings_df["equipment_id"]
+    )
+
+    finding_history_df["inspector_auditor"] = (
+        findings_df["auditor"]
+    )
+
+    finding_history_df["shift"] = (
+        findings_df["shift"]
+    )
+
+    finding_history_df["type_status"] = (
+        findings_df["status"]
+    )
+
+else:
+
+    finding_history_df = pd.DataFrame(
+        columns=checklist_history_df.columns
+    )
+
+
+# ============================================================
+# COMBINE IPQC HISTORY
+# ============================================================
+
+history_df = pd.concat(
+    [
+        checklist_history_df,
+        finding_history_df
+    ],
+    ignore_index=True
+)
+
+history_df = history_df.sort_values(
+    "record_datetime",
+    ascending=False
+).reset_index(
+    drop=True
+)
 
 # ============================================================
 # FILTERS

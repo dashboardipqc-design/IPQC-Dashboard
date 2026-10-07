@@ -491,9 +491,9 @@ if st.button(
     use_container_width=True
 ):
 
-    st.session_state["dashboard_page"] = "history"
-    st.rerun()
-
+    st.switch_page(
+        "pages/data.py"
+    )
 
 with header3:
 

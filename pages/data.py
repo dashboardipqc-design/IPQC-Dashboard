@@ -183,6 +183,8 @@ def load_findings():
             "lot_number,"
             "category,"
             "finding_description,"
+            "interview_result,"
+            "containment_action,"
             "auditee,"
             "auditor,"
             "status"
@@ -362,6 +364,7 @@ checklist_history_df["record_no"] = (
 )
 
 checklist_history_df["record_type"] = "Checklist"
+checklist_history_df["source_id"] = None
 
 checklist_history_df["factory"] = (
     inspection_df["factory"]
@@ -454,6 +457,9 @@ if not findings_df.empty:
     )
 
     finding_history_df["record_type"] = "Finding"
+    finding_history_df["source_id"] = (
+    findings_df["id"]
+)
 
     finding_history_df["factory"] = (
         findings_df["factory"]
@@ -892,12 +898,264 @@ display_columns = [
     "Type / Status"
 ]
 
-
-st.dataframe(
+table_event = st.dataframe(
     display_df[
         display_columns
     ],
     width="stretch",
     hide_index=True,
-    height=500
+    height=500,
+    on_select="rerun",
+    selection_mode="single-row"
 )
+
+# ============================================================
+# FINDING DETAIL VIEWER
+# ============================================================
+
+selected_rows = table_event.selection.rows
+
+
+if selected_rows:
+
+    selected_row_position = selected_rows[0]
+
+    selected_record = filtered_df.iloc[
+        selected_row_position
+    ]
+
+
+    # --------------------------------------------------------
+    # FINDING RECORD ONLY
+    # --------------------------------------------------------
+
+    if selected_record["record_type"] == "Finding":
+
+        finding_id = selected_record["source_id"]
+
+        selected_finding_df = findings_df[
+            findings_df["id"]
+            == finding_id
+        ]
+
+
+        if not selected_finding_df.empty:
+
+            finding_record = (
+                selected_finding_df.iloc[0]
+            )
+
+
+            st.divider()
+
+            st.subheader(
+                f"🔍 Finding Detail — FIND-{finding_id}"
+            )
+
+
+            # ====================================================
+            # FINDING INFORMATION
+            # ====================================================
+
+            st.markdown(
+                "### Finding Information"
+            )
+
+
+            info1, info2, info3, info4 = st.columns(
+                4
+            )
+
+
+            with info1:
+
+                st.markdown(
+                    "**Finding Date / Time**"
+                )
+
+                st.write(
+                    finding_record[
+                        "finding_datetime"
+                    ]
+                    or "-"
+                )
+
+
+            with info2:
+
+                st.markdown(
+                    "**Factory**"
+                )
+
+                st.write(
+                    finding_record["factory"]
+                    or "-"
+                )
+
+
+            with info3:
+
+                st.markdown(
+                    "**Area**"
+                )
+
+                st.write(
+                    finding_record["area"]
+                    or "-"
+                )
+
+
+            with info4:
+
+                st.markdown(
+                    "**Station**"
+                )
+
+                st.write(
+                    finding_record["station"]
+                    or "-"
+                )
+
+
+            info5, info6, info7, info8 = st.columns(
+                4
+            )
+
+
+            with info5:
+
+                st.markdown(
+                    "**Equipment / Station ID**"
+                )
+
+                st.write(
+                    finding_record[
+                        "equipment_id"
+                    ]
+                    or "-"
+                )
+
+
+            with info6:
+
+                st.markdown(
+                    "**Lot Number**"
+                )
+
+                st.write(
+                    finding_record[
+                        "lot_number"
+                    ]
+                    or "-"
+                )
+
+
+            with info7:
+
+                st.markdown(
+                    "**Shift**"
+                )
+
+                st.write(
+                    finding_record["shift"]
+                    or "-"
+                )
+
+
+            with info8:
+
+                st.markdown(
+                    "**Status**"
+                )
+
+                st.write(
+                    finding_record["status"]
+                    or "-"
+                )
+
+
+            st.divider()
+
+
+            # ====================================================
+            # FINDING DETAILS
+            # ====================================================
+
+            st.markdown(
+                "### Finding Details"
+            )
+
+
+            st.markdown(
+                "**Category**"
+            )
+
+            st.write(
+                finding_record["category"]
+                or "-"
+            )
+
+
+            st.markdown(
+                "**Finding Description**"
+            )
+
+            st.write(
+                finding_record[
+                    "finding_description"
+                ]
+                or "-"
+            )
+
+
+            st.markdown(
+                "**Interview Result**"
+            )
+
+            st.write(
+                finding_record[
+                    "interview_result"
+                ]
+                or "-"
+            )
+
+
+            st.markdown(
+                "**Containment Action**"
+            )
+
+            st.write(
+                finding_record[
+                    "containment_action"
+                ]
+                or "-"
+            )
+
+
+            detail1, detail2 = st.columns(
+                2
+            )
+
+
+            with detail1:
+
+                st.markdown(
+                    "**Auditee**"
+                )
+
+                st.write(
+                    finding_record["auditee"]
+                    or "-"
+                )
+
+
+            with detail2:
+
+                st.markdown(
+                    "**Auditor**"
+                )
+
+                st.write(
+                    finding_record["auditor"]
+                    or "-"
+                )

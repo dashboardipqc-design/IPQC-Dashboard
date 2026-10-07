@@ -165,7 +165,38 @@ def load_checklist_master():
     return pd.DataFrame(
         response.data
     )
+@st.cache_data(ttl=60)
+def load_findings():
 
+    response = (
+        supabase
+        .table("Findings")
+        .select(
+            "id,"
+            "created_at,"
+            "finding_datetime,"
+            "shift,"
+            "factory,"
+            "area,"
+            "station,"
+            "equipment_id,"
+            "lot_number,"
+            "category,"
+            "finding_description,"
+            "auditee,"
+            "auditor,"
+            "status"
+        )
+        .order(
+            "created_at",
+            desc=True
+        )
+        .execute()
+    )
+
+    return pd.DataFrame(
+        response.data
+    )
 
 # ============================================================
 # HEADER
@@ -212,6 +243,7 @@ try:
 
     inspection_df = load_inspection_headers()
     checklist_df = load_checklist_master()
+    findings_df = load_findings()
 
 except Exception as e:
 

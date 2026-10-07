@@ -518,7 +518,7 @@ history_df = history_df.sort_values(
 # ============================================================
 
 st.subheader(
-    "Inspection Records"
+    "IPQC Records"
 )
 
 
@@ -550,12 +550,26 @@ with filter2:
 
 with filter3:
 
+    record_type_options = [
+        "All",
+        "Checklist",
+        "Finding"
+    ]
+
+    selected_record_type = st.selectbox(
+        "Record Type",
+        record_type_options
+    )
+
+
+with filter4:
+
     factory_options = [
         "All"
     ] + sorted(
         [
             x
-            for x in inspection_df["factory"].unique()
+            for x in history_df["factory"].unique()
             if x
         ]
     )
@@ -566,7 +580,12 @@ with filter3:
     )
 
 
-with filter4:
+filter5, filter6, filter7, filter8 = st.columns(
+    4
+)
+
+
+with filter5:
 
     area_order = [
         "DP",
@@ -576,7 +595,7 @@ with filter4:
     ]
 
     existing_areas = (
-        inspection_df["area"]
+        history_df["area"]
         .dropna()
         .unique()
         .tolist()
@@ -596,14 +615,9 @@ with filter4:
     )
 
 
-filter5, filter6, filter7, filter8 = st.columns(
-    4
-)
+with filter6:
 
-
-with filter5:
-
-    process_source = inspection_df.copy()
+    process_source = history_df.copy()
 
     if selected_area != "All":
 
@@ -617,44 +631,53 @@ with filter5:
     ] + sorted(
         [
             x
-            for x in process_source["process"].unique()
+            for x in process_source[
+                "process_station"
+            ].unique()
             if x
         ]
     )
 
     selected_process = st.selectbox(
-        "Process",
+        "Process / Station",
         process_options
-    )
-
-
-with filter6:
-
-    submission_options = [
-        "All"
-    ] + sorted(
-        [
-            x
-            for x in inspection_df["submission_type"].unique()
-            if x
-        ]
-    )
-
-    selected_submission_type = st.selectbox(
-        "Submission Type",
-        submission_options
     )
 
 
 with filter7:
 
-    inspector_search = st.text_input(
-        "Inspector",
-        placeholder="6-digit badge"
+    type_status_options = [
+        "All"
+    ] + sorted(
+        [
+            x
+            for x in history_df[
+                "type_status"
+            ].unique()
+            if x
+        ]
+    )
+
+    selected_type_status = st.selectbox(
+        "Type / Status",
+        type_status_options
     )
 
 
 with filter8:
+
+    inspector_search = st.text_input(
+        "Inspector / Auditor",
+        placeholder="6-digit badge"
+    )
+
+
+filter9, filter10, filter11 = st.columns(
+    3
+)
+
+
+with filter9:
 
     lot_search = st.text_input(
         "Lot Number",
@@ -662,12 +685,7 @@ with filter8:
     )
 
 
-filter9, filter10 = st.columns(
-    2
-)
-
-
-with filter9:
+with filter10:
 
     machine_search = st.text_input(
         "Machine / Workstation",
@@ -675,11 +693,11 @@ with filter9:
     )
 
 
-with filter10:
+with filter11:
 
-    inspection_no_search = st.text_input(
-        "Inspection No.",
-        placeholder="Search inspection number"
+    record_no_search = st.text_input(
+        "Record No.",
+        placeholder="Search record number"
     )
 
 
@@ -687,20 +705,28 @@ with filter10:
 # APPLY FILTERS
 # ============================================================
 
-filtered_df = inspection_df.copy()
+filtered_df = history_df.copy()
 
 
 filtered_df = filtered_df[
     (
-        filtered_df["inspection_date"]
+        filtered_df["record_date"]
         >= start_date
     )
     &
     (
-        filtered_df["inspection_date"]
+        filtered_df["record_date"]
         <= end_date
     )
 ]
+
+
+if selected_record_type != "All":
+
+    filtered_df = filtered_df[
+        filtered_df["record_type"]
+        == selected_record_type
+    ]
 
 
 if selected_factory != "All":
@@ -722,23 +748,23 @@ if selected_area != "All":
 if selected_process != "All":
 
     filtered_df = filtered_df[
-        filtered_df["process"]
+        filtered_df["process_station"]
         == selected_process
     ]
 
 
-if selected_submission_type != "All":
+if selected_type_status != "All":
 
     filtered_df = filtered_df[
-        filtered_df["submission_type"]
-        == selected_submission_type
+        filtered_df["type_status"]
+        == selected_type_status
     ]
 
 
 if inspector_search.strip():
 
     filtered_df = filtered_df[
-        filtered_df["inspector"]
+        filtered_df["inspector_auditor"]
         .str.contains(
             inspector_search.strip(),
             case=False,
@@ -771,12 +797,12 @@ if machine_search.strip():
     ]
 
 
-if inspection_no_search.strip():
+if record_no_search.strip():
 
     filtered_df = filtered_df[
-        filtered_df["inspection_no"]
+        filtered_df["record_no"]
         .str.contains(
-            inspection_no_search.strip(),
+            record_no_search.strip(),
             case=False,
             na=False
         )
@@ -784,7 +810,7 @@ if inspection_no_search.strip():
 
 
 filtered_df = filtered_df.sort_values(
-    "inspection_datetime_myt",
+    "record_datetime",
     ascending=False
 )
 
@@ -805,7 +831,7 @@ st.markdown(
         <b style="color:{TEXT};">
             {len(filtered_df):,}
         </b>
-        inspection record(s)
+        IPQC record(s)
     </div>
     """,
     unsafe_allow_html=True
@@ -819,7 +845,7 @@ st.markdown(
 if filtered_df.empty:
 
     st.info(
-        "No inspection records match the selected filters."
+        "No IPQC records match the selected filters."
     )
 
     st.stop()
@@ -828,8 +854,8 @@ if filtered_df.empty:
 display_df = filtered_df.copy()
 
 
-display_df["Inspection Time"] = (
-    display_df["inspection_datetime_myt"]
+display_df["Date / Time"] = (
+    display_df["record_datetime"]
     .dt.strftime(
         "%d-%b-%Y %H:%M"
     )
@@ -838,30 +864,32 @@ display_df["Inspection Time"] = (
 
 display_df = display_df.rename(
     columns={
-        "inspection_no": "Inspection No.",
+        "record_no": "Record No.",
+        "record_type": "Record Type",
         "factory": "Factory",
         "area": "Area",
-        "process": "Process",
+        "process_station": "Process / Station",
         "lot_number": "Lot Number",
-        "machine": "Machine",
-        "inspector": "Inspector",
+        "machine": "Machine / Workstation",
+        "inspector_auditor": "Inspector / Auditor",
         "shift": "Shift",
-        "submission_type": "Type"
+        "type_status": "Type / Status"
     }
 )
 
 
 display_columns = [
-    "Inspection Time",
-    "Inspection No.",
+    "Date / Time",
+    "Record No.",
+    "Record Type",
     "Factory",
     "Area",
-    "Process",
+    "Process / Station",
     "Lot Number",
-    "Machine",
-    "Inspector",
+    "Machine / Workstation",
+    "Inspector / Auditor",
     "Shift",
-    "Type"
+    "Type / Status"
 ]
 
 

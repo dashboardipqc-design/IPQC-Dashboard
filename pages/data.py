@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from zoneinfo import ZoneInfo
 from supabase import create_client
 
@@ -63,6 +63,12 @@ st.markdown(
         color: {MUTED};
     }}
 
+    div[data-testid="stDataFrame"] {{
+        border: 1px solid {BORDER};
+        border-radius: 10px;
+        overflow: hidden;
+    }}
+
     </style>
     """,
     unsafe_allow_html=True
@@ -99,11 +105,74 @@ current_time = datetime.now(
 
 
 # ============================================================
+# LOAD DATA
+# ============================================================
+
+@st.cache_data(ttl=60)
+def load_inspection_headers():
+
+    response = (
+        supabase
+        .table("inspection_header")
+        .select(
+            "id,"
+            "inspection_no,"
+            "checklist_id,"
+            "version_id,"
+            "lot_number,"
+            "machine,"
+            "inspector,"
+            "shift,"
+            "inspection_datetime,"
+            "submitted_at,"
+            "status,"
+            "factory,"
+            "submission_type,"
+            "shift_date"
+        )
+        .eq(
+            "status",
+            "SUBMITTED"
+        )
+        .order(
+            "inspection_datetime",
+            desc=True
+        )
+        .execute()
+    )
+
+    return pd.DataFrame(
+        response.data
+    )
+
+
+@st.cache_data(ttl=300)
+def load_checklist_master():
+
+    response = (
+        supabase
+        .table("checklist_master")
+        .select(
+            "id,"
+            "checklist_code,"
+            "area,"
+            "process,"
+            "checklist_name"
+        )
+        .execute()
+    )
+
+    return pd.DataFrame(
+        response.data
+    )
+
+
+# ============================================================
 # HEADER
 # ============================================================
 
 header1, header2 = st.columns(
-    [4, 1]
+    [5, 1]
 )
 
 
@@ -124,7 +193,7 @@ with header2:
 
     if st.button(
         "← Back to Dashboard",
-        use_container_width=True
+        width="stretch"
     ):
 
         st.switch_page(
@@ -136,9 +205,622 @@ st.divider()
 
 
 # ============================================================
-# PLACEHOLDER
+# GET DATA
 # ============================================================
 
-st.info(
-    "Inspection History is ready for record retrieval setup."
+try:
+
+    inspection_df = load_inspection_headers()
+    checklist_df = load_checklist_master()
+
+except Exception as e:
+
+    st.error(
+        "Unable to retrieve inspection history."
+    )
+
+    st.exception(e)
+
+    st.stop()
+
+
+if inspection_df.empty:
+
+    st.info(
+        "No submitted inspection records found."
+    )
+
+    st.stop()
+
+
+# ============================================================
+# MERGE CHECKLIST INFORMATION
+# ============================================================
+
+if not checklist_df.empty:
+
+    checklist_lookup = checklist_df.rename(
+        columns={
+            "id": "checklist_id"
+        }
+    )
+
+    inspection_df = inspection_df.merge(
+        checklist_lookup[
+            [
+                "checklist_id",
+                "checklist_code",
+                "area",
+                "process",
+                "checklist_name"
+            ]
+        ],
+        on="checklist_id",
+        how="left"
+    )
+
+else:
+
+    inspection_df["checklist_code"] = ""
+    inspection_df["area"] = ""
+    inspection_df["process"] = ""
+    inspection_df["checklist_name"] = ""
+
+
+# ============================================================
+# CLEAN DATA
+# ============================================================
+
+inspection_df["inspection_datetime"] = pd.to_datetime(
+    inspection_df["inspection_datetime"],
+    errors="coerce",
+    utc=True
+)
+
+inspection_df["inspection_datetime_myt"] = (
+    inspection_df["inspection_datetime"]
+    .dt.tz_convert(
+        MALAYSIA_TZ
+    )
+)
+
+
+inspection_df["inspection_date"] = (
+    inspection_df["inspection_datetime_myt"]
+    .dt.date
+)
+
+
+for column in [
+    "factory",
+    "area",
+    "process",
+    "submission_type",
+    "inspector",
+    "lot_number",
+    "machine",
+    "inspection_no",
+    "shift"
+]:
+
+    if column in inspection_df.columns:
+
+        inspection_df[column] = (
+            inspection_df[column]
+            .fillna("")
+            .astype(str)
+        )
+
+
+# ============================================================
+# FILTERS
+# ============================================================
+
+st.subheader(
+    "Inspection Records"
+)
+
+
+filter1, filter2, filter3, filter4 = st.columns(
+    4
+)
+
+
+with filter1:
+
+    default_start_date = (
+        current_time.date()
+        - timedelta(days=30)
+    )
+
+    start_date = st.date_input(
+        "Start Date",
+        value=default_start_date
+    )
+
+
+with filter2:
+
+    end_date = st.date_input(
+        "End Date",
+        value=current_time.date()
+    )
+
+
+with filter3:
+
+    factory_options = [
+        "All"
+    ] + sorted(
+        [
+            x
+            for x in inspection_df["factory"].unique()
+            if x
+        ]
+    )
+
+    selected_factory = st.selectbox(
+        "Factory",
+        factory_options
+    )
+
+
+with filter4:
+
+    area_order = [
+        "DP",
+        "FOL",
+        "MOL",
+        "EOL"
+    ]
+
+    existing_areas = (
+        inspection_df["area"]
+        .dropna()
+        .unique()
+        .tolist()
+    )
+
+    area_options = [
+        "All"
+    ] + [
+        area
+        for area in area_order
+        if area in existing_areas
+    ]
+
+    selected_area = st.selectbox(
+        "Area",
+        area_options
+    )
+
+
+filter5, filter6, filter7, filter8 = st.columns(
+    4
+)
+
+
+with filter5:
+
+    process_source = inspection_df.copy()
+
+    if selected_area != "All":
+
+        process_source = process_source[
+            process_source["area"]
+            == selected_area
+        ]
+
+    process_options = [
+        "All"
+    ] + sorted(
+        [
+            x
+            for x in process_source["process"].unique()
+            if x
+        ]
+    )
+
+    selected_process = st.selectbox(
+        "Process",
+        process_options
+    )
+
+
+with filter6:
+
+    submission_options = [
+        "All"
+    ] + sorted(
+        [
+            x
+            for x in inspection_df["submission_type"].unique()
+            if x
+        ]
+    )
+
+    selected_submission_type = st.selectbox(
+        "Submission Type",
+        submission_options
+    )
+
+
+with filter7:
+
+    inspector_search = st.text_input(
+        "Inspector",
+        placeholder="6-digit badge"
+    )
+
+
+with filter8:
+
+    lot_search = st.text_input(
+        "Lot Number",
+        placeholder="Search lot"
+    )
+
+
+filter9, filter10 = st.columns(
+    2
+)
+
+
+with filter9:
+
+    machine_search = st.text_input(
+        "Machine / Workstation",
+        placeholder="Search machine"
+    )
+
+
+with filter10:
+
+    inspection_no_search = st.text_input(
+        "Inspection No.",
+        placeholder="Search inspection number"
+    )
+
+
+# ============================================================
+# APPLY FILTERS
+# ============================================================
+
+filtered_df = inspection_df.copy()
+
+
+filtered_df = filtered_df[
+    (
+        filtered_df["inspection_date"]
+        >= start_date
+    )
+    &
+    (
+        filtered_df["inspection_date"]
+        <= end_date
+    )
+]
+
+
+if selected_factory != "All":
+
+    filtered_df = filtered_df[
+        filtered_df["factory"]
+        == selected_factory
+    ]
+
+
+if selected_area != "All":
+
+    filtered_df = filtered_df[
+        filtered_df["area"]
+        == selected_area
+    ]
+
+
+if selected_process != "All":
+
+    filtered_df = filtered_df[
+        filtered_df["process"]
+        == selected_process
+    ]
+
+
+if selected_submission_type != "All":
+
+    filtered_df = filtered_df[
+        filtered_df["submission_type"]
+        == selected_submission_type
+    ]
+
+
+if inspector_search.strip():
+
+    filtered_df = filtered_df[
+        filtered_df["inspector"]
+        .str.contains(
+            inspector_search.strip(),
+            case=False,
+            na=False
+        )
+    ]
+
+
+if lot_search.strip():
+
+    filtered_df = filtered_df[
+        filtered_df["lot_number"]
+        .str.contains(
+            lot_search.strip(),
+            case=False,
+            na=False
+        )
+    ]
+
+
+if machine_search.strip():
+
+    filtered_df = filtered_df[
+        filtered_df["machine"]
+        .str.contains(
+            machine_search.strip(),
+            case=False,
+            na=False
+        )
+    ]
+
+
+if inspection_no_search.strip():
+
+    filtered_df = filtered_df[
+        filtered_df["inspection_no"]
+        .str.contains(
+            inspection_no_search.strip(),
+            case=False,
+            na=False
+        )
+    ]
+
+
+filtered_df = filtered_df.sort_values(
+    "inspection_datetime_myt",
+    ascending=False
+)
+
+
+# ============================================================
+# RECORD COUNT
+# ============================================================
+
+st.markdown(
+    f"""
+    <div style="
+        color:{MUTED};
+        font-size:14px;
+        margin-top:10px;
+        margin-bottom:10px;
+    ">
+        Showing
+        <b style="color:{TEXT};">
+            {len(filtered_df):,}
+        </b>
+        inspection record(s)
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ============================================================
+# HISTORY TABLE
+# ============================================================
+
+if filtered_df.empty:
+
+    st.info(
+        "No inspection records match the selected filters."
+    )
+
+    st.stop()
+
+
+display_df = filtered_df.copy()
+
+
+display_df["Inspection Time"] = (
+    display_df["inspection_datetime_myt"]
+    .dt.strftime(
+        "%d-%b-%Y %H:%M"
+    )
+)
+
+
+display_df = display_df.rename(
+    columns={
+        "inspection_no": "Inspection No.",
+        "factory": "Factory",
+        "area": "Area",
+        "process": "Process",
+        "lot_number": "Lot Number",
+        "machine": "Machine",
+        "inspector": "Inspector",
+        "shift": "Shift",
+        "submission_type": "Type"
+    }
+)
+
+
+display_columns = [
+    "Inspection Time",
+    "Inspection No.",
+    "Factory",
+    "Area",
+    "Process",
+    "Lot Number",
+    "Machine",
+    "Inspector",
+    "Shift",
+    "Type"
+]
+
+
+st.dataframe(
+    display_df[
+        display_columns
+    ],
+    width="stretch",
+    hide_index=True,
+    height=500
+)
+
+
+# ============================================================
+# SELECT INSPECTION
+# ============================================================
+
+st.divider()
+
+st.subheader(
+    "View Inspection Record"
+)
+
+
+record_options = filtered_df[
+    [
+        "id",
+        "inspection_no",
+        "inspection_datetime_myt",
+        "factory",
+        "area",
+        "process"
+    ]
+].copy()
+
+
+record_options["label"] = record_options.apply(
+    lambda row:
+        (
+            f"{row['inspection_no']}  |  "
+            f"{row['factory']}  |  "
+            f"{row['area']} - {row['process']}  |  "
+            f"{row['inspection_datetime_myt'].strftime('%d-%b-%Y %H:%M')}"
+        ),
+    axis=1
+)
+
+
+record_lookup = dict(
+    zip(
+        record_options["label"],
+        record_options["id"]
+    )
+)
+
+
+selected_record_label = st.selectbox(
+    "Select Inspection",
+    record_options["label"].tolist()
+)
+
+
+selected_inspection_id = record_lookup[
+    selected_record_label
+]
+
+
+selected_record = filtered_df[
+    filtered_df["id"]
+    == selected_inspection_id
+].iloc[0]
+
+
+# ============================================================
+# INSPECTION HEADER DETAILS
+# ============================================================
+
+st.markdown(
+    "### Inspection Information"
+)
+
+
+detail1, detail2, detail3, detail4 = st.columns(
+    4
+)
+
+
+with detail1:
+
+    st.metric(
+        "Inspection No.",
+        selected_record["inspection_no"]
+    )
+
+
+with detail2:
+
+    st.metric(
+        "Factory",
+        selected_record["factory"]
+    )
+
+
+with detail3:
+
+    st.metric(
+        "Area",
+        selected_record["area"]
+    )
+
+
+with detail4:
+
+    st.metric(
+        "Process",
+        selected_record["process"]
+    )
+
+
+detail5, detail6, detail7, detail8 = st.columns(
+    4
+)
+
+
+with detail5:
+
+    st.metric(
+        "Lot Number",
+        selected_record["lot_number"]
+        if selected_record["lot_number"]
+        else "-"
+    )
+
+
+with detail6:
+
+    st.metric(
+        "Machine",
+        selected_record["machine"]
+        if selected_record["machine"]
+        else "-"
+    )
+
+
+with detail7:
+
+    st.metric(
+        "Inspector",
+        selected_record["inspector"]
+    )
+
+
+with detail8:
+
+    st.metric(
+        "Submission Type",
+        selected_record["submission_type"]
+    )
+
+
+st.caption(
+    "Checklist item results will be displayed here in the next step."
 )

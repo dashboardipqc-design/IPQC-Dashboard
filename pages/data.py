@@ -912,7 +912,43 @@ table_event = st.dataframe(
 # ============================================================
 # FINDING DETAIL VIEWER
 # ============================================================
+def show_detail_value(
+    label,
+    value
+):
 
+    display_value = (
+        str(value)
+        if value not in [
+            None,
+            ""
+        ]
+        else "-"
+    )
+
+    st.markdown(
+        f"""
+        <div style="
+            color:{MUTED};
+            font-size:14px;
+            font-weight:600;
+            margin-bottom:6px;
+        ">
+            {label}
+        </div>
+
+        <div style="
+            color:{TEXT};
+            font-size:17px;
+            font-weight:500;
+            line-height:1.55;
+            margin-bottom:22px;
+        ">
+            {display_value}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 selected_rows = table_event.selection.rows
 
 
@@ -1086,13 +1122,9 @@ if selected_rows:
             )
 
 
-            st.markdown(
-                "**Category**"
-            )
-
-            st.write(
+            show_detail_value(
+                "Category",
                 finding_record["category"]
-                or "-"
             )
 
 

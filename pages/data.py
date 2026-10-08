@@ -222,7 +222,10 @@ with header1:
 
 with header2:
 
-    st.write("")
+    st.markdown(
+        "<div style='height: 22px;'></div>",
+        unsafe_allow_html=True
+    )
 
     if st.button(
         "← Back to Dashboard",
@@ -232,7 +235,6 @@ with header2:
         st.switch_page(
             "app.py"
         )
-
 
 st.markdown(
     "<div style='height: 8px;'></div>",

@@ -568,17 +568,6 @@ df = (
     .copy()
 )
 
-
-# No Findings included in Dashboard
-if df.empty:
-
-    st.info(
-        "No findings recorded."
-    )
-
-    st.stop()
-
-
 df["finding_datetime_parsed"] = pd.to_datetime(
     df["finding_datetime"],
     format="%d-%b-%Y %H:%M:%S",
@@ -830,13 +819,8 @@ filtered_df = df[
 ].copy()
 
 
-if filtered_df.empty:
-
-    st.warning(
-        "No findings match the selected filters."
-    )
-
-    st.stop()
+# Empty Finding result is valid.
+# Dashboard continues to display using checklist data.
 
 
 # ============================================================

@@ -526,11 +526,6 @@ history_df = history_df.sort_values(
 # FILTERS
 # ============================================================
 
-st.subheader(
-    "IPQC Records"
-)
-
-
 filter1, filter2, filter3, filter4 = st.columns(
     4
 )

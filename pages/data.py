@@ -227,30 +227,6 @@ with header2:
         unsafe_allow_html=True
     )
 
-    st.markdown(
-        """
-        <style>
-        div[data-testid="stColumn"]:has(
-            button[kind="secondary"]
-        ) button {
-            background-color: #111318 !important;
-            color: #9FB0CA !important;
-            border: 1px solid #3A414D !important;
-            font-weight: 400 !important;
-        }
-
-        div[data-testid="stColumn"]:has(
-            button[kind="secondary"]
-        ) button:hover {
-            background-color: #171A21 !important;
-            color: #F1F5F9 !important;
-            border-color: #596273 !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
     if st.button(
         "← Back to Dashboard",
         width="stretch"
@@ -1013,38 +989,6 @@ table_event = st.dataframe(
 if total_pages > 1:
 
     st.markdown("")
-
-    st.markdown(
-        """
-        <style>
-        div[data-testid="stHorizontalBlock"]:has(
-            button[kind="secondary"]
-        ) button {
-            background-color: #1E3A8A !important;
-            color: #FFFFFF !important;
-            border-color: #2563EB !important;
-            font-weight: 600 !important;
-        }
-
-        div[data-testid="stHorizontalBlock"]:has(
-            button[kind="secondary"]
-        ) button:hover:not(:disabled) {
-            background-color: #1D4ED8 !important;
-            border-color: #3B82F6 !important;
-        }
-
-        div[data-testid="stHorizontalBlock"]:has(
-            button[kind="secondary"]
-        ) button:disabled {
-            background-color: #2A3342 !important;
-            color: #7C8CA5 !important;
-            border-color: #3A4658 !important;
-            opacity: 1 !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
 
     nav_left, nav_pages, nav_right, nav_space = st.columns(
         [1.2, 1.8, 1.2, 6]

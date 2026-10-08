@@ -212,7 +212,7 @@ header1, header2 = st.columns(
 with header1:
 
     st.title(
-        "📋 IPQC Inspection History"
+        "IPQC Data"
     )
 
     st.caption(

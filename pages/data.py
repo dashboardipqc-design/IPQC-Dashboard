@@ -11,6 +11,7 @@ from supabase import create_client
 
 st.set_page_config(
     page_title="IPQC Data",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed"
 )

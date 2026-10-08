@@ -547,12 +547,34 @@ if df.empty:
 # CLEAN DATA
 # ============================================================
 
+# ------------------------------------------------------------
+# DASHBOARD INCLUDE
+# Only Findings with dashboard_include = TRUE
+# are included in Dashboard calculations
+# ------------------------------------------------------------
+
+if "dashboard_include" in df.columns:
+
+    df["dashboard_include"] = (
+        df["dashboard_include"]
+        .fillna(True)
+        .astype(bool)
+    )
+
+    df = (
+        df[
+            df["dashboard_include"]
+            == True
+        ]
+        .copy()
+    )
+
+
 df["finding_datetime_parsed"] = pd.to_datetime(
     df["finding_datetime"],
     format="%d-%b-%Y %H:%M:%S",
     errors="coerce"
 )
-
 
 df["status_clean"] = (
     df["status"]

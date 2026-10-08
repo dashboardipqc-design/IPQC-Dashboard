@@ -229,7 +229,6 @@ supabase = init_supabase()
 # LOAD FINDINGS
 # ============================================================
 
-@st.cache_data(ttl=60)
 def load_findings():
 
     response = (

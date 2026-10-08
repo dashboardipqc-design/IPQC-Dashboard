@@ -187,7 +187,8 @@ def load_findings():
             "containment_action,"
             "auditee,"
             "auditor,"
-            "status"
+            "status,"
+            "dashboard_include"
         )
         .order(
             "created_at",
@@ -403,6 +404,7 @@ checklist_history_df["type_status"] = (
     inspection_df["submission_type"]
 )
 
+checklist_history_df["dashboard_include"] = True
 
 # ============================================================
 # NORMALIZE FINDING RECORDS
@@ -496,6 +498,12 @@ if not findings_df.empty:
 
     finding_history_df["type_status"] = (
         findings_df["status"]
+    )
+
+    finding_history_df["dashboard_include"] = (
+        findings_df["dashboard_include"]
+        .fillna(True)
+        .astype(bool)
     )
 
 else:
@@ -934,6 +942,15 @@ display_df["Date / Time"] = (
     )
 )
 
+display_df["Dashboard"] = (
+    display_df["dashboard_include"]
+    .map(
+        {
+            True: "Y",
+            False: "N"
+        }
+    )
+)
 
 display_df = display_df.rename(
     columns={
@@ -962,7 +979,8 @@ display_columns = [
     "Machine / Workstation",
     "Inspector / Auditor",
     "Shift",
-    "Type / Status"
+    "Type / Status",
+    "Dashboard"
 ]
 
 table_height = min(

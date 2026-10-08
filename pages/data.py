@@ -1343,29 +1343,33 @@ if selected_rows:
                 finding_record["dashboard_include"]
             )
 
-            dashboard_selection = st.radio(
-                "Count this Finding in Dashboard?",
-                options=[
-                    "Y",
-                    "N"
-                ],
-                index=(
-                    0
-                    if current_dashboard_value
-                    else 1
-                ),
-                horizontal=True,
-                key=f"dashboard_include_{finding_id}"
+            dashboard_key = (
+                f"dashboard_include_{finding_id}"
             )
 
-            new_dashboard_value = (
-                dashboard_selection == "Y"
-            )
-
+            # Keep radio synchronized with Supabase
             if (
-                new_dashboard_value
-                != current_dashboard_value
+                dashboard_key
+                not in st.session_state
             ):
+
+                st.session_state[
+                    dashboard_key
+                ] = (
+                    "Y"
+                    if current_dashboard_value
+                    else "N"
+                )
+
+
+            def update_dashboard_include():
+
+                new_value = (
+                    st.session_state[
+                        dashboard_key
+                    ]
+                    == "Y"
+                )
 
                 try:
 
@@ -1375,7 +1379,7 @@ if selected_rows:
                         .update(
                             {
                                 "dashboard_include":
-                                new_dashboard_value
+                                new_value
                             }
                         )
                         .eq(
@@ -1387,8 +1391,6 @@ if selected_rows:
 
                     load_findings.clear()
 
-                    st.rerun()
-
                 except Exception as e:
 
                     st.error(
@@ -1396,3 +1398,15 @@ if selected_rows:
                     )
 
                     st.exception(e)
+
+
+            st.radio(
+                "Count this Finding in Dashboard?",
+                options=[
+                    "Y",
+                    "N"
+                ],
+                key=dashboard_key,
+                horizontal=True,
+                on_change=update_dashboard_include
+            )

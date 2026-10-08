@@ -49,7 +49,7 @@ st.markdown(
 
     .block-container {{
         max-width: 1800px;
-        padding-top: 3.5rem !important;
+        padding-top: 1.5rem !important;
         padding-left: 2rem;
         padding-right: 2rem;
         padding-bottom: 2rem;
@@ -216,7 +216,7 @@ with header1:
     )
 
     st.caption(
-        "Submitted Checklist Records"
+        "Checklist & Finding Records"
     )
 
 
@@ -234,8 +234,24 @@ with header2:
         )
 
 
+st.markdown(
+    "<div style='height: 8px;'></div>",
+    unsafe_allow_html=True
+)
+
 st.divider()
 
+st.markdown(
+    """
+    <style>
+    div[data-testid="stDivider"] {
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # ============================================================
 # GET DATA

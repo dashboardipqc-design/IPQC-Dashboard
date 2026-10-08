@@ -227,6 +227,30 @@ with header2:
         unsafe_allow_html=True
     )
 
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stColumn"]:has(
+            button[kind="secondary"]
+        ) button {
+            background-color: #111318 !important;
+            color: #9FB0CA !important;
+            border: 1px solid #3A414D !important;
+            font-weight: 400 !important;
+        }
+
+        div[data-testid="stColumn"]:has(
+            button[kind="secondary"]
+        ) button:hover {
+            background-color: #171A21 !important;
+            color: #F1F5F9 !important;
+            border-color: #596273 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     if st.button(
         "← Back to Dashboard",
         width="stretch"

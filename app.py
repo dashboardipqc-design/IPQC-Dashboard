@@ -560,13 +560,23 @@ if "dashboard_include" in df.columns:
         .astype(bool)
     )
 
-    df = (
-        df[
-            df["dashboard_include"]
-            == True
-        ]
-        .copy()
+df = (
+    df[
+        df["dashboard_include"]
+        == True
+    ]
+    .copy()
+)
+
+
+# No Findings included in Dashboard
+if df.empty:
+
+    st.info(
+        "No findings recorded."
     )
+
+    st.stop()
 
 
 df["finding_datetime_parsed"] = pd.to_datetime(

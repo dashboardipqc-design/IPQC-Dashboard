@@ -69,29 +69,6 @@ st.markdown(
         overflow: hidden;
     }}
 
-/* Pagination buttons */
-div[data-testid="stButton"] > button {{
-    background-color: #38BDF8;
-    color: #0F172A;
-    border: 1px solid #38BDF8;
-    font-weight: 600;
-}}
-
-/* Pagination button hover */
-div[data-testid="stButton"] > button:hover:not(:disabled) {{
-    background-color: #7DD3FC;
-    color: #0F172A;
-    border-color: #7DD3FC;
-}}
-
-/* Disabled pagination button */
-div[data-testid="stButton"] > button:disabled {{
-    background-color: #2A3342;
-    color: #7C8CA5;
-    border: 1px solid #3A4658;
-    opacity: 1;
-}}
-
     </style>
     """,
     unsafe_allow_html=True
@@ -1012,6 +989,38 @@ table_event = st.dataframe(
 if total_pages > 1:
 
     st.markdown("")
+
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stHorizontalBlock"]:has(
+            button[kind="secondary"]
+        ) button {
+            background-color: #1E3A8A !important;
+            color: #FFFFFF !important;
+            border-color: #2563EB !important;
+            font-weight: 600 !important;
+        }
+
+        div[data-testid="stHorizontalBlock"]:has(
+            button[kind="secondary"]
+        ) button:hover:not(:disabled) {
+            background-color: #1D4ED8 !important;
+            border-color: #3B82F6 !important;
+        }
+
+        div[data-testid="stHorizontalBlock"]:has(
+            button[kind="secondary"]
+        ) button:disabled {
+            background-color: #2A3342 !important;
+            color: #7C8CA5 !important;
+            border-color: #3A4658 !important;
+            opacity: 1 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
     nav_left, nav_pages, nav_right, nav_space = st.columns(
         [1.2, 1.8, 1.2, 6]

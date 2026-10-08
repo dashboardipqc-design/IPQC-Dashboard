@@ -990,8 +990,8 @@ if total_pages > 1:
 
     st.markdown("")
 
-    nav_left, nav_pages, nav_right = st.columns(
-        [1, 6, 1]
+    nav_left, nav_pages, nav_right, nav_space = st.columns(
+        [1.2, 1.8, 1.2, 6]
     )
 
 

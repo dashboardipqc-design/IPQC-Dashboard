@@ -10,8 +10,7 @@ from supabase import create_client
 # ============================================================
 
 st.set_page_config(
-    page_title="IPQC Inspection History",
-    page_icon="📋",
+    page_title="IPQC Data",
     layout="wide",
     initial_sidebar_state="collapsed"
 )

@@ -481,7 +481,36 @@ with header1:
         "Total Summary"
     )
 
+
+# ============================================================
+# LAST UPDATED
+# ============================================================
+
 with header2:
+
+    st.markdown(
+        f"""
+<div style="
+    text-align:right;
+    color:{MUTED};
+    font-size:13px;
+    padding-top:10px;
+">
+Last Updated<br>
+<b style="color:{TEXT};">
+{current_time.strftime("%d-%b-%Y %H:%M")}
+</b>
+</div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# DATA LOG
+# ============================================================
+
+with header3:
 
     st.write("")
 
@@ -493,21 +522,6 @@ with header2:
         st.switch_page(
             "pages/data.py"
         )
-
-with header3:
-
-    st.markdown(
-        f"""
-<div style="text-align:right; color:{MUTED}; font-size:13px; padding-top:10px;">
-Last Updated<br>
-<b style="color:{TEXT};">
-{current_time.strftime("%d-%b-%Y %H:%M")}
-</b>
-</div>
-        """,
-        unsafe_allow_html=True
-    )
-
 
 # ============================================================
 # EMPTY FINDINGS DATABASE

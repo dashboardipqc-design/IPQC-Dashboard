@@ -1388,8 +1388,6 @@ if selected_rows:
                         .execute()
                     )
 
-                    load_findings.clear()
-
                 except Exception as e:
 
                     st.error(

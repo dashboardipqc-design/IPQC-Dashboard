@@ -942,7 +942,7 @@ display_df["Date / Time"] = (
     )
 )
 
-display_df["Dashboard Y/N"] = (
+display_df["Dashboard"] = (
     display_df["dashboard_include"]
     .map(
         {
@@ -980,7 +980,7 @@ display_columns = [
     "Inspector / Auditor",
     "Shift",
     "Type / Status",
-    "Dashboard Y/N"
+    "Dashboard"
 ]
 
 table_height = min(

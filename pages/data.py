@@ -223,7 +223,7 @@ with header1:
 with header2:
 
     st.markdown(
-        "<div style='height: 22px;'></div>",
+        "<div style='height: 28px;'></div>",
         unsafe_allow_html=True
     )
 

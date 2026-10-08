@@ -1332,3 +1332,77 @@ if selected_rows:
                     "Auditor",
                     finding_record["auditor"]
                 )
+
+            st.divider()
+
+            st.markdown(
+                "### Dashboard Control"
+            )
+
+            current_dashboard_value = bool(
+                finding_record["dashboard_include"]
+            )
+
+            dashboard_selection = st.radio(
+                "Count this Finding in Dashboard?",
+                options=[
+                    "Y",
+                    "N"
+                ],
+                index=(
+                    0
+                    if current_dashboard_value
+                    else 1
+                ),
+                horizontal=True,
+                key=f"dashboard_include_{finding_id}"
+            )
+
+            new_dashboard_value = (
+                dashboard_selection == "Y"
+            )
+
+            if (
+                new_dashboard_value
+                != current_dashboard_value
+            ):
+
+                if st.button(
+                    "Update Dashboard",
+                    type="primary",
+                    key=f"update_dashboard_{finding_id}"
+                ):
+
+                    try:
+
+                        (
+                            supabase
+                            .table("Findings")
+                            .update(
+                                {
+                                    "dashboard_include":
+                                    new_dashboard_value
+                                }
+                            )
+                            .eq(
+                                "id",
+                                finding_id
+                            )
+                            .execute()
+                        )
+
+                        load_findings.clear()
+
+                        st.success(
+                            "Dashboard setting updated successfully."
+                        )
+
+                        st.rerun()
+
+                    except Exception as e:
+
+                        st.error(
+                            "Unable to update Dashboard setting."
+                        )
+
+                        st.exception(e)

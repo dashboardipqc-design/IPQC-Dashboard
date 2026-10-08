@@ -942,7 +942,7 @@ display_df["Date / Time"] = (
     )
 )
 
-display_df["Dashboard"] = (
+display_df["Dashboard Y/N"] = (
     display_df["dashboard_include"]
     .map(
         {
@@ -980,7 +980,7 @@ display_columns = [
     "Inspector / Auditor",
     "Shift",
     "Type / Status",
-    "Dashboard"
+    "Dashboard Y/N"
 ]
 
 table_height = min(
@@ -997,9 +997,46 @@ table_event = st.dataframe(
     hide_index=True,
     height=table_height,
     on_select="rerun",
-    selection_mode="single-row"
+    selection_mode="single-row",
+    column_config={
+        "Date / Time": st.column_config.TextColumn(
+            width="medium"
+        ),
+        "Record No.": st.column_config.TextColumn(
+            width="large"
+        ),
+        "Record Type": st.column_config.TextColumn(
+            width="medium"
+        ),
+        "Factory": st.column_config.TextColumn(
+            width="small"
+        ),
+        "Area": st.column_config.TextColumn(
+            width="small"
+        ),
+        "Process / Station": st.column_config.TextColumn(
+            width="large"
+        ),
+        "Lot Number": st.column_config.TextColumn(
+            width="medium"
+        ),
+        "Machine / Workstation": st.column_config.TextColumn(
+            width="large"
+        ),
+        "Inspector / Auditor": st.column_config.TextColumn(
+            width="medium"
+        ),
+        "Shift": st.column_config.TextColumn(
+            width="medium"
+        ),
+        "Type / Status": st.column_config.TextColumn(
+            width="medium"
+        ),
+        "Dashboard Y/N": st.column_config.TextColumn(
+            width="small"
+        )
+    }
 )
-
 # ============================================================
 # PAGE NAVIGATION
 # ============================================================

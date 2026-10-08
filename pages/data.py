@@ -239,19 +239,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.divider()
-
-st.markdown(
-    """
-    <style>
-    div[data-testid="stDivider"] {
-        margin-top: 0.25rem !important;
-        margin-bottom: 0.25rem !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 
 # ============================================================
 # GET DATA

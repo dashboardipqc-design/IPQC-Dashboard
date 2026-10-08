@@ -988,7 +988,6 @@ table_height = min(
     38 + (len(display_df) * 35)
 )
 
-
 table_event = st.dataframe(
     display_df[
         display_columns
@@ -997,46 +996,10 @@ table_event = st.dataframe(
     hide_index=True,
     height=table_height,
     on_select="rerun",
-    selection_mode="single-row",
-    column_config={
-        "Date / Time": st.column_config.TextColumn(
-            width="medium"
-        ),
-        "Record No.": st.column_config.TextColumn(
-            width="large"
-        ),
-        "Record Type": st.column_config.TextColumn(
-            width="medium"
-        ),
-        "Factory": st.column_config.TextColumn(
-            width="small"
-        ),
-        "Area": st.column_config.TextColumn(
-            width="small"
-        ),
-        "Process / Station": st.column_config.TextColumn(
-            width="large"
-        ),
-        "Lot Number": st.column_config.TextColumn(
-            width="medium"
-        ),
-        "Machine / Workstation": st.column_config.TextColumn(
-            width="large"
-        ),
-        "Inspector / Auditor": st.column_config.TextColumn(
-            width="medium"
-        ),
-        "Shift": st.column_config.TextColumn(
-            width="medium"
-        ),
-        "Type / Status": st.column_config.TextColumn(
-            width="medium"
-        ),
-        "Dashboard Y/N": st.column_config.TextColumn(
-            width="small"
-        )
-    }
+    selection_mode="single-row"
 )
+
+
 # ============================================================
 # PAGE NAVIGATION
 # ============================================================

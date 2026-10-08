@@ -486,7 +486,7 @@ with header2:
     st.write("")
 
     if st.button(
-        "📋 Inspection History",
+        "Data Log",
         width="content"
     ):
 

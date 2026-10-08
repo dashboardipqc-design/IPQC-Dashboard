@@ -1335,6 +1335,8 @@ if selected_rows:
 
             st.divider()
 
+            st.divider()
+
             st.markdown(
                 "### Dashboard Control"
             )
@@ -1367,42 +1369,32 @@ if selected_rows:
                 != current_dashboard_value
             ):
 
-                if st.button(
-                    "Update Dashboard",
-                    type="primary",
-                    key=f"update_dashboard_{finding_id}"
-                ):
+                try:
 
-                    try:
-
-                        (
-                            supabase
-                            .table("Findings")
-                            .update(
-                                {
-                                    "dashboard_include":
-                                    new_dashboard_value
-                                }
-                            )
-                            .eq(
-                                "id",
-                                finding_id
-                            )
-                            .execute()
+                    (
+                        supabase
+                        .table("Findings")
+                        .update(
+                            {
+                                "dashboard_include":
+                                new_dashboard_value
+                            }
                         )
-
-                        load_findings.clear()
-
-                        st.success(
-                            "Dashboard setting updated successfully."
+                        .eq(
+                            "id",
+                            finding_id
                         )
+                        .execute()
+                    )
 
-                        st.rerun()
+                    load_findings.clear()
 
-                    except Exception as e:
+                    st.rerun()
 
-                        st.error(
-                            "Unable to update Dashboard setting."
-                        )
+                except Exception as e:
 
-                        st.exception(e)
+                    st.error(
+                        "Unable to update Dashboard setting."
+                    )
+
+                    st.exception(e)

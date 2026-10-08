@@ -468,8 +468,13 @@ for weeks_ago in range(52):
 # ============================================================
 
 header1, header2, header3 = st.columns(
-    [5, 1.3, 1]
+    [7, 1.4, 0.8]
 )
+
+
+# ============================================================
+# DASHBOARD TITLE
+# ============================================================
 
 with header1:
 
@@ -516,12 +521,13 @@ with header3:
 
     if st.button(
         "Data Log",
-        width="content"
+        width="stretch"
     ):
 
         st.switch_page(
             "pages/data.py"
         )
+
 
 # ============================================================
 # EMPTY FINDINGS DATABASE

@@ -69,28 +69,28 @@ st.markdown(
         overflow: hidden;
     }}
 
-/* Pagination buttons */
-div[data-testid="stButton"] > button {
-    background-color: #38BDF8;
-    color: #0F172A;
-    border: 1px solid #38BDF8;
-    font-weight: 600;
-}
+    /* Pagination buttons */
+    div[data-testid="stButton"] > button {
+        background-color: #38BDF8;
+        color: #0F172A;
+        border: 1px solid #38BDF8;
+        font-weight: 600;
+    }
 
-/* Pagination button hover */
-div[data-testid="stButton"] > button:hover:not(:disabled) {
-    background-color: #7DD3FC;
-    color: #0F172A;
-    border-color: #7DD3FC;
-}
+    /* Pagination button hover */
+    div[data-testid="stButton"] > button:hover:not(:disabled) {
+        background-color: #7DD3FC;
+        color: #0F172A;
+        border-color: #7DD3FC;
+    }
 
-/* Disabled pagination button */
-div[data-testid="stButton"] > button:disabled {
-    background-color: #2A3342;
-    color: #7C8CA5;
-    border: 1px solid #3A4658;
-    opacity: 1;
-}
+    /* Disabled pagination button */
+    div[data-testid="stButton"] > button:disabled {
+        background-color: #2A3342;
+        color: #7C8CA5;
+        border: 1px solid #3A4658;
+        opacity: 1;
+    }
 
     </style>
     """,

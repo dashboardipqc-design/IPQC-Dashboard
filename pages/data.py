@@ -1335,8 +1335,6 @@ if selected_rows:
 
             st.divider()
 
-            st.divider()
-
             st.markdown(
                 "### Dashboard Control"
             )

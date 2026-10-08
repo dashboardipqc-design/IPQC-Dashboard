@@ -1105,7 +1105,7 @@ if selected_rows:
 
     selected_row_position = selected_rows[0]
 
-    selected_record = filtered_df.iloc[
+    selected_record = page_df.iloc[
         selected_row_position
     ]
 

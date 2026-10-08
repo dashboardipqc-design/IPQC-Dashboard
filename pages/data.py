@@ -165,7 +165,6 @@ def load_checklist_master():
     return pd.DataFrame(
         response.data
     )
-@st.cache_data(ttl=60)
 def load_findings():
 
     response = (

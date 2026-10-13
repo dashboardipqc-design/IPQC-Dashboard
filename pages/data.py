@@ -1694,16 +1694,31 @@ if selected_record_no is not None:
 
 
                 with info1:
-
+                
                     st.markdown(
                         "**Finding Date / Time**"
                     )
-
+                
+                    finding_datetime_display = (
+                        finding_record.get(
+                            "record_datetime"
+                        )
+                    )
+                
+                    if pd.isna(finding_datetime_display):
+                
+                        finding_datetime_display = "-"
+                
+                    else:
+                
+                        finding_datetime_display = (
+                            finding_datetime_display.strftime(
+                                "%d-%b-%Y %H:%M:%S"
+                            )
+                        )
+                
                     st.write(
-                        finding_record[
-                            "finding_datetime"
-                        ]
-                        or "-"
+                        finding_datetime_display
                     )
 
 

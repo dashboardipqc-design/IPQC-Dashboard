@@ -600,6 +600,7 @@ if "dashboard_include" in df.columns:
 df["finding_datetime_parsed"] = (
     pd.to_datetime(
         df["finding_datetime_ts"],
+        format="mixed",
         errors="coerce",
         utc=True
     )
@@ -1240,6 +1241,7 @@ weekly_finding_df[
         weekly_finding_df[
             "finding_datetime_ts"
         ],
+        format="mixed",
         errors="coerce",
         utc=True
     )
@@ -2247,6 +2249,7 @@ selected_iso_week = (
 df["finding_datetime_report"] = (
     pd.to_datetime(
         df["finding_datetime_ts"],
+        format="mixed",
         errors="coerce",
         utc=True
     )
@@ -2454,6 +2457,7 @@ st.write(
 management_finding_datetime = (
     pd.to_datetime(
         df["finding_datetime_ts"],
+        format="mixed",
         errors="coerce",
         utc=True
     )

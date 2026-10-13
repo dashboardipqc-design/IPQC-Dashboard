@@ -2586,6 +2586,9 @@ HISTORY_COLUMNS = [
     "area",
     "station",
     "equipment_id",
+    "lot_number",
+    "auditee",
+    "auditor",
     "category_short",
     "finding_description",
     "interview_result",
@@ -2706,8 +2709,12 @@ RULES:
 - Do not invent corrective actions.
 - Do not invent past occurrences.
 - Do not consider two findings similar merely because they have the same broad category.
-- When identifying a similar historical occurrence, consider the finding description, issue mechanism, process, station and equipment.
+- When identifying a similar historical occurrence, compare the finding description, issue mechanism, area, process/station, equipment, lot number and auditee badge.
+- Similarity of the issue itself is the primary basis for identifying a past occurrence. Do not reject an otherwise similar occurrence solely because the equipment, lot number or auditee is different.
 - If a reasonably similar historical occurrence exists, state the previous work week and relevant area/station.
+- When auditee badge data exists for both the selected-period finding and the historical finding, explicitly state whether the auditee badge is the same or different.
+- When equipment data exists for both findings, explicitly state whether the equipment is the same or different when relevant.
+- Do not state that badge, equipment or lot data was unavailable when the corresponding field contains a value in the supplied data.
 - If there is no reasonably similar historical occurrence, state:
   "No similar historical occurrence identified."
 - Recommendation must be practical for IPQC, Quality, Production or Process Engineering follow-up.

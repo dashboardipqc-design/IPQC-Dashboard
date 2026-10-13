@@ -212,6 +212,1010 @@ def load_findings():
     )
 
 # ============================================================
+# DIRECT CORRECTIVE ACTION LINK
+# ============================================================
+
+FINDING_LINK_BASE = "https://ipqcdashboard.streamlit.app/~/+/data"
+
+def safe_display(value):
+    if value is None or (not isinstance(value, (list, dict)) and pd.isna(value)):
+        return "-"
+    value = str(value).strip()
+    return value if value else "-"
+
+def show_compact_finding(finding):
+    fid = int(finding["id"])
+    st.markdown(f"### FIND-{fid} · Corrective Action")
+    cols = st.columns(4)
+    fields = [
+        ("Factory", "factory"), ("Area", "area"),
+        ("Process / Station", "station"), ("Equipment", "equipment_id"),
+        ("Lot Number", "lot_number"), ("Shift", "shift"),
+        ("Severity", "severity"), ("Auditee", "auditee"),
+    ]
+    for index, (label, key) in enumerate(fields):
+        with cols[index % 4]:
+            st.caption(label)
+            st.write(safe_display(finding.get(key)))
+    st.caption("Finding Description")
+    st.write(safe_display(finding.get("finding_description")))
+    if finding.get("containment_action"):
+        st.caption("Containment Action")
+        st.write(safe_display(finding.get("containment_action")))
+
+def show_detail_value(
+    label,
+    value
+):
+
+    display_value = (
+        str(value)
+        if value not in [
+            None,
+            ""
+        ]
+        else "-"
+    )
+
+    st.markdown(
+        f"""
+        <div style="
+            color:{MUTED};
+            font-size:14px;
+            font-weight:600;
+            margin-bottom:6px;
+        ">
+            {label}
+        </div>
+
+        <div style="
+            color:{TEXT};
+            font-size:17px;
+            font-weight:500;
+            line-height:1.55;
+            margin-bottom:22px;
+        ">
+            {display_value}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+
+def render_corrective_action(finding_record, finding_id):
+    st.divider()
+
+    st.markdown(
+        "### Corrective Action"
+    )
+
+    existing_corrective_action = (
+        finding_record.get(
+            "corrective_action"
+        )
+    )
+
+    existing_corrective_action_by = (
+        finding_record.get(
+            "corrective_action_by"
+        )
+    )
+
+    ca_exists = (
+        pd.notna(existing_corrective_action)
+        and bool(
+            str(
+                existing_corrective_action
+            ).strip()
+        )
+    )
+
+
+    # ============================================
+    # CA NOT YET SUBMITTED
+    # ============================================
+
+    if not ca_exists:
+
+        corrective_action = st.text_area(
+            "Corrective Action",
+            placeholder=(
+                "Enter corrective action taken..."
+            ),
+            height=120,
+            key=f"corrective_action_{finding_id}"
+        )
+
+        corrective_col1, corrective_col2 = (
+            st.columns(2)
+        )
+
+
+        with corrective_col1:
+
+            corrective_action_by = st.text_input(
+                "Completed By",
+                placeholder="Enter name",
+                key=f"corrective_action_by_{finding_id}"
+            )
+
+
+        with corrective_col2:
+
+            corrective_action_due_date = st.date_input(
+                "Committed Completion Date",
+                value=current_time.date(),
+                key=(
+                    f"corrective_action_due_date_"
+                    f"{finding_id}"
+                )
+            )
+
+
+        save_corrective_action = st.button(
+            "Save Corrective Action",
+            type="primary",
+            width="stretch",
+            key=f"save_corrective_action_{finding_id}"
+        )
+
+
+        if save_corrective_action:
+
+            if not corrective_action.strip():
+
+                st.error(
+                    "Please enter the Corrective Action."
+                )
+
+            elif not corrective_action_by.strip():
+
+                st.error(
+                    "Please enter Completed By."
+                )
+
+            else:
+
+                corrective_action_datetime = (
+                    datetime.now(
+                        MALAYSIA_TZ
+                    )
+                )
+
+                try:
+
+                    (
+                        supabase
+                        .table("Findings")
+                        .update(
+                            {
+                                "corrective_action":
+                                    corrective_action.strip(),
+
+                                "corrective_action_by":
+                                    corrective_action_by.strip(),
+
+                                "corrective_action_due_date":
+                                    corrective_action_due_date.isoformat(),
+
+                                "corrective_action_at":
+                                    corrective_action_datetime.isoformat()
+                            }
+                        )
+                        .eq(
+                            "id",
+                            int(finding_id)
+                        )
+                        .execute()
+                    )
+
+                    st.success(
+                        "Corrective Action saved."
+                    )
+
+                    st.rerun()
+
+                except Exception as e:
+
+                    st.error(
+                        "Unable to save Corrective Action."
+                    )
+
+                    st.exception(e)
+
+
+    # ============================================
+    # CA ALREADY SUBMITTED
+    # ============================================
+
+    else:
+
+        ca_completed_value = finding_record.get(
+            "corrective_action_completed"
+        )
+
+        ca_completed = (
+            pd.notna(ca_completed_value)
+            and bool(ca_completed_value)
+        )
+
+        ca_edit_key = (
+            f"edit_corrective_action_{finding_id}"
+        )
+        if ca_edit_key not in st.session_state:
+
+            st.session_state[
+                ca_edit_key
+            ] = False
+
+
+        # ========================================
+        # READ-ONLY CA
+        # ========================================
+
+        if not st.session_state[
+            ca_edit_key
+        ]:
+                                        # ========================================
+            # CONFIRM CA COMPLETION
+            # ========================================
+
+            confirm_ca_key = (
+                f"confirm_ca_mode_{finding_id}"
+            )
+
+            if confirm_ca_key not in st.session_state:
+
+                st.session_state[
+                    confirm_ca_key
+                ] = False
+
+
+            if st.session_state[
+                confirm_ca_key
+            ]:
+
+                st.markdown("")
+
+                st.markdown(
+                    "#### Confirm Corrective Action Completion"
+                )
+
+                st.caption(
+                    "Enter the technician badge to confirm "
+                    "that the Corrective Action is completed."
+                )
+
+
+                ca_confirmation_badge = st.text_input(
+                    "Confirmation By",
+                    placeholder="6-digit technician badge",
+                    max_chars=6,
+                    key=(
+                        f"ca_confirmation_badge_"
+                        f"{finding_id}"
+                    )
+                )
+
+
+                confirm_col1, confirm_col2 = (
+                    st.columns(2)
+                )
+
+
+                with confirm_col1:
+
+                    final_confirm_ca = st.button(
+                        "Confirm Completed",
+                        type="primary",
+                        width="stretch",
+                        key=(
+                            f"final_confirm_ca_"
+                            f"{finding_id}"
+                        )
+                    )
+
+
+                with confirm_col2:
+
+                    cancel_confirm_ca = st.button(
+                        "Cancel",
+                        width="stretch",
+                        key=(
+                            f"cancel_confirm_ca_"
+                            f"{finding_id}"
+                        )
+                    )
+
+
+                if cancel_confirm_ca:
+
+                    st.session_state[
+                        confirm_ca_key
+                    ] = False
+
+                    st.rerun()
+
+
+                if final_confirm_ca:
+
+                    confirmation_badge = (
+                        ca_confirmation_badge.strip()
+                    )
+
+
+                    if (
+                        not confirmation_badge.isdigit()
+                        or len(
+                            confirmation_badge
+                        ) != 6
+                    ):
+
+                        st.error(
+                            "Confirmation By must be "
+                            "six (6) numerical digits."
+                        )
+
+                    else:
+
+                        completed_datetime = (
+                            datetime.now(
+                                MALAYSIA_TZ
+                            )
+                        )
+
+                        try:
+
+                            (
+                                supabase
+                                .table("Findings")
+                                .update(
+                                    {
+                                        "corrective_action_completed":
+                                            True,
+
+                                        "corrective_action_completed_by":
+                                            confirmation_badge,
+
+                                        "corrective_action_completed_at":
+                                            completed_datetime.isoformat()
+                                    }
+                                )
+                                .eq(
+                                    "id",
+                                    int(finding_id)
+                                )
+                                .eq(
+                                    "status",
+                                    "CONFIRMED"
+                                )
+                                .execute()
+                            )
+
+
+                            st.session_state[
+                                confirm_ca_key
+                            ] = False
+
+                            st.success(
+                                "Corrective Action "
+                                "confirmed as completed."
+                            )
+
+                            st.rerun()
+
+
+                        except Exception as e:
+
+                            st.error(
+                                "Unable to confirm "
+                                "Corrective Action completion."
+                            )
+
+                            st.exception(e)
+
+            show_detail_value(
+                "Corrective Action",
+                existing_corrective_action
+            )
+
+            ca_detail1, ca_detail2 = (
+                st.columns(2)
+            )
+
+
+            with ca_detail1:
+
+                show_detail_value(
+                    "Completed By",
+                    existing_corrective_action_by
+                )
+
+
+            with ca_detail2:
+
+                existing_due_date = (
+                    finding_record.get(
+                        "corrective_action_due_date"
+                    )
+                )
+
+                if pd.isna(
+                    existing_due_date
+                ):
+
+                    due_date_display = "-"
+
+                else:
+
+                    try:
+
+                        due_date_display = (
+                            pd.to_datetime(
+                                existing_due_date
+                            )
+                            .strftime(
+                                "%d-%b-%Y"
+                            )
+                        )
+
+                    except Exception:
+
+                        due_date_display = (
+                            str(
+                                existing_due_date
+                            )
+                        )
+
+
+                show_detail_value(
+                    "Committed Completion Date",
+                    due_date_display
+                )
+
+
+            # ========================================
+            # COMPLETED CA
+            # ========================================
+
+            if ca_completed:
+
+                st.markdown(
+                    "#### CA Completion"
+                )
+
+                completed_by = finding_record.get(
+                    "corrective_action_completed_by"
+                )
+
+                completed_at = finding_record.get(
+                    "corrective_action_completed_at"
+                )
+
+
+                if (
+                    pd.isna(completed_by)
+                    or not str(completed_by).strip()
+                ):
+
+                    completed_by_display = "-"
+
+                else:
+
+                    completed_by_display = str(
+                        completed_by
+                    )
+
+
+                if (
+                    pd.isna(completed_at)
+                    or not str(completed_at).strip()
+                ):
+
+                    completed_at_display = "-"
+
+                else:
+
+                    try:
+
+                        completed_at_display = (
+                            pd.to_datetime(
+                                completed_at,
+                                utc=True
+                            )
+                            .tz_convert(
+                                MALAYSIA_TZ
+                            )
+                            .strftime(
+                                "%d-%b-%Y %H:%M"
+                            )
+                        )
+
+                    except Exception:
+
+                        completed_at_display = str(
+                            completed_at
+                        )
+
+
+                completion_col1, completion_col2 = (
+                    st.columns(2)
+                )
+
+
+                with completion_col1:
+
+                    show_detail_value(
+                        "Confirmed By",
+                        completed_by_display
+                    )
+
+
+                with completion_col2:
+
+                    show_detail_value(
+                        "Confirmed At",
+                        completed_at_display
+                    )
+
+
+            # ========================================
+            # OPEN CA
+            # ========================================
+
+            else:
+
+                ca_button1, ca_button2 = (
+                    st.columns(2)
+                )
+
+
+                with ca_button1:
+
+                    if st.button(
+                        "Edit Corrective Action",
+                        width="stretch",
+                        key=(
+                            f"edit_ca_button_"
+                            f"{finding_id}"
+                        )
+                    ):
+
+                        st.session_state[
+                            ca_edit_key
+                        ] = True
+
+                        st.rerun()
+
+
+                with ca_button2:
+
+                    if st.button(
+                        "Confirm CA Completed",
+                        type="primary",
+                        width="stretch",
+                        key=(
+                            f"confirm_ca_button_"
+                            f"{finding_id}"
+                        )
+                    ):
+
+                        st.session_state[
+                            f"confirm_ca_mode_{finding_id}"
+                        ] = True
+
+                        st.rerun()
+
+
+                # ====================================
+                # CONFIRM CA COMPLETION
+                # ====================================
+
+                confirm_ca_key = (
+                    f"confirm_ca_mode_{finding_id}"
+                )
+
+                if confirm_ca_key not in st.session_state:
+
+                    st.session_state[
+                        confirm_ca_key
+                    ] = False
+
+
+                if st.session_state[
+                    confirm_ca_key
+                ]:
+
+                    st.markdown("")
+
+                    st.markdown(
+                        "#### Confirm Corrective Action Completion"
+                    )
+
+                    st.caption(
+                        "Enter the technician badge to confirm "
+                        "that the Corrective Action is completed."
+                    )
+
+
+                    ca_confirmation_badge = st.text_input(
+                        "Confirmation By",
+                        placeholder="6-digit technician badge",
+                        max_chars=6,
+                        key=(
+                            f"ca_confirmation_badge_"
+                            f"{finding_id}"
+                        )
+                    )
+
+
+                    confirm_col1, confirm_col2 = (
+                        st.columns(2)
+                    )
+
+
+                    with confirm_col1:
+
+                        final_confirm_ca = st.button(
+                            "Confirm Completed",
+                            type="primary",
+                            width="stretch",
+                            key=(
+                                f"final_confirm_ca_"
+                                f"{finding_id}"
+                            )
+                        )
+
+
+                    with confirm_col2:
+
+                        cancel_confirm_ca = st.button(
+                            "Cancel",
+                            width="stretch",
+                            key=(
+                                f"cancel_confirm_ca_"
+                                f"{finding_id}"
+                            )
+                        )
+
+
+                    if cancel_confirm_ca:
+
+                        st.session_state[
+                            confirm_ca_key
+                        ] = False
+
+                        st.rerun()
+
+
+                    if final_confirm_ca:
+
+                        confirmation_badge = (
+                            ca_confirmation_badge.strip()
+                        )
+
+
+                        if (
+                            not confirmation_badge.isdigit()
+                            or len(
+                                confirmation_badge
+                            ) != 6
+                        ):
+
+                            st.error(
+                                "Confirmation By must be "
+                                "six (6) numerical digits."
+                            )
+
+                        else:
+
+                            completed_datetime = (
+                                datetime.now(
+                                    MALAYSIA_TZ
+                                )
+                            )
+
+                            try:
+
+                                (
+                                    supabase
+                                    .table("Findings")
+                                    .update(
+                                        {
+                                            "corrective_action_completed":
+                                                True,
+
+                                            "corrective_action_completed_by":
+                                                confirmation_badge,
+
+                                            "corrective_action_completed_at":
+                                                completed_datetime.isoformat()
+                                        }
+                                    )
+                                    .eq(
+                                        "id",
+                                        int(finding_id)
+                                    )
+                                    .eq(
+                                        "status",
+                                        "CONFIRMED"
+                                    )
+                                    .execute()
+                                )
+
+
+                                st.session_state[
+                                    confirm_ca_key
+                                ] = False
+
+                                st.success(
+                                    "Corrective Action "
+                                    "confirmed as completed."
+                                )
+
+                                st.rerun()
+
+
+                            except Exception as e:
+
+                                st.error(
+                                    "Unable to confirm "
+                                    "Corrective Action completion."
+                                )
+
+                                st.exception(e)
+
+        # ========================================
+        # EDIT EXISTING CA
+        # ========================================
+
+        else:
+
+            corrective_action = st.text_area(
+                "Corrective Action",
+                value=str(
+                    existing_corrective_action
+                ),
+                height=120,
+                key=(
+                    f"edit_corrective_action_text_"
+                    f"{finding_id}"
+                )
+            )
+
+
+            corrective_col1, corrective_col2 = (
+                st.columns(2)
+            )
+
+
+            with corrective_col1:
+
+                corrective_action_by = (
+                    st.text_input(
+                        "Completed By",
+                        value=(
+                            ""
+                            if pd.isna(
+                                existing_corrective_action_by
+                            )
+                            else str(
+                                existing_corrective_action_by
+                            )
+                        ),
+                        key=(
+                            f"edit_corrective_action_by_"
+                            f"{finding_id}"
+                        )
+                    )
+                )
+
+
+            with corrective_col2:
+
+                existing_due_date = (
+                    finding_record.get(
+                        "corrective_action_due_date"
+                    )
+                )
+
+                if (
+                    pd.isna(existing_due_date)
+                    or not str(
+                        existing_due_date
+                    ).strip()
+                ):
+
+                    existing_due_date = (
+                        current_time.date()
+                    )
+
+                else:
+
+                    parsed_due_date = (
+                        pd.to_datetime(
+                            existing_due_date,
+                            errors="coerce"
+                        )
+                    )
+
+                    if pd.isna(
+                        parsed_due_date
+                    ):
+
+                        existing_due_date = (
+                            current_time.date()
+                        )
+
+                    else:
+
+                        existing_due_date = (
+                            parsed_due_date.date()
+                        )
+
+
+                corrective_action_due_date = (
+                    st.date_input(
+                        "Committed Completion Date",
+                        value=existing_due_date,
+                        key=(
+                            f"edit_corrective_action_due_date_"
+                            f"{finding_id}"
+                        )
+                    )
+                )
+
+
+            edit_button1, edit_button2 = (
+                st.columns(2)
+            )
+
+
+            with edit_button1:
+
+                save_changes = st.button(
+                    "Save Changes",
+                    type="primary",
+                    width="stretch",
+                    key=(
+                        f"save_ca_changes_"
+                        f"{finding_id}"
+                    )
+                )
+
+
+            with edit_button2:
+
+                cancel_edit = st.button(
+                    "Cancel",
+                    width="stretch",
+                    key=(
+                        f"cancel_ca_edit_"
+                        f"{finding_id}"
+                    )
+                )
+
+
+            if cancel_edit:
+
+                st.session_state[
+                    ca_edit_key
+                ] = False
+
+                st.rerun()
+
+
+            if save_changes:
+
+                if not corrective_action.strip():
+
+                    st.error(
+                        "Please enter the Corrective Action."
+                    )
+
+                elif not corrective_action_by.strip():
+
+                    st.error(
+                        "Please enter Completed By."
+                    )
+
+                else:
+
+                    try:
+
+                        (
+                            supabase
+                            .table("Findings")
+                            .update(
+                                {
+                                    "corrective_action":
+                                        corrective_action.strip(),
+
+                                    "corrective_action_by":
+                                        corrective_action_by.strip(),
+
+                                    "corrective_action_due_date":
+                                        corrective_action_due_date.isoformat(),
+
+                                    "corrective_action_at":
+                                        datetime.now(
+                                            MALAYSIA_TZ
+                                        ).isoformat()
+                                }
+                            )
+                            .eq(
+                                "id",
+                                int(finding_id)
+                            )
+                            .execute()
+                        )
+
+                        st.session_state[
+                            ca_edit_key
+                        ] = False
+
+                        st.success(
+                            "Corrective Action updated."
+                        )
+
+                        st.rerun()
+
+                    except Exception as e:
+
+                        st.error(
+                            "Unable to update "
+                            "Corrective Action."
+                        )
+
+                        st.exception(e)
+
+
+# A direct link loads the record by primary key, independently of date filters.
+requested_finding_id = st.query_params.get("finding_id")
+if requested_finding_id is not None:
+    try:
+        requested_finding_id = int(str(requested_finding_id))
+        if requested_finding_id <= 0:
+            raise ValueError("Invalid ID")
+    except (TypeError, ValueError):
+        st.error("Invalid finding link.")
+        st.stop()
+
+    try:
+        response = (
+            supabase.table("Findings")
+            .select("*")
+            .eq("id", requested_finding_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:
+        st.error("Unable to retrieve this finding.")
+        st.exception(exc)
+        st.stop()
+
+    if not response.data:
+        st.warning("Finding not found or access not permitted.")
+        st.stop()
+
+    finding_record = response.data[0]
+    top_left, top_right = st.columns([5, 1])
+    with top_left:
+        st.title("IPQC Corrective Action")
+    with top_right:
+        if st.button("← All Records", width="stretch"):
+            st.query_params.clear()
+            st.rerun()
+
+    show_compact_finding(finding_record)
+    if str(finding_record.get("status", "")).strip().upper() == "CONFIRMED":
+        render_corrective_action(finding_record, requested_finding_id)
+    else:
+        st.info("Corrective Action is available after the finding review is confirmed.")
+    st.stop()
+
+# ============================================================
 # HEADER
 # ============================================================
 
@@ -1581,45 +2585,6 @@ if total_pages > 1:
 # FINDING DETAIL VIEWER
 # ============================================================
 
-def show_detail_value(
-    label,
-    value
-):
-
-    display_value = (
-        str(value)
-        if value not in [
-            None,
-            ""
-        ]
-        else "-"
-    )
-
-    st.markdown(
-        f"""
-        <div style="
-            color:{MUTED};
-            font-size:14px;
-            font-weight:600;
-            margin-bottom:6px;
-        ">
-            {label}
-        </div>
-
-        <div style="
-            color:{TEXT};
-            font-size:17px;
-            font-weight:500;
-            line-height:1.55;
-            margin-bottom:22px;
-        ">
-            {display_value}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
 # ============================================================
 # SELECTED OPEN RECORD
 # ============================================================
@@ -1676,6 +2641,12 @@ if selected_record_no is not None:
 
                 st.subheader(
                     f"🔍 Finding Detail — FIND-{finding_id}"
+                )
+
+                st.caption("Share this direct link for Corrective Action:")
+                st.code(
+                    f"{FINDING_LINK_BASE}?finding_id={int(finding_id)}",
+                    language=None
                 )
 
 
@@ -2123,892 +3094,4 @@ if selected_record_no is not None:
                             "Reviewed At",
                             reviewed_at_display
                         )
-                                            # ============================================
-                    # CORRECTIVE ACTION
-                    # ============================================
-
-                    st.divider()
-
-                    st.markdown(
-                        "### Corrective Action"
-                    )
-
-                    existing_corrective_action = (
-                        finding_record.get(
-                            "corrective_action"
-                        )
-                    )
-
-                    existing_corrective_action_by = (
-                        finding_record.get(
-                            "corrective_action_by"
-                        )
-                    )
-
-                    ca_exists = (
-                        pd.notna(existing_corrective_action)
-                        and bool(
-                            str(
-                                existing_corrective_action
-                            ).strip()
-                        )
-                    )
-
-
-                    # ============================================
-                    # CA NOT YET SUBMITTED
-                    # ============================================
-
-                    if not ca_exists:
-
-                        corrective_action = st.text_area(
-                            "Corrective Action",
-                            placeholder=(
-                                "Enter corrective action taken..."
-                            ),
-                            height=120,
-                            key=f"corrective_action_{finding_id}"
-                        )
-
-                        corrective_col1, corrective_col2 = (
-                            st.columns(2)
-                        )
-
-
-                        with corrective_col1:
-
-                            corrective_action_by = st.text_input(
-                                "Completed By",
-                                placeholder="Enter name",
-                                key=f"corrective_action_by_{finding_id}"
-                            )
-
-
-                        with corrective_col2:
-
-                            corrective_action_due_date = st.date_input(
-                                "Committed Completion Date",
-                                value=current_time.date(),
-                                key=(
-                                    f"corrective_action_due_date_"
-                                    f"{finding_id}"
-                                )
-                            )
-
-
-                        save_corrective_action = st.button(
-                            "Save Corrective Action",
-                            type="primary",
-                            width="stretch",
-                            key=f"save_corrective_action_{finding_id}"
-                        )
-
-
-                        if save_corrective_action:
-
-                            if not corrective_action.strip():
-
-                                st.error(
-                                    "Please enter the Corrective Action."
-                                )
-
-                            elif not corrective_action_by.strip():
-
-                                st.error(
-                                    "Please enter Completed By."
-                                )
-
-                            else:
-
-                                corrective_action_datetime = (
-                                    datetime.now(
-                                        MALAYSIA_TZ
-                                    )
-                                )
-
-                                try:
-
-                                    (
-                                        supabase
-                                        .table("Findings")
-                                        .update(
-                                            {
-                                                "corrective_action":
-                                                    corrective_action.strip(),
-
-                                                "corrective_action_by":
-                                                    corrective_action_by.strip(),
-
-                                                "corrective_action_due_date":
-                                                    corrective_action_due_date.isoformat(),
-
-                                                "corrective_action_at":
-                                                    corrective_action_datetime.isoformat()
-                                            }
-                                        )
-                                        .eq(
-                                            "id",
-                                            int(finding_id)
-                                        )
-                                        .execute()
-                                    )
-
-                                    st.success(
-                                        "Corrective Action saved."
-                                    )
-
-                                    st.rerun()
-
-                                except Exception as e:
-
-                                    st.error(
-                                        "Unable to save Corrective Action."
-                                    )
-
-                                    st.exception(e)
-
-
-                    # ============================================
-                    # CA ALREADY SUBMITTED
-                    # ============================================
-
-                    else:
-                    
-                        ca_completed_value = finding_record.get(
-                            "corrective_action_completed"
-                        )
-                    
-                        ca_completed = (
-                            pd.notna(ca_completed_value)
-                            and bool(ca_completed_value)
-                        )
-                    
-                        ca_edit_key = (
-                            f"edit_corrective_action_{finding_id}"
-                        )
-                        if ca_edit_key not in st.session_state:
-
-                            st.session_state[
-                                ca_edit_key
-                            ] = False
-
-
-                        # ========================================
-                        # READ-ONLY CA
-                        # ========================================
-
-                        if not st.session_state[
-                            ca_edit_key
-                        ]:
-                                                        # ========================================
-                            # CONFIRM CA COMPLETION
-                            # ========================================
-
-                            confirm_ca_key = (
-                                f"confirm_ca_mode_{finding_id}"
-                            )
-
-                            if confirm_ca_key not in st.session_state:
-
-                                st.session_state[
-                                    confirm_ca_key
-                                ] = False
-
-
-                            if st.session_state[
-                                confirm_ca_key
-                            ]:
-
-                                st.markdown("")
-
-                                st.markdown(
-                                    "#### Confirm Corrective Action Completion"
-                                )
-
-                                st.caption(
-                                    "Enter the technician badge to confirm "
-                                    "that the Corrective Action is completed."
-                                )
-
-
-                                ca_confirmation_badge = st.text_input(
-                                    "Confirmation By",
-                                    placeholder="6-digit technician badge",
-                                    max_chars=6,
-                                    key=(
-                                        f"ca_confirmation_badge_"
-                                        f"{finding_id}"
-                                    )
-                                )
-
-
-                                confirm_col1, confirm_col2 = (
-                                    st.columns(2)
-                                )
-
-
-                                with confirm_col1:
-
-                                    final_confirm_ca = st.button(
-                                        "Confirm Completed",
-                                        type="primary",
-                                        width="stretch",
-                                        key=(
-                                            f"final_confirm_ca_"
-                                            f"{finding_id}"
-                                        )
-                                    )
-
-
-                                with confirm_col2:
-
-                                    cancel_confirm_ca = st.button(
-                                        "Cancel",
-                                        width="stretch",
-                                        key=(
-                                            f"cancel_confirm_ca_"
-                                            f"{finding_id}"
-                                        )
-                                    )
-
-
-                                if cancel_confirm_ca:
-
-                                    st.session_state[
-                                        confirm_ca_key
-                                    ] = False
-
-                                    st.rerun()
-
-
-                                if final_confirm_ca:
-
-                                    confirmation_badge = (
-                                        ca_confirmation_badge.strip()
-                                    )
-
-
-                                    if (
-                                        not confirmation_badge.isdigit()
-                                        or len(
-                                            confirmation_badge
-                                        ) != 6
-                                    ):
-
-                                        st.error(
-                                            "Confirmation By must be "
-                                            "six (6) numerical digits."
-                                        )
-
-                                    else:
-
-                                        completed_datetime = (
-                                            datetime.now(
-                                                MALAYSIA_TZ
-                                            )
-                                        )
-
-                                        try:
-
-                                            (
-                                                supabase
-                                                .table("Findings")
-                                                .update(
-                                                    {
-                                                        "corrective_action_completed":
-                                                            True,
-
-                                                        "corrective_action_completed_by":
-                                                            confirmation_badge,
-
-                                                        "corrective_action_completed_at":
-                                                            completed_datetime.isoformat()
-                                                    }
-                                                )
-                                                .eq(
-                                                    "id",
-                                                    int(finding_id)
-                                                )
-                                                .eq(
-                                                    "status",
-                                                    "CONFIRMED"
-                                                )
-                                                .execute()
-                                            )
-
-
-                                            st.session_state[
-                                                confirm_ca_key
-                                            ] = False
-
-                                            st.success(
-                                                "Corrective Action "
-                                                "confirmed as completed."
-                                            )
-
-                                            st.rerun()
-
-
-                                        except Exception as e:
-
-                                            st.error(
-                                                "Unable to confirm "
-                                                "Corrective Action completion."
-                                            )
-
-                                            st.exception(e)
-
-                            show_detail_value(
-                                "Corrective Action",
-                                existing_corrective_action
-                            )
-
-                            ca_detail1, ca_detail2 = (
-                                st.columns(2)
-                            )
-
-
-                            with ca_detail1:
-
-                                show_detail_value(
-                                    "Completed By",
-                                    existing_corrective_action_by
-                                )
-
-
-                            with ca_detail2:
-
-                                existing_due_date = (
-                                    finding_record.get(
-                                        "corrective_action_due_date"
-                                    )
-                                )
-
-                                if pd.isna(
-                                    existing_due_date
-                                ):
-
-                                    due_date_display = "-"
-
-                                else:
-
-                                    try:
-
-                                        due_date_display = (
-                                            pd.to_datetime(
-                                                existing_due_date
-                                            )
-                                            .strftime(
-                                                "%d-%b-%Y"
-                                            )
-                                        )
-
-                                    except Exception:
-
-                                        due_date_display = (
-                                            str(
-                                                existing_due_date
-                                            )
-                                        )
-
-
-                                show_detail_value(
-                                    "Committed Completion Date",
-                                    due_date_display
-                                )
-
-
-                            # ========================================
-                            # COMPLETED CA
-                            # ========================================
-
-                            if ca_completed:
-
-                                st.markdown(
-                                    "#### CA Completion"
-                                )
-
-                                completed_by = finding_record.get(
-                                    "corrective_action_completed_by"
-                                )
-
-                                completed_at = finding_record.get(
-                                    "corrective_action_completed_at"
-                                )
-
-
-                                if (
-                                    pd.isna(completed_by)
-                                    or not str(completed_by).strip()
-                                ):
-
-                                    completed_by_display = "-"
-
-                                else:
-
-                                    completed_by_display = str(
-                                        completed_by
-                                    )
-
-
-                                if (
-                                    pd.isna(completed_at)
-                                    or not str(completed_at).strip()
-                                ):
-
-                                    completed_at_display = "-"
-
-                                else:
-
-                                    try:
-
-                                        completed_at_display = (
-                                            pd.to_datetime(
-                                                completed_at,
-                                                utc=True
-                                            )
-                                            .tz_convert(
-                                                MALAYSIA_TZ
-                                            )
-                                            .strftime(
-                                                "%d-%b-%Y %H:%M"
-                                            )
-                                        )
-
-                                    except Exception:
-
-                                        completed_at_display = str(
-                                            completed_at
-                                        )
-
-
-                                completion_col1, completion_col2 = (
-                                    st.columns(2)
-                                )
-
-
-                                with completion_col1:
-
-                                    show_detail_value(
-                                        "Confirmed By",
-                                        completed_by_display
-                                    )
-
-
-                                with completion_col2:
-
-                                    show_detail_value(
-                                        "Confirmed At",
-                                        completed_at_display
-                                    )
-
-
-                            # ========================================
-                            # OPEN CA
-                            # ========================================
-
-                            else:
-
-                                ca_button1, ca_button2 = (
-                                    st.columns(2)
-                                )
-
-
-                                with ca_button1:
-
-                                    if st.button(
-                                        "Edit Corrective Action",
-                                        width="stretch",
-                                        key=(
-                                            f"edit_ca_button_"
-                                            f"{finding_id}"
-                                        )
-                                    ):
-
-                                        st.session_state[
-                                            ca_edit_key
-                                        ] = True
-
-                                        st.rerun()
-
-
-                                with ca_button2:
-
-                                    if st.button(
-                                        "Confirm CA Completed",
-                                        type="primary",
-                                        width="stretch",
-                                        key=(
-                                            f"confirm_ca_button_"
-                                            f"{finding_id}"
-                                        )
-                                    ):
-
-                                        st.session_state[
-                                            f"confirm_ca_mode_{finding_id}"
-                                        ] = True
-
-                                        st.rerun()
-
-
-                                # ====================================
-                                # CONFIRM CA COMPLETION
-                                # ====================================
-
-                                confirm_ca_key = (
-                                    f"confirm_ca_mode_{finding_id}"
-                                )
-
-                                if confirm_ca_key not in st.session_state:
-
-                                    st.session_state[
-                                        confirm_ca_key
-                                    ] = False
-
-
-                                if st.session_state[
-                                    confirm_ca_key
-                                ]:
-
-                                    st.markdown("")
-
-                                    st.markdown(
-                                        "#### Confirm Corrective Action Completion"
-                                    )
-
-                                    st.caption(
-                                        "Enter the technician badge to confirm "
-                                        "that the Corrective Action is completed."
-                                    )
-
-
-                                    ca_confirmation_badge = st.text_input(
-                                        "Confirmation By",
-                                        placeholder="6-digit technician badge",
-                                        max_chars=6,
-                                        key=(
-                                            f"ca_confirmation_badge_"
-                                            f"{finding_id}"
-                                        )
-                                    )
-
-
-                                    confirm_col1, confirm_col2 = (
-                                        st.columns(2)
-                                    )
-
-
-                                    with confirm_col1:
-
-                                        final_confirm_ca = st.button(
-                                            "Confirm Completed",
-                                            type="primary",
-                                            width="stretch",
-                                            key=(
-                                                f"final_confirm_ca_"
-                                                f"{finding_id}"
-                                            )
-                                        )
-
-
-                                    with confirm_col2:
-
-                                        cancel_confirm_ca = st.button(
-                                            "Cancel",
-                                            width="stretch",
-                                            key=(
-                                                f"cancel_confirm_ca_"
-                                                f"{finding_id}"
-                                            )
-                                        )
-
-
-                                    if cancel_confirm_ca:
-
-                                        st.session_state[
-                                            confirm_ca_key
-                                        ] = False
-
-                                        st.rerun()
-
-
-                                    if final_confirm_ca:
-
-                                        confirmation_badge = (
-                                            ca_confirmation_badge.strip()
-                                        )
-
-
-                                        if (
-                                            not confirmation_badge.isdigit()
-                                            or len(
-                                                confirmation_badge
-                                            ) != 6
-                                        ):
-
-                                            st.error(
-                                                "Confirmation By must be "
-                                                "six (6) numerical digits."
-                                            )
-
-                                        else:
-
-                                            completed_datetime = (
-                                                datetime.now(
-                                                    MALAYSIA_TZ
-                                                )
-                                            )
-
-                                            try:
-
-                                                (
-                                                    supabase
-                                                    .table("Findings")
-                                                    .update(
-                                                        {
-                                                            "corrective_action_completed":
-                                                                True,
-
-                                                            "corrective_action_completed_by":
-                                                                confirmation_badge,
-
-                                                            "corrective_action_completed_at":
-                                                                completed_datetime.isoformat()
-                                                        }
-                                                    )
-                                                    .eq(
-                                                        "id",
-                                                        int(finding_id)
-                                                    )
-                                                    .eq(
-                                                        "status",
-                                                        "CONFIRMED"
-                                                    )
-                                                    .execute()
-                                                )
-
-
-                                                st.session_state[
-                                                    confirm_ca_key
-                                                ] = False
-
-                                                st.success(
-                                                    "Corrective Action "
-                                                    "confirmed as completed."
-                                                )
-
-                                                st.rerun()
-
-
-                                            except Exception as e:
-
-                                                st.error(
-                                                    "Unable to confirm "
-                                                    "Corrective Action completion."
-                                                )
-
-                                                st.exception(e)
-
-                        # ========================================
-                        # EDIT EXISTING CA
-                        # ========================================
-
-                        else:
-
-                            corrective_action = st.text_area(
-                                "Corrective Action",
-                                value=str(
-                                    existing_corrective_action
-                                ),
-                                height=120,
-                                key=(
-                                    f"edit_corrective_action_text_"
-                                    f"{finding_id}"
-                                )
-                            )
-
-
-                            corrective_col1, corrective_col2 = (
-                                st.columns(2)
-                            )
-
-
-                            with corrective_col1:
-
-                                corrective_action_by = (
-                                    st.text_input(
-                                        "Completed By",
-                                        value=(
-                                            ""
-                                            if pd.isna(
-                                                existing_corrective_action_by
-                                            )
-                                            else str(
-                                                existing_corrective_action_by
-                                            )
-                                        ),
-                                        key=(
-                                            f"edit_corrective_action_by_"
-                                            f"{finding_id}"
-                                        )
-                                    )
-                                )
-
-
-                            with corrective_col2:
-
-                                existing_due_date = (
-                                    finding_record.get(
-                                        "corrective_action_due_date"
-                                    )
-                                )
-
-                                if (
-                                    pd.isna(existing_due_date)
-                                    or not str(
-                                        existing_due_date
-                                    ).strip()
-                                ):
-
-                                    existing_due_date = (
-                                        current_time.date()
-                                    )
-
-                                else:
-
-                                    parsed_due_date = (
-                                        pd.to_datetime(
-                                            existing_due_date,
-                                            errors="coerce"
-                                        )
-                                    )
-
-                                    if pd.isna(
-                                        parsed_due_date
-                                    ):
-
-                                        existing_due_date = (
-                                            current_time.date()
-                                        )
-
-                                    else:
-
-                                        existing_due_date = (
-                                            parsed_due_date.date()
-                                        )
-
-
-                                corrective_action_due_date = (
-                                    st.date_input(
-                                        "Committed Completion Date",
-                                        value=existing_due_date,
-                                        key=(
-                                            f"edit_corrective_action_due_date_"
-                                            f"{finding_id}"
-                                        )
-                                    )
-                                )
-
-
-                            edit_button1, edit_button2 = (
-                                st.columns(2)
-                            )
-
-
-                            with edit_button1:
-
-                                save_changes = st.button(
-                                    "Save Changes",
-                                    type="primary",
-                                    width="stretch",
-                                    key=(
-                                        f"save_ca_changes_"
-                                        f"{finding_id}"
-                                    )
-                                )
-
-
-                            with edit_button2:
-
-                                cancel_edit = st.button(
-                                    "Cancel",
-                                    width="stretch",
-                                    key=(
-                                        f"cancel_ca_edit_"
-                                        f"{finding_id}"
-                                    )
-                                )
-
-
-                            if cancel_edit:
-
-                                st.session_state[
-                                    ca_edit_key
-                                ] = False
-
-                                st.rerun()
-
-
-                            if save_changes:
-
-                                if not corrective_action.strip():
-
-                                    st.error(
-                                        "Please enter the Corrective Action."
-                                    )
-
-                                elif not corrective_action_by.strip():
-
-                                    st.error(
-                                        "Please enter Completed By."
-                                    )
-
-                                else:
-
-                                    try:
-
-                                        (
-                                            supabase
-                                            .table("Findings")
-                                            .update(
-                                                {
-                                                    "corrective_action":
-                                                        corrective_action.strip(),
-
-                                                    "corrective_action_by":
-                                                        corrective_action_by.strip(),
-
-                                                    "corrective_action_due_date":
-                                                        corrective_action_due_date.isoformat(),
-
-                                                    "corrective_action_at":
-                                                        datetime.now(
-                                                            MALAYSIA_TZ
-                                                        ).isoformat()
-                                                }
-                                            )
-                                            .eq(
-                                                "id",
-                                                int(finding_id)
-                                            )
-                                            .execute()
-                                        )
-
-                                        st.session_state[
-                                            ca_edit_key
-                                        ] = False
-
-                                        st.success(
-                                            "Corrective Action updated."
-                                        )
-
-                                        st.rerun()
-
-                                    except Exception as e:
-
-                                        st.error(
-                                            "Unable to update "
-                                            "Corrective Action."
-                                        )
-
-                                        st.exception(e)
+                    render_corrective_action(finding_record, finding_id)

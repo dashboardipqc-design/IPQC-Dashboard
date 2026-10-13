@@ -2010,9 +2010,9 @@ st.markdown(
 )
 
 
-ai_header_col1, ai_header_col2, ai_header_col3 = (
+ai_header_col1, ai_header_col2, ai_header_to, ai_header_col3 = (
     st.columns(
-        [1.55, 1, 1]
+        [1.35, 0.75, 0.75, 1]
     )
 )
 
@@ -2038,8 +2038,30 @@ MANAGEMENT INSIGHTS
 
 with ai_header_col2:
 
+    history_start_options = (
+        ["--------"]
+        +
+        [
+            week["label"]
+            for week in reversed(
+                available_reporting_weeks
+            )
+        ]
+    )
+
+    selected_history_start_label = st.selectbox(
+        "From Work Week",
+        options=history_start_options,
+        index=0,
+        key="management_history_start_week",
+        label_visibility="collapsed"
+    )
+
+
+with ai_header_to:
+
     selected_week_label = st.selectbox(
-        "Select Work Week",
+        "To Work Week",
         options=[
             week["label"]
             for week in available_reporting_weeks
@@ -2309,16 +2331,52 @@ current_week_df = filtered_df[
 # HISTORICAL FINDINGS
 # ============================================================
 
-historical_df = filtered_df[
-    (
-        pd.to_datetime(
-            filtered_df["finding_datetime"],
-            format="%d-%b-%Y %H:%M:%S",
-            errors="coerce"
-        ).dt.tz_localize(MALAYSIA_TZ)
-        < selected_report_start
+finding_history_datetime = (
+    pd.to_datetime(
+        filtered_df["finding_datetime"],
+        format="%d-%b-%Y %H:%M:%S",
+        errors="coerce"
     )
-].copy()
+    .dt.tz_localize(MALAYSIA_TZ)
+)
+
+
+# ============================================================
+# HISTORICAL SEARCH WINDOW
+# -------- = ALL HISTORY BEFORE SELECTED REPORTING WEEK
+# SELECTED WW = FROM THAT WEEK UNTIL BEFORE REPORTING WEEK
+# ============================================================
+
+if selected_history_start_label == "--------":
+
+    historical_df = filtered_df[
+        finding_history_datetime
+        < selected_report_start
+    ].copy()
+
+else:
+
+    selected_history_start_week = next(
+        week
+        for week in available_reporting_weeks
+        if week["label"] == selected_history_start_label
+    )
+
+    selected_history_start = (
+        selected_history_start_week["start"]
+    )
+
+    historical_df = filtered_df[
+        (
+            finding_history_datetime
+            >= selected_history_start
+        )
+        &
+        (
+            finding_history_datetime
+            < selected_report_start
+        )
+    ].copy()
 
 
 # ============================================================

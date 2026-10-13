@@ -1209,7 +1209,7 @@ edited_df = st.data_editor(
     
         "Date / Time": st.column_config.TextColumn(
             "Date / Time",
-            width="small"
+            width="medium"
         ),
     
         "Record No.": st.column_config.TextColumn(
@@ -1264,7 +1264,7 @@ edited_df = st.data_editor(
     
         "CA Status": st.column_config.TextColumn(
             "CA Status",
-            width="small"
+            width="medium"
         ),
     
         "Dashboard": st.column_config.CheckboxColumn(

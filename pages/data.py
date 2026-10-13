@@ -533,47 +533,58 @@ if not findings_df.empty:
         finding_status = str(
             row.get("status", "")
         ).strip().upper()
-
+    
         # Corrective Action only starts after Tech Review.
         if finding_status != "CONFIRMED":
-
+    
             return "-"
-
-
+    
+    
         corrective_action = str(
             row.get("corrective_action") or ""
         ).strip()
-
+    
         # Review completed, but no CA submitted yet.
         if not corrective_action:
-
+    
             return "PENDING CA"
-
-
+    
+    
         due_date = row.get(
             "corrective_action_due_date"
         )
-
-        # CA exists but no valid committed date.
-        if not due_date:
-
+    
+        # No committed completion date.
+        if pd.isna(due_date) or not str(due_date).strip():
+    
             return "ON-GOING"
-
-
+    
+    
         try:
-
-            due_date = pd.to_datetime(
-                due_date
-            ).date()
-
+    
+            parsed_due_date = pd.to_datetime(
+                due_date,
+                errors="coerce"
+            )
+    
+            # Invalid date / NaT.
+            if pd.isna(parsed_due_date):
+    
+                return "ON-GOING"
+    
+            due_date = parsed_due_date.date()
+    
         except Exception:
-
+    
             return "ON-GOING"
-
-
-        # Once the committed date has passed,
-        # the CA becomes overdue.
+    
+    
         if current_time.date() > due_date:
+    
+            return "OVERDUE"
+    
+    
+        return "ON-GOING"
 
             return "OVERDUE"
 

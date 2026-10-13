@@ -1205,14 +1205,45 @@ def show_detail_value(
         unsafe_allow_html=True
     )
 
+# ============================================================
+# SINGLE FINDING SELECTION
+# ============================================================
+
+finding_page_df = page_df[
+    page_df["record_type"] == "Finding"
+].copy()
+
+
+finding_options = {
+    row["record_no"]: index
+    for index, row in finding_page_df.iterrows()
+}
+
+
+selected_finding_record = st.selectbox(
+    "View Finding Detail",
+    options=["--------"] + list(finding_options.keys()),
+    index=0,
+    key="selected_finding_detail"
+)
+
+
+if selected_finding_record != "--------":
+
+    selected_row_position = finding_options[
+        selected_finding_record
+    ]
+
+    selected_record = page_df.loc[
+        selected_row_position
+    ]
+
+
     # --------------------------------------------------------
     # FINDING RECORD ONLY
     # --------------------------------------------------------
 
-    if selected_record["record_type"] == "Finding":
-
-        finding_id = selected_record["source_id"]
-
+    finding_id = selected_record["source_id"]
         selected_finding_df = findings_df[
             findings_df["id"]
             == finding_id

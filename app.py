@@ -645,7 +645,8 @@ df["shift_type"] = (
 # ============================================================
 
 today = pd.Timestamp(
-    current_time.date()
+    current_time.date(),
+    tz=MALAYSIA_TZ
 )
 
 

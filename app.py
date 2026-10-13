@@ -7,7 +7,8 @@ from zoneinfo import ZoneInfo
 from supabase import create_client
 import json
 import html
-
+import uuid
+import time
 
 # ============================================================
 # PAGE SETUP
@@ -466,8 +467,8 @@ for weeks_ago in range(52):
 # HEADER
 # ============================================================
 
-header1, header2, header3 = st.columns(
-    [7, 1.4, 0.8]
+header1, header2, header3, header4 = st.columns(
+    [6.5, 1.4, 0.8, 0.8]
 )
 
 
@@ -511,10 +512,25 @@ Last Updated<br>
 
 
 # ============================================================
-# DATA LOG
+# CHECKLIST
 # ============================================================
 
 with header3:
+
+    st.write("")
+
+    st.link_button(
+        "Checklist",
+        "https://ipqcchecklist.streamlit.app/",
+        width="stretch"
+    )
+
+
+# ============================================================
+# DATA LOG
+# ============================================================
+
+with header4:
 
     st.write("")
 
@@ -526,7 +542,6 @@ with header3:
         st.switch_page(
             "pages/data.py"
         )
-
 
 # ============================================================
 # EMPTY FINDINGS DATABASE

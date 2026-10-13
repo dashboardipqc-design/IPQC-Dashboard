@@ -2178,11 +2178,19 @@ if selected_record_no is not None:
                     # ============================================
 
                     else:
-
+                    
+                        ca_completed_value = finding_record.get(
+                            "corrective_action_completed"
+                        )
+                    
+                        ca_completed = (
+                            pd.notna(ca_completed_value)
+                            and bool(ca_completed_value)
+                        )
+                    
                         ca_edit_key = (
                             f"edit_corrective_action_{finding_id}"
                         )
-
                         if ca_edit_key not in st.session_state:
 
                             st.session_state[
@@ -2415,9 +2423,296 @@ if selected_record_no is not None:
                                 )
 
 
-                            ca_button1, ca_button2 = (
-                                st.columns(2)
-                            )
+                            # ========================================
+                            # COMPLETED CA
+                            # ========================================
+
+                            if ca_completed:
+
+                                st.markdown(
+                                    "#### CA Completion"
+                                )
+
+                                completed_by = finding_record.get(
+                                    "corrective_action_completed_by"
+                                )
+
+                                completed_at = finding_record.get(
+                                    "corrective_action_completed_at"
+                                )
+
+
+                                if (
+                                    pd.isna(completed_by)
+                                    or not str(completed_by).strip()
+                                ):
+
+                                    completed_by_display = "-"
+
+                                else:
+
+                                    completed_by_display = str(
+                                        completed_by
+                                    )
+
+
+                                if (
+                                    pd.isna(completed_at)
+                                    or not str(completed_at).strip()
+                                ):
+
+                                    completed_at_display = "-"
+
+                                else:
+
+                                    try:
+
+                                        completed_at_display = (
+                                            pd.to_datetime(
+                                                completed_at,
+                                                utc=True
+                                            )
+                                            .tz_convert(
+                                                MALAYSIA_TZ
+                                            )
+                                            .strftime(
+                                                "%d-%b-%Y %H:%M"
+                                            )
+                                        )
+
+                                    except Exception:
+
+                                        completed_at_display = str(
+                                            completed_at
+                                        )
+
+
+                                completion_col1, completion_col2 = (
+                                    st.columns(2)
+                                )
+
+
+                                with completion_col1:
+
+                                    show_detail_value(
+                                        "Confirmed By",
+                                        completed_by_display
+                                    )
+
+
+                                with completion_col2:
+
+                                    show_detail_value(
+                                        "Confirmed At",
+                                        completed_at_display
+                                    )
+
+
+                            # ========================================
+                            # OPEN CA
+                            # ========================================
+
+                            else:
+
+                                ca_button1, ca_button2 = (
+                                    st.columns(2)
+                                )
+
+
+                                with ca_button1:
+
+                                    if st.button(
+                                        "Edit Corrective Action",
+                                        width="stretch",
+                                        key=(
+                                            f"edit_ca_button_"
+                                            f"{finding_id}"
+                                        )
+                                    ):
+
+                                        st.session_state[
+                                            ca_edit_key
+                                        ] = True
+
+                                        st.rerun()
+
+
+                                with ca_button2:
+
+                                    if st.button(
+                                        "Confirm CA Completed",
+                                        type="primary",
+                                        width="stretch",
+                                        key=(
+                                            f"confirm_ca_button_"
+                                            f"{finding_id}"
+                                        )
+                                    ):
+
+                                        st.session_state[
+                                            f"confirm_ca_mode_{finding_id}"
+                                        ] = True
+
+                                        st.rerun()
+
+
+                                # ====================================
+                                # CONFIRM CA COMPLETION
+                                # ====================================
+
+                                confirm_ca_key = (
+                                    f"confirm_ca_mode_{finding_id}"
+                                )
+
+                                if confirm_ca_key not in st.session_state:
+
+                                    st.session_state[
+                                        confirm_ca_key
+                                    ] = False
+
+
+                                if st.session_state[
+                                    confirm_ca_key
+                                ]:
+
+                                    st.markdown("")
+
+                                    st.markdown(
+                                        "#### Confirm Corrective Action Completion"
+                                    )
+
+                                    st.caption(
+                                        "Enter the technician badge to confirm "
+                                        "that the Corrective Action is completed."
+                                    )
+
+
+                                    ca_confirmation_badge = st.text_input(
+                                        "Confirmation By",
+                                        placeholder="6-digit technician badge",
+                                        max_chars=6,
+                                        key=(
+                                            f"ca_confirmation_badge_"
+                                            f"{finding_id}"
+                                        )
+                                    )
+
+
+                                    confirm_col1, confirm_col2 = (
+                                        st.columns(2)
+                                    )
+
+
+                                    with confirm_col1:
+
+                                        final_confirm_ca = st.button(
+                                            "Confirm Completed",
+                                            type="primary",
+                                            width="stretch",
+                                            key=(
+                                                f"final_confirm_ca_"
+                                                f"{finding_id}"
+                                            )
+                                        )
+
+
+                                    with confirm_col2:
+
+                                        cancel_confirm_ca = st.button(
+                                            "Cancel",
+                                            width="stretch",
+                                            key=(
+                                                f"cancel_confirm_ca_"
+                                                f"{finding_id}"
+                                            )
+                                        )
+
+
+                                    if cancel_confirm_ca:
+
+                                        st.session_state[
+                                            confirm_ca_key
+                                        ] = False
+
+                                        st.rerun()
+
+
+                                    if final_confirm_ca:
+
+                                        confirmation_badge = (
+                                            ca_confirmation_badge.strip()
+                                        )
+
+
+                                        if (
+                                            not confirmation_badge.isdigit()
+                                            or len(
+                                                confirmation_badge
+                                            ) != 6
+                                        ):
+
+                                            st.error(
+                                                "Confirmation By must be "
+                                                "six (6) numerical digits."
+                                            )
+
+                                        else:
+
+                                            completed_datetime = (
+                                                datetime.now(
+                                                    MALAYSIA_TZ
+                                                )
+                                            )
+
+                                            try:
+
+                                                (
+                                                    supabase
+                                                    .table("Findings")
+                                                    .update(
+                                                        {
+                                                            "corrective_action_completed":
+                                                                True,
+
+                                                            "corrective_action_completed_by":
+                                                                confirmation_badge,
+
+                                                            "corrective_action_completed_at":
+                                                                completed_datetime.isoformat()
+                                                        }
+                                                    )
+                                                    .eq(
+                                                        "id",
+                                                        int(finding_id)
+                                                    )
+                                                    .eq(
+                                                        "status",
+                                                        "CONFIRMED"
+                                                    )
+                                                    .execute()
+                                                )
+
+
+                                                st.session_state[
+                                                    confirm_ca_key
+                                                ] = False
+
+                                                st.success(
+                                                    "Corrective Action "
+                                                    "confirmed as completed."
+                                                )
+
+                                                st.rerun()
+
+
+                                            except Exception as e:
+
+                                                st.error(
+                                                    "Unable to confirm "
+                                                    "Corrective Action completion."
+                                                )
+
+                                                st.exception(e)
 
 
                             with ca_button1:

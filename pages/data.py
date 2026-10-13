@@ -194,7 +194,10 @@ def load_findings():
             "corrective_action,"
             "corrective_action_by,"
             "corrective_action_at,"
-            "corrective_action_due_date"
+            "corrective_action_due_date,"
+            "corrective_action_completed,"
+            "corrective_action_completed_by,"
+            "corrective_action_completed_at"
         )
         .order(
             "created_at",
@@ -536,9 +539,23 @@ if not findings_df.empty:
 
         # Corrective Action only starts after Tech Review.
         if finding_status != "CONFIRMED":
-
+        
             return "-"
-
+        
+        
+        # Completed CA takes priority over all other CA statuses.
+        corrective_action_completed = row.get(
+            "corrective_action_completed"
+        )
+        
+        if (
+            pd.notna(corrective_action_completed)
+            and bool(corrective_action_completed)
+        ):
+        
+            return "COMPLETED"
+        
+        
         corrective_action = row.get(
             "corrective_action"
         )
@@ -774,7 +791,8 @@ with filter8:
         "All",
         "PENDING CA",
         "ON-GOING",
-        "OVERDUE"
+        "OVERDUE",
+        "COMPLETED"
     ]
 
     selected_ca_status = st.selectbox(

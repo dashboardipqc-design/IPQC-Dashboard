@@ -539,14 +539,21 @@ if not findings_df.empty:
 
             return "-"
 
-        corrective_action = str(
-            row.get("corrective_action") or ""
-        ).strip()
-
+        corrective_action = row.get(
+            "corrective_action"
+        )
+        
         # Tech Review completed, but no CA submitted.
-        if not corrective_action:
-
+        if (
+            pd.isna(corrective_action)
+            or not str(corrective_action).strip()
+        ):
+        
             return "PENDING CA"
+        
+        corrective_action = str(
+            corrective_action
+        ).strip()
 
         due_date = row.get(
             "corrective_action_due_date"

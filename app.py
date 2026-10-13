@@ -2148,6 +2148,26 @@ else:
 management_period_end = (
     selected_report_end
 )
+
+
+# ============================================================
+# MANAGEMENT INSIGHTS DISPLAY LABEL
+# ============================================================
+
+if is_multi_week_range:
+
+    management_period_label = (
+        f"{selected_history_start_label} – "
+        f"{selected_week_label}"
+    )
+
+else:
+
+    management_period_label = (
+        selected_week_label
+    )
+
+
 selected_iso_year = (
     selected_reporting_week["year"]
 )
@@ -2386,44 +2406,21 @@ finding_history_datetime = (
     .dt.tz_localize(MALAYSIA_TZ)
 )
 
-
 # ============================================================
 # HISTORICAL SEARCH WINDOW
-# -------- = ALL HISTORY BEFORE SELECTED REPORTING WEEK
-# SELECTED WW = FROM THAT WEEK UNTIL BEFORE REPORTING WEEK
+#
+# -------- -> ALL HISTORY BEFORE THE SELECTED "TO" WEEK
+# RANGE    -> ALL HISTORY BEFORE THE SELECTED "FROM" WEEK
 # ============================================================
 
-if selected_history_start_label == "--------":
+historical_cutoff = (
+    management_period_start
+)
 
-    historical_df = filtered_df[
-        finding_history_datetime
-        < selected_report_start
-    ].copy()
-
-else:
-
-    selected_history_start_week = next(
-        week
-        for week in available_reporting_weeks
-        if week["label"] == selected_history_start_label
-    )
-
-    selected_history_start = (
-        selected_history_start_week["start"]
-    )
-
-    historical_df = filtered_df[
-        (
-            finding_history_datetime
-            >= selected_history_start
-        )
-        &
-        (
-            finding_history_datetime
-            < selected_report_start
-        )
-    ].copy()
-
+historical_df = filtered_df[
+    finding_history_datetime
+    < historical_cutoff
+].copy()
 
 # ============================================================
 # CURRENT WW STATISTICS
@@ -2599,7 +2596,7 @@ def generate_new_ai_summary(
     prompt = f"""
 You are supporting an IPQC management dashboard for a semiconductor assembly operation.
 
-The current work week is {selected_week_label}.
+The selected analysis period is {management_period_label}.
 
 Analyze the supplied IPQC data and generate:
 
@@ -2610,10 +2607,10 @@ Analyze the supplied IPQC data and generate:
 
 RULES:
 
-- Observation must summarize only findings from the current work week.
-- Highlight must summarize only positive from the current work week.
-- Historical findings are provided only to determine whether a similar issue occurred previously.
-- Do not summarize historical findings as current-week findings.
+- Observation must summarize only findings from the selected analysis period.
+- Highlight must summarize only positive points from the selected analysis period.
+- Historical findings are provided only to determine whether a similar issue occurred before the selected analysis period.
+- Do not summarize historical findings as findings from the selected analysis period.
 - Do not invent root causes.
 - Do not invent corrective actions.
 - Do not invent past occurrences.
@@ -2993,11 +2990,11 @@ Total Findings
     margin-top:25px;
     line-height:1.5;
 ">
-{selected_report_start.strftime("%Y-%b-%d  |  %H:%M")}
+{management_period_start.strftime("%Y-%b-%d  |  %H:%M")}
 <br>
 to
 <br>
-{selected_report_end.strftime("%Y-%b-%d  |  %H:%M")}
+{management_period_end.strftime("%Y-%b-%d  |  %H:%M")}
 </div>
 
 </div>
@@ -3021,7 +3018,7 @@ KEY OBSERVATIONS / LOW LIGHT
 </div>
 
 <div class="lowlight-header">
-⚠ Low Light — {selected_week_label}
+⚠ Low Light — {management_period_label}
 </div>
 
 <div class="ai-label">
@@ -3070,11 +3067,11 @@ HIGHLIGHTS
 </div>
 
 <div class="highlight-header">
-★ Highlight — {selected_week_label}
+★ Highlight — {management_period_label}
 </div>
 
 <div class="ai-label">
-Current Week
+Selected Period
 </div>
 
 <div class="ai-text">

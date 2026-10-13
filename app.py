@@ -571,17 +571,31 @@ if "dashboard_include" in df.columns:
 
     df["dashboard_include"] = (
         df["dashboard_include"]
-        .fillna(True)
-        .astype(bool)
+        .apply(
+            lambda value:
+                True
+                if (
+                    value is True
+                    or
+                    str(value).strip().lower()
+                    in [
+                        "true",
+                        "1",
+                        "yes",
+                        "y"
+                    ]
+                )
+                else False
+        )
     )
 
-df = (
-    df[
-        df["dashboard_include"]
-        == True
-    ]
-    .copy()
-)
+    df = (
+        df[
+            df["dashboard_include"]
+            == True
+        ]
+        .copy()
+    )
 
 df["finding_datetime_parsed"] = pd.to_datetime(
     df["finding_datetime"],

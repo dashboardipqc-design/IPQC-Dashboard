@@ -542,19 +542,38 @@ with header4:
         st.switch_page(
             "pages/data.py"
         )
-
 # ============================================================
 # EMPTY FINDINGS DATABASE
+# Zero Findings is valid.
+# Dashboard continues using checklist data.
 # ============================================================
 
 if df.empty:
 
-    st.info(
-        "No findings recorded yet. "
-        "Submit findings through the IPQC Finding Entry system."
+    df = pd.DataFrame(
+        columns=[
+            "id",
+            "finding_datetime",
+            "finding_datetime_ts",
+            "shift",
+            "factory",
+            "area",
+            "station",
+            "equipment_id",
+            "lot_number",
+            "category",
+            "finding_description",
+            "interview_result",
+            "containment_action",
+            "auditee",
+            "auditor",
+            "status",
+            "severity",
+            "reviewed_by",
+            "reviewed_at",
+            "dashboard_include"
+        ]
     )
-
-    st.stop()
 
 
 # ============================================================

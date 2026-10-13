@@ -499,7 +499,18 @@ if not findings_df.empty:
     )
 
     finding_history_df["type_status"] = (
-        findings_df["status"]
+        findings_df.apply(
+            lambda row:
+                row["severity"]
+                if (
+                    str(row["status"]).strip().upper()
+                    == "CONFIRMED"
+                    and
+                    row.get("severity")
+                )
+                else row["status"],
+            axis=1
+        )
     )
 
     finding_history_df["dashboard_include"] = (

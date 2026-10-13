@@ -524,7 +524,7 @@ if not findings_df.empty:
         .fillna(True)
         .astype(bool)
     )
-        # ========================================================
+    # ========================================================
     # CORRECTIVE ACTION STATUS
     # ========================================================
 
@@ -533,61 +533,52 @@ if not findings_df.empty:
         finding_status = str(
             row.get("status", "")
         ).strip().upper()
-    
+
         # Corrective Action only starts after Tech Review.
         if finding_status != "CONFIRMED":
-    
+
             return "-"
-    
-    
+
         corrective_action = str(
             row.get("corrective_action") or ""
         ).strip()
-    
-        # Review completed, but no CA submitted yet.
+
+        # Tech Review completed, but no CA submitted.
         if not corrective_action:
-    
+
             return "PENDING CA"
-    
-    
+
         due_date = row.get(
             "corrective_action_due_date"
         )
-    
-        # No committed completion date.
+
+        # CA exists but no committed completion date.
         if pd.isna(due_date) or not str(due_date).strip():
-    
+
             return "ON-GOING"
-    
-    
+
         try:
-    
+
             parsed_due_date = pd.to_datetime(
                 due_date,
                 errors="coerce"
             )
-    
-            # Invalid date / NaT.
+
             if pd.isna(parsed_due_date):
-    
+
                 return "ON-GOING"
-    
+
             due_date = parsed_due_date.date()
-    
+
         except Exception:
-    
+
             return "ON-GOING"
-    
-    
+
+        # Due date itself is still ON-GOING.
+        # It becomes OVERDUE starting the following day.
         if current_time.date() > due_date:
-    
-            return "OVERDUE"
-    
-    
-        return "ON-GOING"
 
             return "OVERDUE"
-
 
         return "ON-GOING"
 
@@ -598,7 +589,6 @@ if not findings_df.empty:
             axis=1
         )
     )
-
 else:
 
     finding_history_df = pd.DataFrame(

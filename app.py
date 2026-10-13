@@ -2151,7 +2151,7 @@ management_period_end = (
 
 
 # ============================================================
-# MANAGEMENT INSIGHTS DISPLAY LABEL
+# MANAGEMENT INSIGHTS DISPLAY LABEL + CACHE KEY
 # ============================================================
 
 if is_multi_week_range:
@@ -2161,12 +2161,20 @@ if is_multi_week_range:
         f"{selected_week_label}"
     )
 
+    management_cache_key = (
+        f"{selected_history_start_label}|"
+        f"{selected_week_label}"
+    )
+
 else:
 
     management_period_label = (
         selected_week_label
     )
 
+    management_cache_key = (
+        f"single|{selected_week_label}"
+    )
 
 selected_iso_year = (
     selected_reporting_week["year"]
@@ -2543,10 +2551,16 @@ historical_records = (
 
 ai_payload = {
 
-    "selected_week_label":
-        selected_week_label,
+    "selected_period_label":
+        management_period_label,
 
-    "current_week_statistics": {
+    "selected_period_start":
+        management_period_start,
+
+    "selected_period_end":
+        management_period_end,
+
+    "selected_period_statistics": {
 
         "total_findings":
             current_total,
@@ -2561,13 +2575,12 @@ ai_payload = {
             current_shift_counts
     },
 
-    "current_week_findings":
+    "selected_period_findings":
         current_records,
 
     "historical_findings":
         historical_records
 }
-
 
 payload_json = json.dumps(
     ai_payload,
@@ -2699,9 +2712,6 @@ def safe_text(value):
         str(value)
     )
 
-
-
-
 # ============================================================
 # GENERATE BUTTON
 # ============================================================
@@ -2712,7 +2722,7 @@ if generate_ai:
 
         st.warning(
             f"No findings recorded for "
-            f"{selected_week_label}. "
+            f"{management_period_label}. "
             "Summary was not generated."
         )
 
@@ -2736,7 +2746,7 @@ if generate_ai:
 
             with st.spinner(
                 f"Generating "
-                f"{selected_week_label} "
+                f"{management_period_label} "
                 "summary..."
             ):
 
@@ -2747,9 +2757,9 @@ if generate_ai:
                 )
 
 
-            # Save AI summary separately for each work week
+            # Save AI summary separately for each selected period
             ai_summary_store[
-                selected_week_label
+                management_cache_key
             ] = {
 
                 "summary":
@@ -2770,7 +2780,7 @@ if generate_ai:
 
 
             st.success(
-                f"{selected_week_label} "
+                f"{management_period_label} "
                 "summary generated."
             )
 
@@ -2788,12 +2798,12 @@ if generate_ai:
 
 
 # ============================================================
-# READ EXISTING AI SUMMARY FOR SELECTED WEEK
+# READ EXISTING AI SUMMARY FOR SELECTED PERIOD
 # ============================================================
 
 selected_week_cache = (
     ai_summary_store.get(
-        selected_week_label
+        management_cache_key
     )
 )
 
@@ -2825,7 +2835,7 @@ if cached_summary is None:
 
     observation = (
         f"{current_total} finding(s) "
-        f"recorded in {selected_week_label} "
+        f"recorded in {management_period_label} "
         "for the selected scope."
     )
 
@@ -2833,26 +2843,25 @@ if cached_summary is None:
     past_occurrence = (
         "Summary has not been generated. "
         "Generate the summary to compare "
-        "current findings with historical "
+        "selected-period findings with historical "
         "occurrences."
     )
 
 
     recommendation = (
         "Continue IPQC monitoring and "
-        "follow up on the current "
+        "follow up on the selected-period "
         "findings."
     )
 
 
     highlight = (
-        f"Current {selected_week_label}: "
+        f"{management_period_label}: "
         f"{current_total} finding(s)."
     )
 
 
     showing_ai = False
-
 
 # ============================================================
 # CACHED AI SUMMARY

@@ -1035,7 +1035,7 @@ edited_df = st.data_editor(
     ),
     column_config={
         "Open": st.column_config.CheckboxColumn(
-            "Open",
+            "-",
             default=False
         ),
         "Dashboard": st.column_config.CheckboxColumn(

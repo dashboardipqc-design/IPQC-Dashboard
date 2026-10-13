@@ -187,6 +187,9 @@ def load_findings():
             "auditee,"
             "auditor,"
             "status,"
+            "severity,"
+            "reviewed_by,"
+            "reviewed_at,"
             "dashboard_include"
         )
         .order(
@@ -1177,16 +1180,53 @@ for row_position in range(
 
     # --------------------------------------------------------
     # FINDING
-    # Save only when value changed
+    # Pending Review cannot be included in Dashboard.
+    # After Tech confirmation, Dashboard remains manually
+    # editable regardless of Major / Minor classification.
     # --------------------------------------------------------
 
-    if edited_value != original_value:
+    finding_id = int(
+        original_record[
+            "source_id"
+        ]
+    )
 
-        finding_id = int(
-            original_record[
-                "source_id"
-            ]
-        )
+    finding_match = findings_df[
+        findings_df["id"]
+        == finding_id
+    ]
+
+
+    if finding_match.empty:
+
+        continue
+
+
+    finding_status = str(
+        finding_match.iloc[0]["status"]
+    ).strip().upper()
+
+
+    # Pending Review must remain excluded from Dashboard.
+    if finding_status == "PENDING REVIEW":
+
+        if edited_value:
+
+            st.warning(
+                "Pending Review Finding cannot be included "
+                "in Dashboard until Tech Review is completed."
+            )
+
+            st.session_state.history_editor_version += 1
+
+            st.rerun()
+
+        continue
+
+
+    # Confirmed Finding:
+    # Dashboard checkbox remains manually editable.
+    if edited_value != original_value:
 
         try:
 
@@ -1196,7 +1236,7 @@ for row_position in range(
                 .update(
                     {
                         "dashboard_include":
-                        edited_value
+                            edited_value
                     }
                 )
                 .eq(
@@ -1215,6 +1255,7 @@ for row_position in range(
             )
 
             st.exception(e)
+            
 # ============================================================
 # PAGE NAVIGATION
 # ============================================================
@@ -1579,3 +1620,245 @@ if selected_record_no is not None:
                             "auditor"
                         ]
                     )
+                                    # ============================================
+                # TECH REVIEW
+                # ============================================
+
+                finding_status = str(
+                    finding_record.get(
+                        "status",
+                        ""
+                    )
+                ).strip().upper()
+
+
+                if finding_status == "PENDING REVIEW":
+
+                    st.divider()
+
+                    st.markdown(
+                        "### Tech Review"
+                    )
+
+                    st.caption(
+                        "Confirm whether this Finding is "
+                        "Minor or Major."
+                    )
+
+
+                    review_col1, review_col2 = st.columns(
+                        2
+                    )
+
+
+                    with review_col1:
+
+                        review_severity = st.radio(
+                            "Severity",
+                            [
+                                "MINOR",
+                                "MAJOR"
+                            ],
+                            index=None,
+                            horizontal=True,
+                            key=f"review_severity_{finding_id}"
+                        )
+
+
+                    with review_col2:
+
+                        reviewer_badge = st.text_input(
+                            "Technician Badge",
+                            placeholder="6-digit badge",
+                            max_chars=6,
+                            key=f"reviewed_by_{finding_id}"
+                        )
+
+
+                    confirm_review = st.button(
+                        "Confirm Review",
+                        type="primary",
+                        width="stretch",
+                        key=f"confirm_review_{finding_id}"
+                    )
+
+
+                    if confirm_review:
+
+                        # ------------------------------------
+                        # VALIDATE SEVERITY
+                        # ------------------------------------
+
+                        if review_severity is None:
+
+                            st.error(
+                                "Please select Minor or Major."
+                            )
+
+
+                        # ------------------------------------
+                        # VALIDATE TECHNICIAN BADGE
+                        # ------------------------------------
+
+                        elif (
+                            not reviewer_badge.strip().isdigit()
+                            or
+                            len(
+                                reviewer_badge.strip()
+                            ) != 6
+                        ):
+
+                            st.error(
+                                "Technician Badge must be "
+                                "six (6) numerical digits."
+                            )
+
+
+                        else:
+
+                            reviewed_datetime = datetime.now(
+                                MALAYSIA_TZ
+                            )
+
+
+                            # --------------------------------
+                            # DEFAULT DASHBOARD SETTING
+                            # Minor = unticked
+                            # Major = ticked
+                            # --------------------------------
+
+                            dashboard_include = (
+                                review_severity
+                                == "MAJOR"
+                            )
+
+
+                            try:
+
+                                (
+                                    supabase
+                                    .table("Findings")
+                                    .update(
+                                        {
+                                            "status":
+                                                "CONFIRMED",
+
+                                            "severity":
+                                                review_severity,
+
+                                            "reviewed_by":
+                                                reviewer_badge.strip(),
+
+                                            "reviewed_at":
+                                                reviewed_datetime.isoformat(),
+
+                                            "dashboard_include":
+                                                dashboard_include
+                                        }
+                                    )
+                                    .eq(
+                                        "id",
+                                        int(finding_id)
+                                    )
+                                    .eq(
+                                        "status",
+                                        "PENDING REVIEW"
+                                    )
+                                    .execute()
+                                )
+
+
+                                st.session_state.history_editor_version += 1
+
+                                st.success(
+                                    "Tech Review confirmed."
+                                )
+
+                                st.rerun()
+
+
+                            except Exception as e:
+
+                                st.error(
+                                    "Unable to confirm Tech Review."
+                                )
+
+                                st.exception(e)
+
+
+                # ============================================
+                # COMPLETED TECH REVIEW
+                # ============================================
+
+                elif finding_status == "CONFIRMED":
+
+                    st.divider()
+
+                    st.markdown(
+                        "### Tech Review"
+                    )
+
+
+                    review1, review2, review3 = st.columns(
+                        3
+                    )
+
+
+                    with review1:
+
+                        show_detail_value(
+                            "Severity",
+                            finding_record.get(
+                                "severity"
+                            )
+                        )
+
+
+                    with review2:
+
+                        show_detail_value(
+                            "Reviewed By",
+                            finding_record.get(
+                                "reviewed_by"
+                            )
+                        )
+
+
+                    with review3:
+
+                        reviewed_at = finding_record.get(
+                            "reviewed_at"
+                        )
+
+                        if reviewed_at:
+
+                            try:
+
+                                reviewed_at_display = (
+                                    pd.to_datetime(
+                                        reviewed_at,
+                                        utc=True
+                                    )
+                                    .tz_convert(
+                                        MALAYSIA_TZ
+                                    )
+                                    .strftime(
+                                        "%d-%b-%Y %H:%M"
+                                    )
+                                )
+
+                            except Exception:
+
+                                reviewed_at_display = (
+                                    reviewed_at
+                                )
+
+                        else:
+
+                            reviewed_at_display = "-"
+
+
+                        show_detail_value(
+                            "Reviewed At",
+                            reviewed_at_display
+                        )

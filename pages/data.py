@@ -931,7 +931,44 @@ page_df = (
     )
 )
 
+# ============================================================
+# SINGLE OPEN ROW STATE
+# ============================================================
+
+if "history_open_record" not in st.session_state:
+    st.session_state.history_open_record = None
+
+if "history_editor_version" not in st.session_state:
+    st.session_state.history_editor_version = 0
+
+
+# Clear the selection if the selected record is no longer
+# visible on the current page.
+visible_record_numbers = (
+    page_df["record_no"]
+    .astype(str)
+    .tolist()
+)
+
+if (
+    st.session_state.history_open_record is not None
+    and st.session_state.history_open_record
+    not in visible_record_numbers
+):
+
+    st.session_state.history_open_record = None
+
+
 display_df = page_df.copy()
+
+
+# Only one row can be Open at a time.
+display_df["Open"] = (
+    display_df["record_no"]
+    .astype(str)
+    == st.session_state.history_open_record
+)
+
 
 display_df["Date / Time"] = (
     display_df["record_datetime"]
@@ -963,6 +1000,7 @@ display_df = display_df.rename(
 
 
 display_columns = [
+    "Open",
     "Date / Time",
     "Record No.",
     "Record Type",
@@ -977,10 +1015,12 @@ display_columns = [
     "Dashboard"
 ]
 
+
 table_height = min(
     500,
     38 + (len(display_df) * 35)
 )
+
 
 edited_df = st.data_editor(
     display_df[
@@ -989,8 +1029,15 @@ edited_df = st.data_editor(
     width="stretch",
     hide_index=True,
     height=table_height,
-    key="ipqc_history_editor",
+    key=(
+        "ipqc_history_editor_"
+        f"{st.session_state.history_editor_version}"
+    ),
     column_config={
+        "Open": st.column_config.CheckboxColumn(
+            "Open",
+            default=False
+        ),
         "Dashboard": st.column_config.CheckboxColumn(
             "Dashboard"
         )
@@ -1010,6 +1057,86 @@ edited_df = st.data_editor(
     ]
 )
 
+
+# ============================================================
+# SINGLE OPEN ROW CONTROL
+# ============================================================
+
+original_open = (
+    display_df["Open"]
+    .fillna(False)
+    .astype(bool)
+    .reset_index(drop=True)
+)
+
+edited_open = (
+    edited_df["Open"]
+    .fillna(False)
+    .astype(bool)
+    .reset_index(drop=True)
+)
+
+
+open_changed_rows = [
+    row_position
+    for row_position in range(
+        len(edited_df)
+    )
+    if (
+        bool(
+            edited_open.iloc[
+                row_position
+            ]
+        )
+        !=
+        bool(
+            original_open.iloc[
+                row_position
+            ]
+        )
+    )
+]
+
+
+if open_changed_rows:
+
+    changed_row_position = (
+        open_changed_rows[-1]
+    )
+
+    changed_record_no = str(
+        page_df.iloc[
+            changed_row_position
+        ]["record_no"]
+    )
+
+
+    # User ticked a new row.
+    if bool(
+        edited_open.iloc[
+            changed_row_position
+        ]
+    ):
+
+        st.session_state.history_open_record = (
+            changed_record_no
+        )
+
+
+    # User unticked the currently selected row.
+    elif (
+        st.session_state.history_open_record
+        == changed_record_no
+    ):
+
+        st.session_state.history_open_record = None
+
+
+    # Use a fresh editor instance so its displayed
+    # checkbox state is rebuilt from history_open_record.
+    st.session_state.history_editor_version += 1
+
+    st.rerun()
 # ============================================================
 # DASHBOARD TABLE CONTROL
 # ============================================================
@@ -1208,246 +1335,247 @@ def show_detail_value(
 
 
 # ============================================================
-# SINGLE FINDING SELECTION
+# SELECTED OPEN RECORD
 # ============================================================
 
-finding_page_df = page_df[
-    page_df["record_type"] == "Finding"
-].copy()
-
-
-finding_options = {
-    row["record_no"]: index
-    for index, row in finding_page_df.iterrows()
-}
-
-
-selected_finding_record = st.selectbox(
-    "View Finding Detail",
-    options=[
-        "--------"
-    ] + list(
-        finding_options.keys()
-    ),
-    index=0,
-    key="selected_finding_detail"
+selected_record_no = (
+    st.session_state.history_open_record
 )
 
 
-if selected_finding_record != "--------":
+if selected_record_no is not None:
 
-    selected_row_position = finding_options[
-        selected_finding_record
-    ]
-
-    selected_record = page_df.loc[
-        selected_row_position
-    ]
-
-    finding_id = selected_record[
-        "source_id"
+    selected_records = page_df[
+        page_df["record_no"]
+        .astype(str)
+        == selected_record_no
     ]
 
 
-    selected_finding_df = findings_df[
-        findings_df["id"]
-        == finding_id
-    ]
+    if not selected_records.empty:
 
-
-    if not selected_finding_df.empty:
-
-        finding_record = (
-            selected_finding_df.iloc[0]
+        selected_record = (
+            selected_records.iloc[0]
         )
 
 
-        st.divider()
+        # ----------------------------------------------------
+        # FINDING RECORD ONLY
+        # ----------------------------------------------------
 
-        st.subheader(
-            f"🔍 Finding Detail — FIND-{finding_id}"
-        )
+        if (
+            selected_record["record_type"]
+            == "Finding"
+        ):
 
-
-        # ====================================================
-        # FINDING INFORMATION
-        # ====================================================
-
-        st.markdown(
-            "### Finding Information"
-        )
-
-
-        info1, info2, info3, info4 = st.columns(
-            4
-        )
-
-
-        with info1:
-
-            st.markdown(
-                "**Finding Date / Time**"
-            )
-
-            st.write(
-                finding_record[
-                    "finding_datetime"
-                ]
-                or "-"
-            )
-
-
-        with info2:
-
-            st.markdown(
-                "**Factory**"
-            )
-
-            st.write(
-                finding_record["factory"]
-                or "-"
-            )
-
-
-        with info3:
-
-            st.markdown(
-                "**Area**"
-            )
-
-            st.write(
-                finding_record["area"]
-                or "-"
-            )
-
-
-        with info4:
-
-            st.markdown(
-                "**Station**"
-            )
-
-            st.write(
-                finding_record["station"]
-                or "-"
-            )
-
-
-        info5, info6, info7, info8 = st.columns(
-            4
-        )
-
-
-        with info5:
-
-            st.markdown(
-                "**Equipment / Station ID**"
-            )
-
-            st.write(
-                finding_record[
-                    "equipment_id"
-                ]
-                or "-"
-            )
-
-
-        with info6:
-
-            st.markdown(
-                "**Lot Number**"
-            )
-
-            st.write(
-                finding_record[
-                    "lot_number"
-                ]
-                or "-"
-            )
-
-
-        with info7:
-
-            st.markdown(
-                "**Shift**"
-            )
-
-            st.write(
-                finding_record["shift"]
-                or "-"
-            )
-
-
-        with info8:
-
-            st.markdown(
-                "**Status**"
-            )
-
-            st.write(
-                finding_record["status"]
-                or "-"
-            )
-
-
-        st.divider()
-
-
-        # ====================================================
-        # FINDING DETAILS
-        # ====================================================
-
-        st.markdown(
-            "### Finding Details"
-        )
-
-
-        show_detail_value(
-            "Category",
-            finding_record["category"]
-        )
-
-
-        show_detail_value(
-            "Finding Description",
-            finding_record[
-                "finding_description"
+            finding_id = selected_record[
+                "source_id"
             ]
-        )
 
 
-        show_detail_value(
-            "Interview Result",
-            finding_record[
-                "interview_result"
+            selected_finding_df = findings_df[
+                findings_df["id"]
+                == finding_id
             ]
-        )
 
 
-        show_detail_value(
-            "Containment Action",
-            finding_record[
-                "containment_action"
-            ]
-        )
+            if not selected_finding_df.empty:
+
+                finding_record = (
+                    selected_finding_df.iloc[0]
+                )
 
 
-        detail1, detail2 = st.columns(
-            2
-        )
+                st.divider()
+
+                st.subheader(
+                    f"🔍 Finding Detail — FIND-{finding_id}"
+                )
 
 
-        with detail1:
+                # ============================================
+                # FINDING INFORMATION
+                # ============================================
 
-            show_detail_value(
-                "Auditee",
-                finding_record["auditee"]
-            )
+                st.markdown(
+                    "### Finding Information"
+                )
 
 
-        with detail2:
+                info1, info2, info3, info4 = (
+                    st.columns(4)
+                )
 
-            show_detail_value(
-                "Auditor",
-                finding_record["auditor"]
-            )
+
+                with info1:
+
+                    st.markdown(
+                        "**Finding Date / Time**"
+                    )
+
+                    st.write(
+                        finding_record[
+                            "finding_datetime"
+                        ]
+                        or "-"
+                    )
+
+
+                with info2:
+
+                    st.markdown(
+                        "**Factory**"
+                    )
+
+                    st.write(
+                        finding_record["factory"]
+                        or "-"
+                    )
+
+
+                with info3:
+
+                    st.markdown(
+                        "**Area**"
+                    )
+
+                    st.write(
+                        finding_record["area"]
+                        or "-"
+                    )
+
+
+                with info4:
+
+                    st.markdown(
+                        "**Station**"
+                    )
+
+                    st.write(
+                        finding_record["station"]
+                        or "-"
+                    )
+
+
+                info5, info6, info7, info8 = (
+                    st.columns(4)
+                )
+
+
+                with info5:
+
+                    st.markdown(
+                        "**Equipment / Station ID**"
+                    )
+
+                    st.write(
+                        finding_record[
+                            "equipment_id"
+                        ]
+                        or "-"
+                    )
+
+
+                with info6:
+
+                    st.markdown(
+                        "**Lot Number**"
+                    )
+
+                    st.write(
+                        finding_record[
+                            "lot_number"
+                        ]
+                        or "-"
+                    )
+
+
+                with info7:
+
+                    st.markdown(
+                        "**Shift**"
+                    )
+
+                    st.write(
+                        finding_record["shift"]
+                        or "-"
+                    )
+
+
+                with info8:
+
+                    st.markdown(
+                        "**Status**"
+                    )
+
+                    st.write(
+                        finding_record["status"]
+                        or "-"
+                    )
+
+
+                st.divider()
+
+
+                # ============================================
+                # FINDING DETAILS
+                # ============================================
+
+                st.markdown(
+                    "### Finding Details"
+                )
+
+
+                show_detail_value(
+                    "Category",
+                    finding_record["category"]
+                )
+
+
+                show_detail_value(
+                    "Finding Description",
+                    finding_record[
+                        "finding_description"
+                    ]
+                )
+
+
+                show_detail_value(
+                    "Interview Result",
+                    finding_record[
+                        "interview_result"
+                    ]
+                )
+
+
+                show_detail_value(
+                    "Containment Action",
+                    finding_record[
+                        "containment_action"
+                    ]
+                )
+
+
+                detail1, detail2 = st.columns(
+                    2
+                )
+
+
+                with detail1:
+
+                    show_detail_value(
+                        "Auditee",
+                        finding_record[
+                            "auditee"
+                        ]
+                    )
+
+
+                with detail2:
+
+                    show_detail_value(
+                        "Auditor",
+                        finding_record[
+                            "auditor"
+                        ]
+                    )

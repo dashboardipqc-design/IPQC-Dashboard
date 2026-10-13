@@ -1203,10 +1203,73 @@ edited_df = st.data_editor(
     column_config={
         "Open": st.column_config.CheckboxColumn(
             "-",
-            default=False
+            default=False,
+            width="small"
         ),
+    
+        "Date / Time": st.column_config.TextColumn(
+            "Date / Time",
+            width="small"
+        ),
+    
+        "Record No.": st.column_config.TextColumn(
+            "Record No.",
+            width="small"
+        ),
+    
+        "Record Type": st.column_config.TextColumn(
+            "Record Type",
+            width="small"
+        ),
+    
+        "Factory": st.column_config.TextColumn(
+            "Factory",
+            width="small"
+        ),
+    
+        "Area": st.column_config.TextColumn(
+            "Area",
+            width="small"
+        ),
+    
+        "Process / Station": st.column_config.TextColumn(
+            "Process / Station",
+            width="medium"
+        ),
+    
+        "Lot Number": st.column_config.TextColumn(
+            "Lot Number",
+            width="small"
+        ),
+    
+        "Machine / Workstation": st.column_config.TextColumn(
+            "Machine / Workstation",
+            width="small"
+        ),
+    
+        "Inspector / Auditor": st.column_config.TextColumn(
+            "Inspector / Auditor",
+            width="small"
+        ),
+    
+        "Shift": st.column_config.TextColumn(
+            "Shift",
+            width="small"
+        ),
+    
+        "Type / Status": st.column_config.TextColumn(
+            "Type / Status",
+            width="small"
+        ),
+    
+        "CA Status": st.column_config.TextColumn(
+            "CA Status",
+            width="small"
+        ),
+    
         "Dashboard": st.column_config.CheckboxColumn(
-            "Dashboard"
+            "Dashboard",
+            width="small"
         )
     },
     disabled=[

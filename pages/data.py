@@ -2068,9 +2068,9 @@ if selected_record_no is not None:
                     with review1:
 
                         show_detail_value(
-                            "Severity",
+                            "Reviewed By",
                             finding_record.get(
-                                "severity"
+                                "reviewed_by"
                             )
                         )
 
@@ -2078,9 +2078,9 @@ if selected_record_no is not None:
                     with review2:
 
                         show_detail_value(
-                            "Reviewed By",
+                            "Severity",
                             finding_record.get(
-                                "reviewed_by"
+                                "severity"
                             )
                         )
 

@@ -2009,10 +2009,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
-ai_header_col1, ai_header_col2, ai_header_to, ai_header_col3 = (
+ai_header_col1, ai_header_col2, ai_header_text, ai_header_to, ai_header_col3 = (
     st.columns(
-        [1.35, 0.75, 0.75, 1]
+        [1.25, 0.65, 0.10, 0.65, 1]
     )
 )
 
@@ -2043,9 +2042,7 @@ with ai_header_col2:
         +
         [
             week["label"]
-            for week in reversed(
-                available_reporting_weeks
-            )
+            for week in available_reporting_weeks
         ]
     )
 
@@ -2058,7 +2055,36 @@ with ai_header_col2:
     )
 
 
+with ai_header_text:
+
+    st.markdown(
+        f"""
+        <div style="
+            color:{MUTED};
+            font-size:15px;
+            font-weight:700;
+            text-align:center;
+            padding-top:12px;
+        ">
+            to
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
 with ai_header_to:
+
+    selected_week_label = st.selectbox(
+        "To Work Week",
+        options=[
+            week["label"]
+            for week in available_reporting_weeks
+        ],
+        index=0,
+        key="management_reporting_week",
+        label_visibility="collapsed"
+    )
 
     selected_week_label = st.selectbox(
         "To Work Week",

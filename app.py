@@ -2116,7 +2116,38 @@ selected_report_start = (
 selected_report_end = (
     selected_reporting_week["end"]
 )
+# ============================================================
+# MANAGEMENT INSIGHTS ANALYSIS PERIOD
+# -------- = SELECTED "TO" WEEK ONLY
+# FROM WW  = FROM SELECTED START WEEK THROUGH "TO" WEEK
+# ============================================================
 
+is_multi_week_range = (
+    selected_history_start_label != "--------"
+)
+
+if is_multi_week_range:
+
+    selected_from_week = next(
+        week
+        for week in available_reporting_weeks
+        if week["label"] == selected_history_start_label
+    )
+
+    management_period_start = (
+        selected_from_week["start"]
+    )
+
+else:
+
+    management_period_start = (
+        selected_report_start
+    )
+
+
+management_period_end = (
+    selected_report_end
+)
 selected_iso_year = (
     selected_reporting_week["year"]
 )
@@ -2175,14 +2206,14 @@ if not completed_checklist_df.empty:
                 completed_checklist_df[
                     "inspection_datetime_report"
                 ]
-                >= selected_report_start
+                >= management_period_start
             )
             &
             (
                 completed_checklist_df[
                     "inspection_datetime_report"
                 ]
-                < selected_report_end
+                < management_period_end
             )
         ]
         .copy()
@@ -2255,7 +2286,11 @@ checklist_change = (
 )
 
 
-if checklist_change > 0:
+if is_multi_week_range:
+
+    checklist_change_html = ""
+
+elif checklist_change > 0:
 
     checklist_change_html = (
         f'<span style="'
@@ -2265,7 +2300,6 @@ if checklist_change > 0:
         f'▲ {checklist_change}'
         f'</span>'
     )
-
 
 elif checklist_change < 0:
 
@@ -2278,7 +2312,6 @@ elif checklist_change < 0:
         f'</span>'
     )
 
-
 else:
 
     checklist_change_html = (
@@ -2290,7 +2323,6 @@ else:
         f'</span>'
     )
 
-
 # ------------------------------------------------------------
 # FINDINGS FOR SELECTED REPORTING WINDOW
 # ------------------------------------------------------------
@@ -2299,17 +2331,16 @@ latest_week_findings = (
     df[
         (
             df["finding_datetime_report"]
-            >= selected_report_start
+            >= management_period_start
         )
         &
         (
             df["finding_datetime_report"]
-            < selected_report_end
+            < management_period_end
         )
     ]
     .copy()
 )
-
 
 latest_week_finding_count = len(
     latest_week_findings
@@ -2328,7 +2359,7 @@ current_week_df = filtered_df[
             format="%d-%b-%Y %H:%M:%S",
             errors="coerce"
         ).dt.tz_localize(MALAYSIA_TZ)
-        >= selected_report_start
+        >= management_period_start
     )
     &
     (
@@ -2337,7 +2368,7 @@ current_week_df = filtered_df[
             format="%d-%b-%Y %H:%M:%S",
             errors="coerce"
         ).dt.tz_localize(MALAYSIA_TZ)
-        < selected_report_end
+        < management_period_end
     )
 ].copy()
 

@@ -2637,157 +2637,40 @@ if selected_record_no is not None:
                 )
 
 
-                st.divider()
-
+                # Compact finding header: no duplicated section title or oversized URL.
+                finding_severity = safe_display(finding_record.get("severity"))
                 st.subheader(
-                    f"🔍 Finding Detail — FIND-{finding_id}"
+                    f"FIND-{int(finding_id)}  ·  "
+                    f"{safe_display(finding_record.get('station'))}  ·  "
+                    f"{finding_severity}"
                 )
 
-                st.caption("Share this direct link for Corrective Action:")
-                st.code(
-                    f"{FINDING_LINK_BASE}?finding_id={int(finding_id)}",
-                    language=None
-                )
+                summary_fields = [
+                    ("Factory", "factory"),
+                    ("Area", "area"),
+                    ("Equipment", "equipment_id"),
+                    ("Lot Number", "lot_number"),
+                    ("Shift", "shift"),
+                ]
+                summary_cols = st.columns(6)
+                for index, (label, key) in enumerate(summary_fields):
+                    with summary_cols[index]:
+                        st.caption(label)
+                        st.write(safe_display(finding_record.get(key)))
 
-
-                # ============================================
-                # FINDING INFORMATION
-                # ============================================
-
-                st.markdown(
-                    "### Finding Information"
-                )
-
-
-                info1, info2, info3, info4 = (
-                    st.columns(4)
-                )
-
-
-                with info1:
-                
-                    st.markdown(
-                        "**Finding Date / Time**"
-                    )
-                
-                    finding_datetime_display = (
-                        finding_record.get(
-                            "record_datetime"
-                        )
-                    )
-                
-                    if pd.isna(finding_datetime_display):
-                
-                        finding_datetime_display = "-"
-                
-                    else:
-                
-                        finding_datetime_display = (
-                            finding_datetime_display.strftime(
-                                "%d-%b-%Y %H:%M:%S"
-                            )
-                        )
-                
+                with summary_cols[5]:
+                    st.caption("Finding Date")
+                    finding_dt = finding_record.get("record_datetime")
                     st.write(
-                        finding_datetime_display
+                        finding_dt.strftime("%d-%b-%Y %H:%M")
+                        if pd.notna(finding_dt) else "-"
                     )
 
-
-                with info2:
-
-                    st.markdown(
-                        "**Factory**"
+                with st.expander("🔗 Share Corrective Action Link"):
+                    st.code(
+                        f"{FINDING_LINK_BASE}?finding_id={int(finding_id)}",
+                        language=None
                     )
-
-                    st.write(
-                        finding_record["factory"]
-                        or "-"
-                    )
-
-
-                with info3:
-
-                    st.markdown(
-                        "**Area**"
-                    )
-
-                    st.write(
-                        finding_record["area"]
-                        or "-"
-                    )
-
-
-                with info4:
-
-                    st.markdown(
-                        "**Station**"
-                    )
-
-                    st.write(
-                        finding_record["station"]
-                        or "-"
-                    )
-
-
-                info5, info6, info7, info8 = (
-                    st.columns(4)
-                )
-
-
-                with info5:
-
-                    st.markdown(
-                        "**Equipment / Station ID**"
-                    )
-
-                    st.write(
-                        finding_record[
-                            "equipment_id"
-                        ]
-                        or "-"
-                    )
-
-
-                with info6:
-
-                    st.markdown(
-                        "**Lot Number**"
-                    )
-
-                    st.write(
-                        finding_record[
-                            "lot_number"
-                        ]
-                        or "-"
-                    )
-
-
-                with info7:
-
-                    st.markdown(
-                        "**Shift**"
-                    )
-
-                    st.write(
-                        finding_record["shift"]
-                        or "-"
-                    )
-
-
-                with info8:
-
-                    st.markdown(
-                        "**Status**"
-                    )
-
-                    st.write(
-                        finding_record["status"]
-                        or "-"
-                    )
-
-
-                st.divider()
-
 
                 # ============================================
                 # FINDING DETAILS

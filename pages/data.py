@@ -760,7 +760,42 @@ with filter7:
     )
 
 
-v
+with filter8:
+
+    ca_status_options = [
+        "All",
+        "PENDING CA",
+        "ON-GOING",
+        "OVERDUE"
+    ]
+
+    selected_ca_status = st.selectbox(
+        "CA Status",
+        ca_status_options
+    )
+
+
+with filter9:
+
+    dashboard_options = [
+        "All",
+        "Tick",
+        "Untick"
+    ]
+
+    selected_dashboard = st.selectbox(
+        "Dashboard",
+        dashboard_options
+    )
+
+
+with filter10:
+
+    inspector_search = st.text_input(
+        "Inspector / Auditor",
+        placeholder="6-digit badge"
+    )
+
 
 filter11, filter12, filter13 = st.columns(
     3

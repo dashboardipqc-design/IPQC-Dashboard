@@ -412,6 +412,8 @@ checklist_history_df["type_status"] = (
 
 checklist_history_df["dashboard_include"] = True
 
+checklist_history_df["ca_status"] = "-"
+
 # ============================================================
 # NORMALIZE FINDING RECORDS
 # ============================================================
@@ -522,6 +524,69 @@ if not findings_df.empty:
         .fillna(True)
         .astype(bool)
     )
+        # ========================================================
+    # CORRECTIVE ACTION STATUS
+    # ========================================================
+
+    def get_ca_status(row):
+
+        finding_status = str(
+            row.get("status", "")
+        ).strip().upper()
+
+        # Corrective Action only starts after Tech Review.
+        if finding_status != "CONFIRMED":
+
+            return "-"
+
+
+        corrective_action = str(
+            row.get("corrective_action") or ""
+        ).strip()
+
+        # Review completed, but no CA submitted yet.
+        if not corrective_action:
+
+            return "PENDING CA"
+
+
+        due_date = row.get(
+            "corrective_action_due_date"
+        )
+
+        # CA exists but no valid committed date.
+        if not due_date:
+
+            return "ON-GOING"
+
+
+        try:
+
+            due_date = pd.to_datetime(
+                due_date
+            ).date()
+
+        except Exception:
+
+            return "ON-GOING"
+
+
+        # Once the committed date has passed,
+        # the CA becomes overdue.
+        if current_time.date() > due_date:
+
+            return "OVERDUE"
+
+
+        return "ON-GOING"
+
+
+    finding_history_df["ca_status"] = (
+        findings_df.apply(
+            get_ca_status,
+            axis=1
+        )
+    )
 
 else:
 
@@ -611,8 +676,8 @@ with filter4:
     )
 
 
-filter5, filter6, filter7, filter8, filter9 = st.columns(
-    5
+filter5, filter6, filter7, filter8, filter9, filter10 = st.columns(
+    6
 )
 
 
@@ -695,32 +760,14 @@ with filter7:
     )
 
 
-with filter8:
+v
 
-    dashboard_options = [
-        "All",
-        "Tick",
-        "Untick"
-    ]
-
-    selected_dashboard = st.selectbox(
-        "Dashboard",
-        dashboard_options
-    )
-
-
-with filter9:
-
-    inspector_search = st.text_input(
-        "Inspector / Auditor",
-        placeholder="6-digit badge"
-    )
-filter10, filter11, filter12 = st.columns(
+filter11, filter12, filter13 = st.columns(
     3
 )
 
 
-with filter10:
+with filter11:
 
     lot_search = st.text_input(
         "Lot Number",
@@ -728,7 +775,7 @@ with filter10:
     )
 
 
-with filter11:
+with filter12:
 
     machine_search = st.text_input(
         "Machine / Workstation",
@@ -736,7 +783,7 @@ with filter11:
     )
 
 
-with filter12:
+with filter13:
 
     record_no_search = st.text_input(
         "Record No.",
@@ -801,6 +848,14 @@ if selected_type_status != "All":
     filtered_df = filtered_df[
         filtered_df["type_status"]
         == selected_type_status
+    ]
+
+
+if selected_ca_status != "All":
+
+    filtered_df = filtered_df[
+        filtered_df["ca_status"]
+        == selected_ca_status
     ]
 
 
@@ -1024,7 +1079,9 @@ display_df["Date / Time"] = (
         "%d-%b-%Y %H:%M"
     )
 )
-
+display_df["CA Status"] = (
+    display_df["ca_status"]
+)
 display_df["Dashboard"] = (
     display_df["dashboard_include"]
     .fillna(True)
@@ -1060,6 +1117,7 @@ display_columns = [
     "Inspector / Auditor",
     "Shift",
     "Type / Status",
+    "CA Status",
     "Dashboard"
 ]
 
@@ -1101,7 +1159,8 @@ edited_df = st.data_editor(
         "Machine / Workstation",
         "Inspector / Auditor",
         "Shift",
-        "Type / Status"
+        "Type / Status",
+        "CA Status"
     ]
 )
 

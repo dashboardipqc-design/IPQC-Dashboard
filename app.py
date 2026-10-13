@@ -2425,6 +2425,26 @@ latest_week_finding_count = len(
     latest_week_findings
 )
 
+st.write(
+    "DEBUG Management Period:",
+    management_period_start,
+    "→",
+    management_period_end
+)
+
+st.write(
+    "DEBUG Findings:",
+    df[
+        [
+            "id",
+            "finding_datetime",
+            "finding_datetime_ts",
+            "finding_datetime_report",
+            "dashboard_include"
+        ]
+    ]
+)
+
 # ============================================================
 # SELECTED PERIOD FINDINGS
 # MANAGEMENT INSIGHTS USES DASHBOARD-INCLUDED FINDINGS ONLY

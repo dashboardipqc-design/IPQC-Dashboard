@@ -597,13 +597,15 @@ if "dashboard_include" in df.columns:
         .copy()
     )
 
-df["finding_datetime_parsed"] = pd.to_datetime(
-    df["finding_datetime"],
-    format="mixed",
-    errors="coerce",
-    utc=True
-).dt.tz_convert(
-    ZoneInfo("Asia/Kuala_Lumpur")
+df["finding_datetime_parsed"] = (
+    pd.to_datetime(
+        df["finding_datetime_ts"],
+        errors="coerce",
+        utc=True
+    )
+    .dt.tz_convert(
+        MALAYSIA_TZ
+    )
 )
 
 df["status_clean"] = (
@@ -1236,9 +1238,8 @@ weekly_finding_df[
 ] = (
     pd.to_datetime(
         weekly_finding_df[
-            "finding_datetime"
+            "finding_datetime_ts"
         ],
-        format="mixed",
         errors="coerce",
         utc=True
     )
@@ -2245,8 +2246,7 @@ selected_iso_week = (
 
 df["finding_datetime_report"] = (
     pd.to_datetime(
-        df["finding_datetime"],
-        format="mixed",
+        df["finding_datetime_ts"],
         errors="coerce",
         utc=True
     )
@@ -2433,8 +2433,7 @@ latest_week_finding_count = len(
 
 management_finding_datetime = (
     pd.to_datetime(
-        df["finding_datetime"],
-        format="mixed",
+        df["finding_datetime_ts"],
         errors="coerce",
         utc=True
     )
@@ -2442,7 +2441,6 @@ management_finding_datetime = (
         MALAYSIA_TZ
     )
 )
-
 
 current_week_df = df[
     (

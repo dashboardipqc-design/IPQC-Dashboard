@@ -1167,6 +1167,7 @@ if total_pages > 1:
 # ============================================================
 # FINDING DETAIL VIEWER
 # ============================================================
+
 def show_detail_value(
     label,
     value
@@ -1205,6 +1206,7 @@ def show_detail_value(
         unsafe_allow_html=True
     )
 
+
 # ============================================================
 # SINGLE FINDING SELECTION
 # ============================================================
@@ -1222,7 +1224,11 @@ finding_options = {
 
 selected_finding_record = st.selectbox(
     "View Finding Detail",
-    options=["--------"] + list(finding_options.keys()),
+    options=[
+        "--------"
+    ] + list(
+        finding_options.keys()
+    ),
     index=0,
     key="selected_finding_detail"
 )
@@ -1238,207 +1244,210 @@ if selected_finding_record != "--------":
         selected_row_position
     ]
 
-
-    # --------------------------------------------------------
-    # FINDING RECORD ONLY
-    # --------------------------------------------------------
-
-    finding_id = selected_record["source_id"]
-        selected_finding_df = findings_df[
-            findings_df["id"]
-            == finding_id
-        ]
+    finding_id = selected_record[
+        "source_id"
+    ]
 
 
-        if not selected_finding_df.empty:
-
-            finding_record = (
-                selected_finding_df.iloc[0]
-            )
-
-
-            st.divider()
-
-            st.subheader(
-                f"🔍 Finding Detail — FIND-{finding_id}"
-            )
+    selected_finding_df = findings_df[
+        findings_df["id"]
+        == finding_id
+    ]
 
 
-            # ====================================================
-            # FINDING INFORMATION
-            # ====================================================
+    if not selected_finding_df.empty:
 
-            st.markdown(
-                "### Finding Information"
-            )
+        finding_record = (
+            selected_finding_df.iloc[0]
+        )
 
 
-            info1, info2, info3, info4 = st.columns(
-                4
-            )
+        st.divider()
+
+        st.subheader(
+            f"🔍 Finding Detail — FIND-{finding_id}"
+        )
 
 
-            with info1:
+        # ====================================================
+        # FINDING INFORMATION
+        # ====================================================
 
-                st.markdown(
-                    "**Finding Date / Time**"
-                )
-
-                st.write(
-                    finding_record[
-                        "finding_datetime"
-                    ]
-                    or "-"
-                )
+        st.markdown(
+            "### Finding Information"
+        )
 
 
-            with info2:
-
-                st.markdown(
-                    "**Factory**"
-                )
-
-                st.write(
-                    finding_record["factory"]
-                    or "-"
-                )
+        info1, info2, info3, info4 = st.columns(
+            4
+        )
 
 
-            with info3:
-
-                st.markdown(
-                    "**Area**"
-                )
-
-                st.write(
-                    finding_record["area"]
-                    or "-"
-                )
-
-
-            with info4:
-
-                st.markdown(
-                    "**Station**"
-                )
-
-                st.write(
-                    finding_record["station"]
-                    or "-"
-                )
-
-
-            info5, info6, info7, info8 = st.columns(
-                4
-            )
-
-
-            with info5:
-
-                st.markdown(
-                    "**Equipment / Station ID**"
-                )
-
-                st.write(
-                    finding_record[
-                        "equipment_id"
-                    ]
-                    or "-"
-                )
-
-
-            with info6:
-
-                st.markdown(
-                    "**Lot Number**"
-                )
-
-                st.write(
-                    finding_record[
-                        "lot_number"
-                    ]
-                    or "-"
-                )
-
-
-            with info7:
-
-                st.markdown(
-                    "**Shift**"
-                )
-
-                st.write(
-                    finding_record["shift"]
-                    or "-"
-                )
-
-
-            with info8:
-
-                st.markdown(
-                    "**Status**"
-                )
-
-                st.write(
-                    finding_record["status"]
-                    or "-"
-                )
-
-
-            st.divider()
-
-
-            # ====================================================
-            # FINDING DETAILS
-            # ====================================================
+        with info1:
 
             st.markdown(
-                "### Finding Details"
+                "**Finding Date / Time**"
             )
 
+            st.write(
+                finding_record[
+                    "finding_datetime"
+                ]
+                or "-"
+            )
+
+
+        with info2:
+
+            st.markdown(
+                "**Factory**"
+            )
+
+            st.write(
+                finding_record["factory"]
+                or "-"
+            )
+
+
+        with info3:
+
+            st.markdown(
+                "**Area**"
+            )
+
+            st.write(
+                finding_record["area"]
+                or "-"
+            )
+
+
+        with info4:
+
+            st.markdown(
+                "**Station**"
+            )
+
+            st.write(
+                finding_record["station"]
+                or "-"
+            )
+
+
+        info5, info6, info7, info8 = st.columns(
+            4
+        )
+
+
+        with info5:
+
+            st.markdown(
+                "**Equipment / Station ID**"
+            )
+
+            st.write(
+                finding_record[
+                    "equipment_id"
+                ]
+                or "-"
+            )
+
+
+        with info6:
+
+            st.markdown(
+                "**Lot Number**"
+            )
+
+            st.write(
+                finding_record[
+                    "lot_number"
+                ]
+                or "-"
+            )
+
+
+        with info7:
+
+            st.markdown(
+                "**Shift**"
+            )
+
+            st.write(
+                finding_record["shift"]
+                or "-"
+            )
+
+
+        with info8:
+
+            st.markdown(
+                "**Status**"
+            )
+
+            st.write(
+                finding_record["status"]
+                or "-"
+            )
+
+
+        st.divider()
+
+
+        # ====================================================
+        # FINDING DETAILS
+        # ====================================================
+
+        st.markdown(
+            "### Finding Details"
+        )
+
+
+        show_detail_value(
+            "Category",
+            finding_record["category"]
+        )
+
+
+        show_detail_value(
+            "Finding Description",
+            finding_record[
+                "finding_description"
+            ]
+        )
+
+
+        show_detail_value(
+            "Interview Result",
+            finding_record[
+                "interview_result"
+            ]
+        )
+
+
+        show_detail_value(
+            "Containment Action",
+            finding_record[
+                "containment_action"
+            ]
+        )
+
+
+        detail1, detail2 = st.columns(
+            2
+        )
+
+
+        with detail1:
 
             show_detail_value(
-                "Category",
-                finding_record["category"]
+                "Auditee",
+                finding_record["auditee"]
             )
 
+
+        with detail2:
 
             show_detail_value(
-                "Finding Description",
-                finding_record["finding_description"]
+                "Auditor",
+                finding_record["auditor"]
             )
-
-
-            show_detail_value(
-                "Interview Result",
-                finding_record["interview_result"]
-            )
-
-
-            show_detail_value(
-                "Containment Action",
-                finding_record["containment_action"]
-            )
-
-
-            detail1, detail2 = st.columns(
-                2
-            )
-
-
-            with detail1:
-
-                show_detail_value(
-                    "Auditee",
-                    finding_record["auditee"]
-                )
-
-
-            with detail2:
-
-                show_detail_value(
-                    "Auditor",
-                    finding_record["auditor"]
-                )
-
-            

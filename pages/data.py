@@ -1215,14 +1215,66 @@ open_rows = edited_df.index[
 ].tolist()
 
 
-if open_rows:
+# ============================================================
+# SINGLE ROW SELECTION
+# Only one Open checkbox may remain selected
+# ============================================================
+
+if len(open_rows) > 1:
+
+    previous_open_row = st.session_state.get(
+        "history_open_row"
+    )
+
+    newly_selected_rows = [
+        row
+        for row in open_rows
+        if row != previous_open_row
+    ]
+
+    if newly_selected_rows:
+
+        selected_row_position = newly_selected_rows[-1]
+
+    else:
+
+        selected_row_position = open_rows[-1]
+
+
+    st.session_state.history_open_row = (
+        selected_row_position
+    )
+
+    st.session_state[
+        "ipqc_history_editor"
+    ]["edited_rows"] = {
+        selected_row_position: {
+            "Open": True
+        }
+    }
+
+    st.rerun()
+
+
+elif len(open_rows) == 1:
 
     selected_row_position = open_rows[0]
+
+    st.session_state.history_open_row = (
+        selected_row_position
+    )
+
+
+else:
+
+    st.session_state.history_open_row = None
+
+
+if open_rows:
 
     selected_record = page_df.iloc[
         selected_row_position
     ]
-
     # --------------------------------------------------------
     # FINDING RECORD ONLY
     # --------------------------------------------------------

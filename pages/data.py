@@ -1898,7 +1898,7 @@ if selected_record_no is not None:
                     st.divider()
 
                     st.markdown(
-                        "### Tech Review"
+                        "### Reviewed By"
                     )
 
                     st.caption(

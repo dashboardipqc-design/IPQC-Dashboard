@@ -2697,6 +2697,7 @@ RULES:
 - Observation must summarize only findings from the selected analysis period.
 - Highlight must summarize only positive points from the selected analysis period. e.g. Low finding compare to previous week
 - Historical findings are provided only to determine whether a similar issue occurred before the selected analysis period.
+- Cross check if the same MS badge (operator / auditee) repeated the same issue
 - Do not summarize historical findings as findings from the selected analysis period.
 - Do not invent root causes.
 - Do not invent corrective actions.

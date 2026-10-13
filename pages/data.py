@@ -174,6 +174,7 @@ def load_findings():
             "id,"
             "created_at,"
             "finding_datetime,"
+            "finding_datetime_ts,"
             "shift,"
             "factory,"
             "area,"
@@ -423,18 +424,34 @@ checklist_history_df["ca_status"] = "-"
 
 if not findings_df.empty:
 
-    findings_df["created_at"] = pd.to_datetime(
-        findings_df["created_at"],
+    findings_df["finding_datetime_ts"] = pd.to_datetime(
+        findings_df["finding_datetime_ts"],
+        format="mixed",
         errors="coerce",
         utc=True
     )
 
+    findings_df["created_at"] = pd.to_datetime(
+        findings_df["created_at"],
+        format="mixed",
+        errors="coerce",
+        utc=True
+    )
+
+
+    # Canonical Finding timestamp.
+    # created_at is retained only as fallback for older records
+    # where finding_datetime_ts may be missing.
     findings_df["record_datetime"] = (
-        findings_df["created_at"]
+        findings_df["finding_datetime_ts"]
+        .fillna(
+            findings_df["created_at"]
+        )
         .dt.tz_convert(
             MALAYSIA_TZ
         )
     )
+
 
     findings_df["record_date"] = (
         findings_df["record_datetime"]

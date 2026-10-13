@@ -1000,7 +1000,7 @@ display_df = display_df.rename(
 
 
 display_columns = [
-    "Open",
+    "-",
     "Date / Time",
     "Record No.",
     "Record Type",

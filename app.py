@@ -2085,17 +2085,6 @@ with ai_header_to:
         key="management_reporting_week",
         label_visibility="collapsed"
     )
-
-    selected_week_label = st.selectbox(
-        "To Work Week",
-        options=[
-            week["label"]
-            for week in available_reporting_weeks
-        ],
-        index=0,
-        key="management_reporting_week",
-        label_visibility="collapsed"
-    )
     
 # ============================================================
 # GENERATE SUMMARY BUTTON

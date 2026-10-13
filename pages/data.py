@@ -193,7 +193,8 @@ def load_findings():
             "dashboard_include,"
             "corrective_action,"
             "corrective_action_by,"
-            "corrective_action_at"
+            "corrective_action_at,"
+            "corrective_action_due_date"
         )
         .order(
             "created_at",
@@ -1941,12 +1942,49 @@ if selected_record_no is not None:
                         key=f"corrective_action_{finding_id}"
                     )
 
-                    corrective_action_by = st.text_input(
-                        "Corrective Action By",
-                        value=existing_corrective_action_by,
-                        placeholder="Enter name",
-                        key=f"corrective_action_by_{finding_id}"
+                    corrective_col1, corrective_col2 = st.columns(
+                        2
                     )
+                    
+                    
+                    with corrective_col1:
+                    
+                        corrective_action_by = st.text_input(
+                            "Completed By",
+                            value=existing_corrective_action_by,
+                            placeholder="Enter name",
+                            key=f"corrective_action_by_{finding_id}"
+                        )
+                    
+                    
+                    with corrective_col2:
+                    
+                        existing_due_date = finding_record.get(
+                            "corrective_action_due_date"
+                        )
+                    
+                        if existing_due_date:
+                    
+                            try:
+                    
+                                existing_due_date = pd.to_datetime(
+                                    existing_due_date
+                                ).date()
+                    
+                            except Exception:
+                    
+                                existing_due_date = current_time.date()
+                    
+                        else:
+                    
+                            existing_due_date = current_time.date()
+                    
+                    
+                        corrective_action_due_date = st.date_input(
+                            "Completion Date",
+                            value=existing_due_date,
+                            key=f"corrective_action_due_date_{finding_id}"
+                        )
 
                     save_corrective_action = st.button(
                         "Save Corrective Action",
@@ -1965,9 +2003,9 @@ if selected_record_no is not None:
                             )
 
                         elif not corrective_action_by.strip():
-
+                        
                             st.error(
-                                "Please enter Corrective Action By."
+                                "Please enter Completed By."
                             )
 
                         else:
@@ -1985,10 +2023,13 @@ if selected_record_no is not None:
                                         {
                                             "corrective_action":
                                                 corrective_action.strip(),
-
+                                            
                                             "corrective_action_by":
                                                 corrective_action_by.strip(),
-
+                                            
+                                            "corrective_action_due_date":
+                                                corrective_action_due_date.isoformat(),
+                                            
                                             "corrective_action_at":
                                                 corrective_action_datetime.isoformat()
                                         }

@@ -2714,43 +2714,6 @@ if selected_record_no is not None:
 
                                                 st.exception(e)
 
-
-                            with ca_button1:
-
-                                if st.button(
-                                    "Edit Corrective Action",
-                                    width="stretch",
-                                    key=(
-                                        f"edit_ca_button_"
-                                        f"{finding_id}"
-                                    )
-                                ):
-
-                                    st.session_state[
-                                        ca_edit_key
-                                    ] = True
-
-                                    st.rerun()
-
-                            with ca_button2:
-                            
-                                if st.button(
-                                    "Confirm CA Completed",
-                                    type="primary",
-                                    width="stretch",
-                                    key=(
-                                        f"confirm_ca_button_"
-                                        f"{finding_id}"
-                                    )
-                                ):
-                            
-                                    st.session_state[
-                                        f"confirm_ca_mode_{finding_id}"
-                                    ] = True
-                            
-                                    st.rerun()
-
-
                         # ========================================
                         # EDIT EXISTING CA
                         # ========================================

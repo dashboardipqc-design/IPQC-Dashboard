@@ -607,8 +607,8 @@ with filter4:
     )
 
 
-filter5, filter6, filter7, filter8 = st.columns(
-    4
+filter5, filter6, filter7, filter8, filter9 = st.columns(
+    5
 )
 
 
@@ -693,18 +693,30 @@ with filter7:
 
 with filter8:
 
+    dashboard_options = [
+        "All",
+        "Tick",
+        "Untick"
+    ]
+
+    selected_dashboard = st.selectbox(
+        "Dashboard",
+        dashboard_options
+    )
+
+
+with filter9:
+
     inspector_search = st.text_input(
         "Inspector / Auditor",
         placeholder="6-digit badge"
     )
-
-
-filter9, filter10, filter11 = st.columns(
+filter10, filter11, filter12 = st.columns(
     3
 )
 
 
-with filter9:
+with filter10:
 
     lot_search = st.text_input(
         "Lot Number",
@@ -712,7 +724,7 @@ with filter9:
     )
 
 
-with filter10:
+with filter11:
 
     machine_search = st.text_input(
         "Machine / Workstation",
@@ -720,7 +732,7 @@ with filter10:
     )
 
 
-with filter11:
+with filter12:
 
     record_no_search = st.text_input(
         "Record No.",
@@ -785,6 +797,24 @@ if selected_type_status != "All":
     filtered_df = filtered_df[
         filtered_df["type_status"]
         == selected_type_status
+    ]
+
+
+if selected_dashboard == "Tick":
+
+    filtered_df = filtered_df[
+        filtered_df["dashboard_include"]
+        .fillna(False)
+        .astype(bool)
+    ]
+
+
+elif selected_dashboard == "Untick":
+
+    filtered_df = filtered_df[
+        ~filtered_df["dashboard_include"]
+        .fillna(False)
+        .astype(bool)
     ]
 
 

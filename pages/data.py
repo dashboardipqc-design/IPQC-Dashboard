@@ -190,7 +190,10 @@ def load_findings():
             "severity,"
             "reviewed_by,"
             "reviewed_at,"
-            "dashboard_include"
+            "dashboard_include,"
+            "corrective_action,"
+            "corrective_action_by,"
+            "corrective_action_at"
         )
         .order(
             "created_at",
@@ -1904,3 +1907,109 @@ if selected_record_no is not None:
                             "Reviewed At",
                             reviewed_at_display
                         )
+                                            # ============================================
+                    # CORRECTIVE ACTION
+                    # ============================================
+
+                    st.divider()
+
+                    st.markdown(
+                        "### Corrective Action"
+                    )
+
+                    existing_corrective_action = (
+                        finding_record.get(
+                            "corrective_action"
+                        )
+                        or ""
+                    )
+
+                    existing_corrective_action_by = (
+                        finding_record.get(
+                            "corrective_action_by"
+                        )
+                        or ""
+                    )
+
+                    corrective_action = st.text_area(
+                        "Corrective Action",
+                        value=existing_corrective_action,
+                        placeholder=(
+                            "Enter corrective action taken..."
+                        ),
+                        height=120,
+                        key=f"corrective_action_{finding_id}"
+                    )
+
+                    corrective_action_by = st.text_input(
+                        "Corrective Action By",
+                        value=existing_corrective_action_by,
+                        placeholder="Enter name",
+                        key=f"corrective_action_by_{finding_id}"
+                    )
+
+                    save_corrective_action = st.button(
+                        "Save Corrective Action",
+                        type="primary",
+                        width="stretch",
+                        key=f"save_corrective_action_{finding_id}"
+                    )
+
+
+                    if save_corrective_action:
+
+                        if not corrective_action.strip():
+
+                            st.error(
+                                "Please enter the Corrective Action."
+                            )
+
+                        elif not corrective_action_by.strip():
+
+                            st.error(
+                                "Please enter Corrective Action By."
+                            )
+
+                        else:
+
+                            corrective_action_datetime = datetime.now(
+                                MALAYSIA_TZ
+                            )
+
+                            try:
+
+                                (
+                                    supabase
+                                    .table("Findings")
+                                    .update(
+                                        {
+                                            "corrective_action":
+                                                corrective_action.strip(),
+
+                                            "corrective_action_by":
+                                                corrective_action_by.strip(),
+
+                                            "corrective_action_at":
+                                                corrective_action_datetime.isoformat()
+                                        }
+                                    )
+                                    .eq(
+                                        "id",
+                                        int(finding_id)
+                                    )
+                                    .execute()
+                                )
+
+                                st.success(
+                                    "Corrective Action saved."
+                                )
+
+                                st.rerun()
+
+                            except Exception as e:
+
+                                st.error(
+                                    "Unable to save Corrective Action."
+                                )
+
+                                st.exception(e)

@@ -943,12 +943,8 @@ display_df["Date / Time"] = (
 
 display_df["Dashboard"] = (
     display_df["dashboard_include"]
-    .map(
-        {
-            True: "Y",
-            False: "N"
-        }
-    )
+    .fillna(True)
+    .astype(bool)
 )
 
 display_df = display_df.rename(

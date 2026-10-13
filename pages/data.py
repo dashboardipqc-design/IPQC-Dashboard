@@ -931,9 +931,7 @@ page_df = (
     )
 )
 
-
 display_df = page_df.copy()
-display_df["Open"] = False
 
 display_df["Date / Time"] = (
     display_df["record_datetime"]
@@ -965,7 +963,6 @@ display_df = display_df.rename(
 
 
 display_columns = [
-    "Open",
     "Date / Time",
     "Record No.",
     "Record Type",
@@ -985,37 +982,23 @@ table_height = min(
     38 + (len(display_df) * 35)
 )
 
-edited_df = st.data_editor(
+table_event = st.dataframe(
     display_df[
         display_columns
     ],
     width="stretch",
     hide_index=True,
     height=table_height,
-    key="ipqc_history_editor",
+    key="ipqc_history_table",
+    on_select="rerun",
+    selection_mode="single-row",
     column_config={
-        "Open": st.column_config.CheckboxColumn(
-            "Open",
-            default=False
-        ),
         "Dashboard": st.column_config.CheckboxColumn(
             "Dashboard"
         )
-    },
-    disabled=[
-        "Date / Time",
-        "Record No.",
-        "Record Type",
-        "Factory",
-        "Area",
-        "Process / Station",
-        "Lot Number",
-        "Machine / Workstation",
-        "Inspector / Auditor",
-        "Shift",
-        "Type / Status"
-    ]
+    }
 )
+
 # ============================================================
 # DASHBOARD TABLE CONTROL
 # ============================================================

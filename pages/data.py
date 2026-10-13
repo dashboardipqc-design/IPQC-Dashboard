@@ -933,6 +933,7 @@ page_df = (
 
 
 display_df = page_df.copy()
+display_df["Open"] = False
 
 display_df["Date / Time"] = (
     display_df["record_datetime"]
@@ -964,6 +965,7 @@ display_df = display_df.rename(
 
 
 display_columns = [
+    "Open",
     "Date / Time",
     "Record No.",
     "Record Type",
@@ -983,18 +985,115 @@ table_height = min(
     38 + (len(display_df) * 35)
 )
 
-table_event = st.dataframe(
+edited_df = st.data_editor(
     display_df[
         display_columns
     ],
     width="stretch",
     hide_index=True,
     height=table_height,
-    on_select="rerun",
-    selection_mode="single-row"
+    key="ipqc_history_editor",
+    column_config={
+        "Open": st.column_config.CheckboxColumn(
+            "Open",
+            default=False
+        ),
+        "Dashboard": st.column_config.CheckboxColumn(
+            "Dashboard"
+        )
+    },
+    disabled=[
+        "Date / Time",
+        "Record No.",
+        "Record Type",
+        "Factory",
+        "Area",
+        "Process / Station",
+        "Lot Number",
+        "Machine / Workstation",
+        "Inspector / Auditor",
+        "Shift",
+        "Type / Status"
+    ]
 )
+# ============================================================
+# DASHBOARD TABLE CONTROL
+# ============================================================
+
+for row_position in range(
+    len(edited_df)
+):
+
+    original_record = page_df.iloc[
+        row_position
+    ]
+
+    original_value = bool(
+        original_record[
+            "dashboard_include"
+        ]
+    )
+
+    edited_value = bool(
+        edited_df.iloc[
+            row_position
+        ]["Dashboard"]
+    )
 
 
+    # --------------------------------------------------------
+    # CHECKLIST
+    # Dashboard is permanently included
+    # --------------------------------------------------------
+
+    if (
+        original_record["record_type"]
+        == "Checklist"
+    ):
+
+        continue
+
+
+    # --------------------------------------------------------
+    # FINDING
+    # Save only when value changed
+    # --------------------------------------------------------
+
+    if edited_value != original_value:
+
+        finding_id = int(
+            original_record[
+                "source_id"
+            ]
+        )
+
+        try:
+
+            (
+                supabase
+                .table("Findings")
+                .update(
+                    {
+                        "dashboard_include":
+                        edited_value
+                    }
+                )
+                .eq(
+                    "id",
+                    finding_id
+                )
+                .execute()
+            )
+
+            st.rerun()
+
+        except Exception as e:
+
+            st.error(
+                "Unable to update Dashboard setting."
+            )
+
+            st.exception(e)
 # ============================================================
 # PAGE NAVIGATION
 # ============================================================
@@ -1111,17 +1210,18 @@ def show_detail_value(
         """,
         unsafe_allow_html=True
     )
-selected_rows = table_event.selection.rows
+open_rows = edited_df.index[
+    edited_df["Open"] == True
+].tolist()
 
 
-if selected_rows:
+if open_rows:
 
-    selected_row_position = selected_rows[0]
+    selected_row_position = open_rows[0]
 
     selected_record = page_df.iloc[
         selected_row_position
     ]
-
 
     # --------------------------------------------------------
     # FINDING RECORD ONLY
@@ -1328,78 +1428,4 @@ if selected_rows:
                     finding_record["auditor"]
                 )
 
-            st.divider()
-
-            st.markdown(
-                "### Dashboard Control"
-            )
-
-            current_dashboard_value = bool(
-                finding_record["dashboard_include"]
-            )
-
-            dashboard_key = (
-                f"dashboard_include_{finding_id}"
-            )
-
-            # Keep radio synchronized with Supabase
-            if (
-                dashboard_key
-                not in st.session_state
-            ):
-
-                st.session_state[
-                    dashboard_key
-                ] = (
-                    "Y"
-                    if current_dashboard_value
-                    else "N"
-                )
-
-
-            def update_dashboard_include():
-
-                new_value = (
-                    st.session_state[
-                        dashboard_key
-                    ]
-                    == "Y"
-                )
-
-                try:
-
-                    (
-                        supabase
-                        .table("Findings")
-                        .update(
-                            {
-                                "dashboard_include":
-                                new_value
-                            }
-                        )
-                        .eq(
-                            "id",
-                            finding_id
-                        )
-                        .execute()
-                    )
-
-                except Exception as e:
-
-                    st.error(
-                        "Unable to update Dashboard setting."
-                    )
-
-                    st.exception(e)
-
-
-            st.radio(
-                "Count this Finding in Dashboard?",
-                options=[
-                    "Y",
-                    "N"
-                ],
-                key=dashboard_key,
-                horizontal=True,
-                on_change=update_dashboard_include
-            )
+            

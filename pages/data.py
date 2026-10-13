@@ -2058,25 +2058,35 @@ if selected_record_no is not None:
                             "corrective_action_due_date"
                         )
                     
-                        if existing_due_date:
+                        # Default to today when no committed date exists.
+                        if pd.isna(existing_due_date) or not str(existing_due_date).strip():
+                    
+                            existing_due_date = current_time.date()
+                    
+                        else:
                     
                             try:
                     
-                                existing_due_date = pd.to_datetime(
-                                    existing_due_date
-                                ).date()
+                                parsed_due_date = pd.to_datetime(
+                                    existing_due_date,
+                                    errors="coerce"
+                                )
+                    
+                                if pd.isna(parsed_due_date):
+                    
+                                    existing_due_date = current_time.date()
+                    
+                                else:
+                    
+                                    existing_due_date = parsed_due_date.date()
                     
                             except Exception:
                     
                                 existing_due_date = current_time.date()
                     
-                        else:
-                    
-                            existing_due_date = current_time.date()
-                    
                     
                         corrective_action_due_date = st.date_input(
-                            "Completion Date",
+                            "Committed Completion Date",
                             value=existing_due_date,
                             key=f"corrective_action_due_date_{finding_id}"
                         )

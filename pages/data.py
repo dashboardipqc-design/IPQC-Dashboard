@@ -1601,17 +1601,17 @@ def show_detail_value(
             color:{MUTED};
             font-size:14px;
             font-weight:600;
-            margin-bottom:2px;
+            margin-bottom:6px;
         ">
             {label}
         </div>
 
         <div style="
             color:{TEXT};
-            font-size:16px;
+            font-size:17px;
             font-weight:500;
-            line-height:1.3;
-            margin-bottom:6px;
+            line-height:1.55;
+            margin-bottom:22px;
         ">
             {display_value}
         </div>

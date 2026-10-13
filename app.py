@@ -2075,13 +2075,44 @@ with ai_header_text:
 
 with ai_header_to:
 
-    selected_week_label = st.selectbox(
-        "To Work Week",
-        options=[
+    if selected_history_start_label == "--------":
+
+        management_to_options = [
             week["label"]
             for week in available_reporting_weeks
-        ],
-        index=0,
+        ]
+
+    else:
+
+        selected_from_week_for_options = next(
+            week
+            for week in available_reporting_weeks
+            if week["label"]
+            == selected_history_start_label
+        )
+
+        management_to_options = [
+            week["label"]
+            for week in available_reporting_weeks
+            if week["start"]
+            >= selected_from_week_for_options["start"]
+        ]
+
+
+    current_to_week = st.session_state.get(
+        "management_reporting_week"
+    )
+
+    if current_to_week not in management_to_options:
+
+        st.session_state[
+            "management_reporting_week"
+        ] = management_to_options[0]
+
+
+    selected_week_label = st.selectbox(
+        "To Work Week",
+        options=management_to_options,
         key="management_reporting_week",
         label_visibility="collapsed"
     )

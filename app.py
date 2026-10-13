@@ -2405,28 +2405,30 @@ latest_week_finding_count = len(
     latest_week_findings
 )
 
-
-
 # ============================================================
-# SELECTED WW FINDINGS
+# SELECTED PERIOD FINDINGS
+# MANAGEMENT INSIGHTS USES DASHBOARD-INCLUDED FINDINGS ONLY
+# SIDEBAR FILTERS DO NOT AFFECT MANAGEMENT INSIGHTS
 # ============================================================
 
-current_week_df = filtered_df[
+management_finding_datetime = (
+    pd.to_datetime(
+        df["finding_datetime"],
+        format="%d-%b-%Y %H:%M:%S",
+        errors="coerce"
+    )
+    .dt.tz_localize(MALAYSIA_TZ)
+)
+
+
+current_week_df = df[
     (
-        pd.to_datetime(
-            filtered_df["finding_datetime"],
-            format="%d-%b-%Y %H:%M:%S",
-            errors="coerce"
-        ).dt.tz_localize(MALAYSIA_TZ)
+        management_finding_datetime
         >= management_period_start
     )
     &
     (
-        pd.to_datetime(
-            filtered_df["finding_datetime"],
-            format="%d-%b-%Y %H:%M:%S",
-            errors="coerce"
-        ).dt.tz_localize(MALAYSIA_TZ)
+        management_finding_datetime
         < management_period_end
     )
 ].copy()
@@ -2437,13 +2439,9 @@ current_week_df = filtered_df[
 # ============================================================
 
 finding_history_datetime = (
-    pd.to_datetime(
-        filtered_df["finding_datetime"],
-        format="%d-%b-%Y %H:%M:%S",
-        errors="coerce"
-    )
-    .dt.tz_localize(MALAYSIA_TZ)
+    management_finding_datetime
 )
+
 
 # ============================================================
 # HISTORICAL SEARCH WINDOW
@@ -2456,7 +2454,8 @@ historical_cutoff = (
     management_period_start
 )
 
-historical_df = filtered_df[
+
+historical_df = df[
     finding_history_datetime
     < historical_cutoff
 ].copy()

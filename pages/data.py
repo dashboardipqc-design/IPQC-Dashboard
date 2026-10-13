@@ -1,5 +1,8 @@
 import streamlit as st
 import pandas as pd
+import streamlit.components.v1 as components
+import json
+import html
 from datetime import datetime, timedelta, date
 from zoneinfo import ZoneInfo
 from supabase import create_client
@@ -2666,11 +2669,55 @@ if selected_record_no is not None:
                         if pd.notna(finding_dt) else "-"
                     )
 
-                with st.expander("🔗 Share Corrective Action Link"):
-                    st.code(
-                        f"{FINDING_LINK_BASE}?finding_id={int(finding_id)}",
-                        language=None
-                    )
+                # One-line share link. Clicking Copy copies the direct CAPA URL.
+                finding_share_url = (
+                    f"{FINDING_LINK_BASE}?finding_id={int(finding_id)}"
+                )
+                components.html(
+                    f"""
+                    <div style="display:flex;align-items:center;gap:10px;
+                                flex-wrap:wrap;font-family:Arial,sans-serif;
+                                color:#9FB0CA;font-size:14px;">
+                      <span>Share corrective action link -</span>
+                      <a href="{html.escape(finding_share_url, quote=True)}"
+                         target="_blank" rel="noopener noreferrer"
+                         style="color:#22D3EE;overflow-wrap:anywhere;">
+                        {html.escape(finding_share_url)}
+                      </a>
+                      <button id="copy-finding-link" type="button"
+                              style="background:#1C2B40;color:#F1F5F9;
+                                     border:1px solid #2A3C59;border-radius:6px;
+                                     padding:5px 12px;cursor:pointer;">
+                        📋 Copy link
+                      </button>
+                      <span id="copy-status" role="status" aria-live="polite"></span>
+                    </div>
+                    <script>
+                      const url = {json.dumps(finding_share_url)};
+                      const button = document.getElementById('copy-finding-link');
+                      const status = document.getElementById('copy-status');
+                      button.addEventListener('click', async () => {{
+                        try {{
+                          await navigator.clipboard.writeText(url);
+                          status.textContent = 'Copied!';
+                        }} catch (err) {{
+                          const field = document.createElement('textarea');
+                          field.value = url;
+                          field.style.position = 'fixed';
+                          field.style.opacity = '0';
+                          document.body.appendChild(field);
+                          field.focus();
+                          field.select();
+                          const ok = document.execCommand('copy');
+                          field.remove();
+                          status.textContent = ok ? 'Copied!' : 'Copy blocked by browser';
+                        }}
+                      }});
+                    </script>
+                    """,
+                    height=62,
+                    scrolling=False,
+                )
 
                 # ============================================
                 # FINDING DETAILS

@@ -1917,8 +1917,8 @@ if selected_record_no is not None:
                         review_severity = st.radio(
                             "Severity",
                             [
-                                "MINOR",
-                                "MAJOR"
+                                "Minor",
+                                "Major"
                             ],
                             index=None,
                             horizontal=True,

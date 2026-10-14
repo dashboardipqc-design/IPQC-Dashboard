@@ -2830,7 +2830,7 @@ if selected_record_no is not None:
                     with review_col2:
 
                         reviewer_badge = st.text_input(
-                            "Technician Badge",
+                            "Verified by",
                             placeholder="6-digit badge",
                             max_chars=6,
                             key=f"reviewed_by_{finding_id}"

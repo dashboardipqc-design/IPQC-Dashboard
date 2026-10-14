@@ -2891,7 +2891,7 @@ if selected_record_no is not None:
 
                             dashboard_include = (
                                 review_severity
-                                == "MAJOR"
+                                == "Major"
                             )
 
 
